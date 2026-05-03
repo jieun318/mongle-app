@@ -4,47 +4,84 @@ import { useState } from "react";
 import InputField from "@/components/ui/InputField";
 import PasswordField from "@/components/ui/PasswordField";
 import Button from "@/components/ui/Button";
+import { loginSchema } from "@/types/authSchema";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function LoginForm() {
   const router = useRouter();
   const [id, setId] = useState("");
   const [password, setPassword] = useState("");
   const [keepLogin, setKeepLogin] = useState(false);
+  const [errors, setErrors] = useState<{ id?: string; password?: string }>({});
+
+  const handleLogin = async () => {
+    const result = loginSchema.safeParse({ id, password });
+    if (!result.success) {
+      const fieldErrors = result.error.flatten().fieldErrors;
+      setErrors({
+        id: fieldErrors.id?.[0],
+        password: fieldErrors.password?.[0],
+      });
+      return;
+    }
+    setErrors({});
+    await AsyncStorage.setItem("isLoggedIn", "true");
+    router.replace("/(app)");
+  };
 
   return (
     <View style={styles.container}>
-      {/* 로고 */}
       <View style={styles.logoWrap}>
         <Image
           source={require("@/assets/images/mongle-logo.png")}
           style={styles.logo}
           resizeMode="contain"
         />
-        <Text style={styles.title}>몽글</Text>
-        <Text style={styles.subtitle}>어젯밤 어떤 꿈을 꾸셨나요?</Text>
+        <Text
+          style={{
+            fontFamily: "OnglyphPDH",
+            fontSize: 36,
+            color: "#3D2B5E",
+            letterSpacing: 2,
+          }}
+        >
+          몽글
+        </Text>
+        <Text
+          style={{ fontFamily: "OnglyphPDH", fontSize: 16, color: "#5C4A7A" }}
+        >
+          어젯밤 어떤 꿈을 꾸셨나요?
+        </Text>
       </View>
 
-      {/* 입력 폼 */}
       <View style={styles.form}>
-        <InputField
-          placeholder="아이디를 입력해주세요"
-          value={id}
-          onChangeText={setId}
-        />
-        <PasswordField
-          placeholder="비밀번호를 입력해주세요"
-          value={password}
-          onChangeText={setPassword}
-        />
+        <View style={styles.fieldWrap}>
+          <InputField
+            placeholder="아이디를 입력해주세요"
+            value={id}
+            onChangeText={setId}
+          />
+          {errors.id ? <Text style={styles.errorText}>{errors.id}</Text> : null}
+        </View>
 
-        {/* 로그인 유지 + 비밀번호 찾기 */}
+        <View style={styles.fieldWrap}>
+          <PasswordField
+            placeholder="비밀번호를 입력해주세요"
+            value={password}
+            onChangeText={setPassword}
+          />
+          {errors.password ? (
+            <Text style={styles.errorText}>{errors.password}</Text>
+          ) : null}
+        </View>
+
         <View style={styles.optionRow}>
           <TouchableOpacity
             style={styles.checkRow}
             onPress={() => setKeepLogin(!keepLogin)}
           >
             <View style={[styles.checkbox, keepLogin && styles.checkboxActive]}>
-              {keepLogin && <Text style={styles.checkmark}>✓</Text>}
+              {keepLogin ? <Text style={styles.checkmark}>✓</Text> : null}
             </View>
             <Text style={styles.checkLabel}>로그인 유지</Text>
           </TouchableOpacity>
@@ -53,10 +90,9 @@ export default function LoginForm() {
           </TouchableOpacity>
         </View>
 
-        <Button label="로그인" onPress={() => router.push("/(app)")} />
+        <Button label="로그인" onPress={handleLogin} />
       </View>
 
-      {/* 소셜 로그인 */}
       <View style={styles.socialWrap}>
         <View style={styles.dividerRow}>
           <View style={styles.divider} />
@@ -73,7 +109,7 @@ export default function LoginForm() {
             />
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.socialBtn, { backgroundColor: "#000" }]}
+            style={[styles.socialBtn, { backgroundColor: "#fff" }]}
           >
             <Image
               source={require("@/assets/images/apple.png")}
@@ -83,10 +119,9 @@ export default function LoginForm() {
         </View>
       </View>
 
-      {/* 회원가입 링크 */}
       <View style={styles.signupRow}>
         <Text style={styles.signupText}>아직 계정이 없으신가요? </Text>
-        <TouchableOpacity onPress={() => router.push("/(auth)/signup")}>
+        <TouchableOpacity onPress={() => router.replace("/(auth)/signup")}>
           <Text style={styles.signupLink}>회원가입하기</Text>
         </TouchableOpacity>
       </View>
@@ -99,17 +134,13 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center",
     paddingHorizontal: 24,
-    paddingVertical: 40,
+    paddingVertical: 10,
+    paddingTop: 40,
   },
-  logoWrap: {
-    alignItems: "center",
-    marginBottom: 32,
-    gap: 8,
-  },
-  logo: { width: 120, height: 120 },
-  title: { fontSize: 32, fontWeight: "700", color: "#826c98" },
-  subtitle: { fontSize: 16, color: "#615172" },
+  logoWrap: { alignItems: "center", marginBottom: 55, gap: -10 },
+  logo: { width: 200, height: 200, marginBottom: -15 },
   form: { width: "100%", gap: 12 },
+  fieldWrap: { gap: 4 },
   optionRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -127,12 +158,13 @@ const styles = StyleSheet.create({
   },
   checkboxActive: { backgroundColor: "#7B6A9E", borderColor: "#7B6A9E" },
   checkmark: { color: "#fff", fontSize: 11, fontWeight: "700" },
-  checkLabel: { fontSize: 13, color: "#615172" },
-  forgotText: { fontSize: 13, color: "#B0A8C2" },
+  checkLabel: { fontSize: 13, color: "#5C4A7A" },
+  forgotText: { fontSize: 13, color: "#9B8BB4" },
+  errorText: { fontSize: 11, color: "#f87171", paddingLeft: 4 },
   socialWrap: { width: "100%", marginTop: 24, gap: 16 },
   dividerRow: { flexDirection: "row", alignItems: "center", gap: 12 },
   divider: { flex: 1, height: 1, backgroundColor: "#d8b4fe" },
-  dividerText: { fontSize: 12, color: "#B0A8C2" },
+  dividerText: { fontSize: 12, color: "#9B8BB4" },
   socialBtns: { flexDirection: "row", justifyContent: "center", gap: 16 },
   socialBtn: {
     width: 48,
@@ -141,8 +173,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  socialIcon: { width: 28, height: 28 },
+  socialIcon: { width: 40, height: 40 },
   signupRow: { flexDirection: "row", marginTop: 24, alignItems: "center" },
-  signupText: { fontSize: 13, color: "#B0A8C2" },
-  signupLink: { fontSize: 13, color: "#826c98", fontWeight: "700" },
+  signupText: { fontSize: 13, color: "#9B8BB4" },
+  signupLink: { fontSize: 13, color: "#5B3E8F", fontWeight: "700" },
 });

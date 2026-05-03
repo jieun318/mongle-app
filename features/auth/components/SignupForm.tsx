@@ -4,6 +4,7 @@ import { useState } from "react";
 import InputField from "@/components/ui/InputField";
 import PasswordField from "@/components/ui/PasswordField";
 import Button from "@/components/ui/Button";
+import { signupSchema } from "@/types/authSchema";
 
 export default function SignupForm() {
   const router = useRouter();
@@ -11,26 +12,59 @@ export default function SignupForm() {
   const [id, setId] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
+  const [errors, setErrors] = useState<{
+    nickname?: string;
+    id?: string;
+    password?: string;
+    passwordConfirm?: string;
+  }>({});
 
-  const isPasswordValid =
-    password.length >= 8 && /[a-zA-Z]/.test(password) && /[0-9]/.test(password);
-  const isPasswordMatch =
-    password === passwordConfirm && passwordConfirm.length > 0;
+  const handleSignup = () => {
+    const result = signupSchema.safeParse({
+      nickname,
+      id,
+      password,
+      passwordConfirm,
+    });
+    if (!result.success) {
+      const fieldErrors = result.error.flatten().fieldErrors;
+      setErrors({
+        nickname: fieldErrors.nickname?.[0],
+        id: fieldErrors.id?.[0],
+        password: fieldErrors.password?.[0],
+        passwordConfirm: fieldErrors.passwordConfirm?.[0],
+      });
+      return;
+    }
+    setErrors({});
+    router.replace("/(auth)/login");
+  };
 
   return (
     <View style={styles.container}>
-      {/* 로고 */}
       <View style={styles.logoWrap}>
         <Image
           source={require("@/assets/images/mongle-logo.png")}
           style={styles.logo}
           resizeMode="contain"
         />
-        <Text style={styles.title}>몽글</Text>
-        <Text style={styles.subtitle}>어젯밤 어떤 꿈을 꾸셨나요?</Text>
+        <Text
+          style={{
+            fontFamily: "OnglyphPDH",
+            fontSize: 36,
+            color: "#3D2B5E",
+            letterSpacing: 2,
+          }}
+        >
+          몽글
+        </Text>
+        <Text
+          style={{ fontFamily: "OnglyphPDH", fontSize: 16, color: "#5C4A7A" }}
+        >
+          어젯밤 어떤 꿈을 꾸셨나요?
+        </Text>
       </View>
 
-      {/* 입력 폼 */}
       <View style={styles.form}>
         <View style={styles.fieldWrap}>
           <Text style={styles.label}>닉네임</Text>
@@ -40,6 +74,9 @@ export default function SignupForm() {
             onChangeText={setNickname}
             maxLength={10}
           />
+          {errors.nickname ? (
+            <Text style={styles.errorText}>{errors.nickname}</Text>
+          ) : null}
         </View>
 
         <View style={styles.fieldWrap}>
@@ -49,6 +86,7 @@ export default function SignupForm() {
             value={id}
             onChangeText={setId}
           />
+          {errors.id ? <Text style={styles.errorText}>{errors.id}</Text> : null}
         </View>
 
         <View style={styles.fieldWrap}>
@@ -58,13 +96,11 @@ export default function SignupForm() {
             value={password}
             onChangeText={setPassword}
           />
-          {password.length > 0 && (
-            <Text style={isPasswordValid ? styles.validText : styles.errorText}>
-              {isPasswordValid
-                ? "✓ 사용 가능한 비밀번호예요"
-                : "영문+숫자 조합 8자 이상이어야 해요"}
-            </Text>
-          )}
+          {errors.password ? (
+            <Text style={styles.errorText}>{errors.password}</Text>
+          ) : password.length > 0 ? (
+            <Text style={styles.validText}>✓ 사용 가능한 비밀번호예요</Text>
+          ) : null}
         </View>
 
         <View style={styles.fieldWrap}>
@@ -74,22 +110,21 @@ export default function SignupForm() {
             value={passwordConfirm}
             onChangeText={setPasswordConfirm}
           />
-          {passwordConfirm.length > 0 && (
-            <Text style={isPasswordMatch ? styles.validText : styles.errorText}>
-              {isPasswordMatch
-                ? "✓ 비밀번호가 일치해요"
-                : "비밀번호가 일치하지 않아요"}
-            </Text>
-          )}
+          {errors.passwordConfirm ? (
+            <Text style={styles.errorText}>{errors.passwordConfirm}</Text>
+          ) : passwordConfirm.length > 0 && password === passwordConfirm ? (
+            <Text style={styles.validText}>✓ 비밀번호가 일치해요</Text>
+          ) : null}
         </View>
 
-        <Button label="회원가입" onPress={() => router.push("/(auth)/login")} />
+        <View style={{ marginTop: 8 }}>
+          <Button label="회원가입" onPress={handleSignup} />
+        </View>
       </View>
 
-      {/* 로그인 링크 */}
       <View style={styles.loginRow}>
         <Text style={styles.loginText}>계정이 있으신가요? </Text>
-        <TouchableOpacity onPress={() => router.push("/(auth)/login")}>
+        <TouchableOpacity onPress={() => router.replace("/(auth)/login")}>
           <Text style={styles.loginLink}>로그인하기</Text>
         </TouchableOpacity>
       </View>
@@ -102,18 +137,17 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center",
     paddingHorizontal: 24,
-    paddingVertical: 40,
+    paddingVertical: 10,
+    paddingTop: 40,
   },
-  logoWrap: { alignItems: "center", marginBottom: 28, gap: 8 },
-  logo: { width: 120, height: 120 },
-  title: { fontSize: 32, fontWeight: "700", color: "#826c98" },
-  subtitle: { fontSize: 16, color: "#615172" },
+  logoWrap: { alignItems: "center", marginBottom: 28, gap: -10 },
+  logo: { width: 200, height: 200, marginBottom: -15 },
   form: { width: "100%", gap: 12 },
-  fieldWrap: { gap: 6 },
-  label: { fontSize: 12, fontWeight: "700", color: "#615172" },
+  fieldWrap: { gap: 4 },
+  label: { fontSize: 12, fontWeight: "700", color: "#5C4A7A" },
   validText: { fontSize: 11, color: "#22c55e", paddingLeft: 4 },
   errorText: { fontSize: 11, color: "#f87171", paddingLeft: 4 },
   loginRow: { flexDirection: "row", marginTop: 24, alignItems: "center" },
-  loginText: { fontSize: 13, color: "#B0A8C2" },
-  loginLink: { fontSize: 13, color: "#826c98", fontWeight: "700" },
+  loginText: { fontSize: 13, color: "#9B8BB4" },
+  loginLink: { fontSize: 13, color: "#5B3E8F", fontWeight: "700" },
 });

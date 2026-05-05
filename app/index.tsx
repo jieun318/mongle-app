@@ -1,22 +1,29 @@
 import { useEffect } from "react";
-import { Redirect } from "expo-router";
 import { useRouter } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { View, ActivityIndicator } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { useSession } from "@/features/auth/auth";
 
 export default function Index() {
   const router = useRouter();
+  const { session, loading } = useSession();
 
   useEffect(() => {
-    const checkLogin = async () => {
-      const isLoggedIn = await AsyncStorage.getItem("isLoggedIn");
-      if (isLoggedIn === "true") {
-        router.replace("/(app)");
-      } else {
-        router.replace("/(auth)/login");
-      }
-    };
-    checkLogin();
-  }, []);
+    if (loading) return;
+    if (session) {
+      router.replace("/(app)");
+    } else {
+      router.replace("/(auth)/login");
+    }
+  }, [session, loading]);
 
-  return null;
+  return (
+    <LinearGradient
+      colors={["#E8DEFF", "#EEF6FF", "#FFF8E7"]}
+      style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+    >
+      <ActivityIndicator color="#7B6A9E" />
+      <View />
+    </LinearGradient>
+  );
 }

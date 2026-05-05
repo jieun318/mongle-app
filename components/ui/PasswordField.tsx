@@ -1,11 +1,6 @@
-import {
-  View,
-  TextInput,
-  TouchableOpacity,
-  Image,
-  StyleSheet,
-} from "react-native";
+import { View, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 import { useState } from "react";
+import { EyeIcon, EyeOffIcon } from "@/components/ui/icons";
 
 interface PasswordFieldProps {
   placeholder?: string;
@@ -19,6 +14,7 @@ export default function PasswordField({
   onChangeText,
 }: PasswordFieldProps) {
   const [showPassword, setShowPassword] = useState(false);
+  const Icon = showPassword ? EyeIcon : EyeOffIcon;
 
   return (
     <View style={styles.wrap}>
@@ -34,15 +30,9 @@ export default function PasswordField({
       <TouchableOpacity
         style={styles.eyeBtn}
         onPress={() => setShowPassword(!showPassword)}
+        activeOpacity={0.7}
       >
-        <Image
-          source={
-            showPassword
-              ? require("@/assets/images/eye.png")
-              : require("@/assets/images/eye-off.png")
-          }
-          style={styles.eyeIcon}
-        />
+        <Icon size={20} color="#9888CC" />
       </TouchableOpacity>
     </View>
   );
@@ -65,11 +55,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#3D3240",
   },
-  eyeBtn: {
-    padding: 4,
-  },
-  eyeIcon: {
-    width: 20,
-    height: 20,
-  },
+  eyeBtn: { padding: 4 },
 });

@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const loginSchema = z.object({
-  id: z.string().min(1, "아이디를 입력해주세요"),
+  email: z.string().min(1, "이메일을 입력해주세요").email("이메일 형식이 올바르지 않아요"),
   password: z.string().min(1, "비밀번호를 입력해주세요"),
 });
 
@@ -11,10 +11,10 @@ export const signupSchema = z
       .string()
       .min(1, "닉네임을 입력해주세요")
       .max(10, "닉네임은 10자 이하로 입력해주세요"),
-    id: z
+    email: z
       .string()
-      .min(1, "아이디를 입력해주세요")
-      .regex(/^[a-zA-Z0-9]+$/, "아이디는 영문/숫자만 입력해주세요"),
+      .min(1, "이메일을 입력해주세요")
+      .email("이메일 형식이 올바르지 않아요"),
     password: z
       .string()
       .min(8, "비밀번호는 8자 이상 입력해주세요")

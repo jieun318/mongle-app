@@ -6,6 +6,8 @@ interface InputFieldProps {
   value?: string;
   onChangeText?: (text: string) => void;
   autoCapitalize?: "none" | "sentences" | "words" | "characters";
+  autoCorrect?: boolean;
+  autoComplete?: "off" | "email" | "username" | "name" | "tel";
   maxLength?: number;
   keyboardType?: "default" | "email-address" | "numeric";
 }
@@ -17,6 +19,8 @@ const InputField = forwardRef<any, InputFieldProps>(
       value,
       onChangeText,
       autoCapitalize = "none",
+      autoCorrect = false,
+      autoComplete = "off",
       maxLength,
       keyboardType = "default",
     },
@@ -31,6 +35,8 @@ const InputField = forwardRef<any, InputFieldProps>(
         value={value}
         onChangeText={onChangeText}
         autoCapitalize={autoCapitalize}
+        autoCorrect={autoCorrect}
+        autoComplete={autoComplete}
         maxLength={maxLength}
         keyboardType={keyboardType}
       />

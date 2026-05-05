@@ -13,6 +13,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useState, useRef, useEffect } from "react";
 import Svg, { Defs, RadialGradient, Stop, Circle } from "react-native-svg";
 import BottomNav from "@/components/ui/BottomNav";
+import { BellIcon } from "@/components/ui/icons";
 import FortuneGradeGuide from "@/components/fortune/FortuneGradeGuide";
 import GradeBadgeCard from "@/components/fortune/GradeBadgeCard";
 import { Fortune } from "@/types/fortune";
@@ -278,11 +279,7 @@ export default function HomeScreen() {
     >
       <View style={styles.header}>
         <TouchableOpacity>
-          <Image
-            source={require("@/assets/images/bell.png")}
-            style={styles.bellIcon}
-            resizeMode="contain"
-          />
+          <BellIcon size={24} color="#5848A8" />
         </TouchableOpacity>
       </View>
 

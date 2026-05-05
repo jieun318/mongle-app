@@ -1,31 +1,44 @@
-import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Image, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import InputField from "@/components/ui/InputField";
 import PasswordField from "@/components/ui/PasswordField";
 import Button from "@/components/ui/Button";
 import { loginSchema } from "@/types/authSchema";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { signInWithEmail } from "@/features/auth/auth";
 
 export default function LoginForm() {
   const router = useRouter();
-  const [id, setId] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [keepLogin, setKeepLogin] = useState(false);
-  const [errors, setErrors] = useState<{ id?: string; password?: string }>({});
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [submitting, setSubmitting] = useState(false);
 
   const handleLogin = async () => {
-    const result = loginSchema.safeParse({ id, password });
+    const result = loginSchema.safeParse({ email, password });
     if (!result.success) {
       const fieldErrors = result.error.flatten().fieldErrors;
       setErrors({
-        id: fieldErrors.id?.[0],
+        email: fieldErrors.email?.[0],
         password: fieldErrors.password?.[0],
       });
       return;
     }
     setErrors({});
-    await AsyncStorage.setItem("isLoggedIn", "true");
+    setSubmitting(true);
+    const { error } = await signInWithEmail(email.trim(), password);
+    setSubmitting(false);
+    if (error) {
+      const message =
+        error.message === "Invalid login credentials"
+          ? "이메일 또는 비밀번호가 올바르지 않아요"
+          : error.message === "Email not confirmed"
+            ? "이메일 인증이 필요해요. 메일함을 확인해주세요"
+            : error.message;
+      Alert.alert("로그인 실패", message);
+      return;
+    }
     router.replace("/(app)");
   };
 
@@ -57,11 +70,13 @@ export default function LoginForm() {
       <View style={styles.form}>
         <View style={styles.fieldWrap}>
           <InputField
-            placeholder="아이디를 입력해주세요"
-            value={id}
-            onChangeText={setId}
+            placeholder="이메일을 입력해주세요"
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+            keyboardType="email-address"
           />
-          {errors.id ? <Text style={styles.errorText}>{errors.id}</Text> : null}
+          {errors.email ? <Text style={styles.errorText}>{errors.email}</Text> : null}
         </View>
 
         <View style={styles.fieldWrap}>
@@ -90,7 +105,7 @@ export default function LoginForm() {
           </TouchableOpacity>
         </View>
 
-        <Button label="로그인" onPress={handleLogin} />
+        <Button label={submitting ? "로그인 중..." : "로그인"} onPress={handleLogin} />
       </View>
 
       <View style={styles.socialWrap}>

@@ -1,28 +1,30 @@
-import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Image, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import InputField from "@/components/ui/InputField";
 import PasswordField from "@/components/ui/PasswordField";
 import Button from "@/components/ui/Button";
 import { signupSchema } from "@/types/authSchema";
+import { signUpWithEmail } from "@/features/auth/auth";
 
 export default function SignupForm() {
   const router = useRouter();
   const [nickname, setNickname] = useState("");
-  const [id, setId] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [errors, setErrors] = useState<{
     nickname?: string;
-    id?: string;
+    email?: string;
     password?: string;
     passwordConfirm?: string;
   }>({});
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSignup = () => {
+  const handleSignup = async () => {
     const result = signupSchema.safeParse({
       nickname,
-      id,
+      email,
       password,
       passwordConfirm,
     });
@@ -30,14 +32,40 @@ export default function SignupForm() {
       const fieldErrors = result.error.flatten().fieldErrors;
       setErrors({
         nickname: fieldErrors.nickname?.[0],
-        id: fieldErrors.id?.[0],
+        email: fieldErrors.email?.[0],
         password: fieldErrors.password?.[0],
         passwordConfirm: fieldErrors.passwordConfirm?.[0],
       });
       return;
     }
     setErrors({});
-    router.replace("/(auth)/login");
+    setSubmitting(true);
+    const { data, error } = await signUpWithEmail({
+      email: email.trim(),
+      password,
+      nickname: nickname.trim(),
+    });
+    setSubmitting(false);
+    if (error) {
+      const message =
+        error.message === "User already registered"
+          ? "이미 가입된 이메일이에요"
+          : error.message;
+      Alert.alert("회원가입 실패", message);
+      return;
+    }
+
+    // Supabase 기본 설정상 이메일 인증 메일이 발송됨 — 세션은 인증 후 생성
+    if (data.session) {
+      // 이메일 인증이 꺼져 있는 경우 즉시 로그인됨
+      router.replace("/(app)");
+    } else {
+      Alert.alert(
+        "가입 메일을 보냈어요",
+        "메일함에서 인증 링크를 눌러주세요. 인증이 끝나면 로그인할 수 있어요.",
+        [{ text: "확인", onPress: () => router.replace("/(auth)/login") }],
+      );
+    }
   };
 
   return (
@@ -80,13 +108,15 @@ export default function SignupForm() {
         </View>
 
         <View style={styles.fieldWrap}>
-          <Text style={styles.label}>아이디</Text>
+          <Text style={styles.label}>이메일</Text>
           <InputField
-            placeholder="영문으로 입력해주세요"
-            value={id}
-            onChangeText={setId}
+            placeholder="example@mongle.app"
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+            keyboardType="email-address"
           />
-          {errors.id ? <Text style={styles.errorText}>{errors.id}</Text> : null}
+          {errors.email ? <Text style={styles.errorText}>{errors.email}</Text> : null}
         </View>
 
         <View style={styles.fieldWrap}>
@@ -118,7 +148,10 @@ export default function SignupForm() {
         </View>
 
         <View style={{ marginTop: 8 }}>
-          <Button label="회원가입" onPress={handleSignup} />
+          <Button
+            label={submitting ? "가입 중..." : "회원가입"}
+            onPress={handleSignup}
+          />
         </View>
       </View>
 

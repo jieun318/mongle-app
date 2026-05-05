@@ -1,5 +1,13 @@
-import { View, TouchableOpacity, Image, StyleSheet } from "react-native";
+import { View, TouchableOpacity, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
+import type { ComponentType } from "react";
+import {
+  HomeIcon,
+  SearchIcon,
+  StarIcon,
+  MypageIcon,
+  type IconProps,
+} from "@/components/ui/icons";
 
 type NavItem = "home" | "search" | "storage" | "mypage";
 
@@ -7,44 +15,39 @@ interface BottomNavProps {
   active: NavItem;
 }
 
+const ACTIVE_COLOR = "#5848A8";
+const INACTIVE_COLOR = "#C4B8DC";
+
 export default function BottomNav({ active }: BottomNavProps) {
   const router = useRouter();
 
-  const items = [
-    { key: "home", href: "/(app)/", icon: require("@/assets/images/home.png") },
-    {
-      key: "search",
-      href: "/(app)/search",
-      icon: require("@/assets/images/search.png"),
-    },
-    {
-      key: "storage",
-      href: "/(app)/storage",
-      icon: require("@/assets/images/star.png"),
-    },
-    {
-      key: "mypage",
-      href: "/(app)/mypage",
-      icon: require("@/assets/images/mypage.png"),
-    },
-  ] as const;
+  const items: {
+    key: NavItem;
+    href: string;
+    Icon: ComponentType<IconProps>;
+  }[] = [
+    { key: "home",    href: "/(app)/",        Icon: HomeIcon },
+    { key: "search",  href: "/(app)/search",  Icon: SearchIcon },
+    { key: "storage", href: "/(app)/storage", Icon: StarIcon },
+    { key: "mypage",  href: "/(app)/mypage",  Icon: MypageIcon },
+  ];
 
   return (
     <View style={styles.wrapper}>
       <View style={styles.container}>
-        {items.map((item) => (
-          <TouchableOpacity
-            key={item.key}
-            style={styles.navItem}
-            onPress={() => router.replace(item.href)}
-          >
-            <Image
-              source={item.icon}
-              style={[styles.icon, active !== item.key && styles.inactive]}
-              resizeMode="contain"
-            />
-          </TouchableOpacity>
-        ))}
+        {items.map(({ key, href, Icon }) => {
+          const isActive = active === key;
+          return (
+            <TouchableOpacity
+              key={key}
+              style={styles.navItem}
+              onPress={() => router.replace(href)}
+              activeOpacity={0.7}
+            >
+              <Icon size={24} color={isActive ? ACTIVE_COLOR : INACTIVE_COLOR} />
+            </TouchableOpacity>
+          );
+        })}
       </View>
     </View>
   );
@@ -73,6 +76,4 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   navItem: { alignItems: "center", flex: 1 },
-  icon: { width: 24, height: 24 },
-  inactive: { opacity: 0.35 },
 });

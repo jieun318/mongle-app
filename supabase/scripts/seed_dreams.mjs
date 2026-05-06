@@ -163,7 +163,62 @@ const KEYWORD_EMOJI_RULES = [
   ["피", "🩸"],
 ];
 
+// 카테고리별로 "주어가 될 수 있는" 키워드 목록.
+//   title 매칭이 카테고리와 무관한 단어(예: animal 카테고리에서 '칼')에
+//   끌려가지 않도록, 카테고리 화이트리스트 안에서만 우선 매칭한다.
+//   동일 카테고리 안에서는 더 구체적인 단어가 먼저 와야 substring 충돌을 피함.
+const CATEGORY_PRIORITY_NEEDLES = {
+  animal: [
+    "멧돼지", "산돼지", "아기돼지", "새끼돼지",
+    "금붕어", "물고기",
+    "구렁이", "지렁이", "구더기", "땅거미", "거미", "곤충",
+    "뱀", "돼지", "호랑이", "강아지", "고양이", "용", "쥐",
+  ],
+  nature: [
+    "불꽃놀이", "무지개", "번개", "벼락", "지진", "태양",
+    "연못", "나무", "별", "하늘", "땅", "물", "불",
+    "해", "달", "비", "눈",
+  ],
+  body: ["머리카락", "이빨", "피", "손", "발", "눈"],
+  daily: [
+    "자동차", "권총", "화장실", "지옥", "지도", "시체", "그림",
+    "연장", "쇠기둥", "옷", "음식", "돈", "쌀", "칼",
+  ],
+  people: ["가족", "아기", "임금", "대통령", "용상", "옥새"],
+  pregnancy: ["금붕어", "물고기", "보석", "꽃", "분꽃", "과일", "용", "뱀", "돼지"],
+  mystic: ["귀신", "천사", "죽음"],
+  lucky: ["금은보화", "보석", "돈", "쌀"],
+  unlucky: ["지옥", "시체", "죽음"],
+};
+
+const EMOJI_BY_NEEDLE = Object.fromEntries(KEYWORD_EMOJI_RULES);
+
+// 카테고리 화이트리스트 안에서 title 에 등장하는 needle 들을 우선순위 순서로 수집.
+//   resolveEmoji / 키워드 보강에서 공통으로 사용.
+function matchedCategoryNeedles(item) {
+  const title = item.keyword ?? "";
+  const priority = CATEGORY_PRIORITY_NEEDLES[item.category];
+  if (!priority) return [];
+  const out = [];
+  for (const needle of priority) {
+    if (title.includes(needle)) out.push(needle);
+  }
+  return out;
+}
+
+// emoji 우선순위:
+//   1) 카테고리 화이트리스트 안의 첫 매칭  (animal × '돼지' → 🐷, animal × '칼' 무시)
+//   2) 카테고리 대표 emoji                   (animal × 매칭 없음 → 🐾)
+//   3) 카테고리 화이트리스트가 없는 경우에만 글로벌 룰을 fallback 으로 적용
 function resolveEmoji(item) {
+  const matched = matchedCategoryNeedles(item);
+  for (const needle of matched) {
+    const emoji = EMOJI_BY_NEEDLE[needle];
+    if (emoji) return emoji;
+  }
+  if (CATEGORY_PRIORITY_NEEDLES[item.category]) {
+    return CATEGORY_EMOJI[item.category] ?? "💭";
+  }
   const title = item.keyword ?? "";
   for (const [needle, emoji] of KEYWORD_EMOJI_RULES) {
     if (title.includes(needle)) return emoji;
@@ -203,6 +258,11 @@ function buildRow(item, idx) {
   const description = item.interpretation ?? "";
   const preview = description.slice(0, 50);
   const tags = computeTags(item);
+  // 의미 태그(item.tags)에 더해 title 에서 뽑아낸 주어 키워드도 함께 저장.
+  //   → 카테고리 화면의 #돼지 / #뱀 필터가 keywords 컬럼만으로 매칭 가능.
+  const semanticKeywords = item.tags ?? [];
+  const subjectKeywords = matchedCategoryNeedles(item);
+  const keywords = [...new Set([...subjectKeywords, ...semanticKeywords])];
   return {
     id,
     category_id: item.category,
@@ -211,7 +271,7 @@ function buildRow(item, idx) {
     description,
     emoji: resolveEmoji(item),
     tags,
-    keywords: item.tags ?? [],
+    keywords,
     bookmark_count: 0,
     luck_index: computeLuckIndex(item),
     is_warning: item.type === "흉몽",

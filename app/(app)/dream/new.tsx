@@ -8,23 +8,29 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
   createDream,
+  getDream,
   isValidISODate,
   todayISODate,
+  updateDream,
 } from "@/features/dream/dreams";
 import { useDreamItem } from "@/features/dream/dreamQueries";
+import DreamEmoji from "@/components/dream/DreamEmoji";
 
 export default function NewDreamScreen() {
   const router = useRouter();
-  const { dreamItemId, initialTitle } = useLocalSearchParams<{
+  const { dreamItemId, initialTitle, editId } = useLocalSearchParams<{
     dreamItemId?: string;
     initialTitle?: string;
+    editId?: string;
   }>();
+  const isEdit = !!editId;
 
   const { data: sourceItem } = useDreamItem(dreamItemId?.toString());
 
@@ -32,6 +38,7 @@ export default function NewDreamScreen() {
   const [content, setContent] = useState("");
   const [dreamDate, setDreamDate] = useState(todayISODate());
   const [submitting, setSubmitting] = useState(false);
+  const [loadingEdit, setLoadingEdit] = useState(isEdit);
   const [errors, setErrors] = useState<{
     title?: string;
     dreamDate?: string;
@@ -40,11 +47,35 @@ export default function NewDreamScreen() {
   // sourceItem 이 비동기로 들어오면 (사용자가 아직 입력 안한 경우에만) 제목 자동 채움.
   const seededRef = useRef(false);
   useEffect(() => {
+    if (isEdit) return; // 편집 모드에서는 sourceItem seed 생략 (기존 값 유지)
     if (!seededRef.current && sourceItem?.title) {
       seededRef.current = true;
       setTitle((cur) => (cur.trim() ? cur : sourceItem.title));
     }
-  }, [sourceItem]);
+  }, [sourceItem, isEdit]);
+
+  // 편집 모드: 기존 row 를 가져와 폼 채우기
+  useEffect(() => {
+    if (!editId) return;
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await getDream(editId.toString());
+      if (cancelled) return;
+      if (error || !data) {
+        Alert.alert("불러오기 실패", error?.message ?? "꿈을 찾을 수 없어요", [
+          { text: "확인", onPress: () => router.back() },
+        ]);
+        return;
+      }
+      setTitle(data.title);
+      setContent(data.content);
+      setDreamDate(data.dream_date);
+      setLoadingEdit(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [editId, router]);
 
   const handleSave = async () => {
     const next: typeof errors = {};
@@ -56,6 +87,24 @@ export default function NewDreamScreen() {
     if (Object.keys(next).length > 0) return;
 
     setSubmitting(true);
+
+    if (isEdit && editId) {
+      const { error } = await updateDream(editId.toString(), {
+        title: title.trim(),
+        content: content.trim(),
+        dreamDate,
+      });
+      setSubmitting(false);
+      if (error) {
+        Alert.alert("저장 실패", error.message);
+        return;
+      }
+      Alert.alert("수정 완료", "꿈 기록을 수정했어요", [
+        { text: "확인", onPress: () => router.back() },
+      ]);
+      return;
+    }
+
     const { error } = await createDream({
       title: title.trim(),
       content: content.trim(),
@@ -93,16 +142,21 @@ export default function NewDreamScreen() {
           <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
             <Text style={styles.backIcon}>‹</Text>
           </TouchableOpacity>
-          <Text style={styles.headerText}>꿈 기록하기</Text>
+          <Text style={styles.headerText}>{isEdit ? "꿈 기록 수정" : "꿈 기록하기"}</Text>
         </View>
 
+        {loadingEdit ? (
+          <View style={styles.loading}>
+            <ActivityIndicator color="#7868C8" />
+          </View>
+        ) : (
         <ScrollView
           contentContainerStyle={styles.scroll}
           keyboardShouldPersistTaps="handled"
         >
-          {sourceItem ? (
+          {sourceItem && !isEdit ? (
             <View style={styles.sourceBanner}>
-              <Text style={styles.sourceEmoji}>{sourceItem.emoji}</Text>
+              <DreamEmoji emoji={sourceItem.emoji} size={28} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.sourceLabel}>해몽 카드 기반</Text>
                 <Text style={styles.sourceTitle} numberOfLines={1}>
@@ -180,11 +234,16 @@ export default function NewDreamScreen() {
               style={styles.saveBtnGradient}
             >
               <Text style={styles.saveBtnText}>
-                {submitting ? "저장 중..." : "보관함에 담기"}
+                {submitting
+                  ? "저장 중..."
+                  : isEdit
+                    ? "수정 완료"
+                    : "보관함에 담기"}
               </Text>
             </LinearGradient>
           </TouchableOpacity>
         </ScrollView>
+        )}
       </KeyboardAvoidingView>
     </LinearGradient>
   );
@@ -255,4 +314,6 @@ const styles = StyleSheet.create({
   saveBtn: { borderRadius: 16, overflow: "hidden", marginTop: 12 },
   saveBtnGradient: { paddingVertical: 16, alignItems: "center" },
   saveBtnText: { fontSize: 15, fontWeight: "700", color: "#fff" },
+
+  loading: { flex: 1, alignItems: "center", justifyContent: "center" },
 });

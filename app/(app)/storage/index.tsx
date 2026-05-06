@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   Image,
+  Alert,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -16,17 +17,13 @@ import BottomNav from "@/components/ui/BottomNav";
 import { SearchIcon } from "@/components/ui/icons";
 import RecordedDreamCard from "@/components/dream/RecordedDreamCard";
 import RecordedDreamModal from "@/components/dream/RecordedDreamModal";
-import DreamDetailModal from "@/components/dream/DreamDetailModal";
 import {
   DreamRecord,
   DreamSource,
   computeStats,
+  deleteDream,
   listMyDreams,
 } from "@/features/dream/dreams";
-import {
-  DreamItem,
-  getCategoryById,
-} from "@/features/dream/dreamData";
 
 type FilterTab = "all" | "card" | "ai";
 
@@ -42,30 +39,6 @@ const SOURCE_BY_TAB: Record<FilterTab, DreamSource | null> = {
   ai: "ai",
 };
 
-// 보관함의 카드 해몽 결과를 검색페이지의 DreamDetailModal 와 동일한
-// 모양으로 띄우기 위해, Supabase 에서 함께 join 해온 dream_items
-// 마스터 row 를 우선으로 사용하고, 없으면 record 의 스냅샷으로 보충한다.
-function recordToDreamItem(r: DreamRecord): DreamItem {
-  const item = r.dream_item;
-  return {
-    id: item?.id ?? r.dream_item_id ?? r.id,
-    categoryId: item?.category_id ?? r.category_id ?? "",
-    title: item?.title || r.title || "꿈",
-    preview: item?.preview ?? r.content ?? "",
-    description: item?.description || r.content || "",
-    emoji: item?.emoji || r.emoji || "🌙",
-    tags: (item?.tags as ("길몽" | "흉몽" | "태몽")[]) ?? [],
-    keywords: item?.keywords ?? [],
-    bookmarkCount: item?.bookmark_count ?? 0,
-    luckIndex: item?.luck_index ?? r.luck_index ?? 0,
-    isWarning: item?.is_warning ?? r.is_warning ?? false,
-    moodTags:
-      item?.mood_tags && item.mood_tags.length > 0
-        ? item.mood_tags
-        : r.mood_tags,
-  };
-}
-
 export default function StorageScreen() {
   const router = useRouter();
 
@@ -76,15 +49,12 @@ export default function StorageScreen() {
 
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState<FilterTab>("all");
-  const [selectedItem, setSelectedItem] = useState<DreamItem | null>(null);
   const [selectedRecord, setSelectedRecord] = useState<DreamRecord | null>(null);
 
+  // 보관함에서는 source 와 무관하게 사용자의 기록(DreamRecord)을 띄운다.
+  // 수정/삭제는 record 단위로 동작하므로 RecordedDreamModal 로 통일.
   const openDream = useCallback((d: DreamRecord) => {
-    if (d.source === "ai") {
-      setSelectedRecord(d);
-      return;
-    }
-    setSelectedItem(recordToDreamItem(d));
+    setSelectedRecord(d);
   }, []);
 
   const load = useCallback(async () => {
@@ -116,6 +86,40 @@ export default function StorageScreen() {
     await load();
     setRefreshing(false);
   }, [load]);
+
+  const handleEditDream = useCallback(
+    (d: DreamRecord) => {
+      setSelectedRecord(null);
+      router.push({
+        pathname: "/(app)/dream/new",
+        params: { editId: d.id },
+      });
+    },
+    [router],
+  );
+
+  const handleDeleteDream = useCallback(
+    (d: DreamRecord) => {
+      Alert.alert("꿈 삭제", "이 꿈 기록을 삭제할까요?", [
+        { text: "취소", style: "cancel" },
+        {
+          text: "삭제",
+          style: "destructive",
+          onPress: async () => {
+            const { error } = await deleteDream(d.id);
+            if (error) {
+              Alert.alert("삭제 실패", error.message);
+              return;
+            }
+            // 모달 닫고 즉시 로컬 state 에서 제거 (낙관적 업데이트)
+            setSelectedRecord(null);
+            setDreams((prev) => prev.filter((row) => row.id !== d.id));
+          },
+        },
+      ]);
+    },
+    [],
+  );
 
   const stats = useMemo(() => computeStats(dreams), [dreams]);
 
@@ -247,24 +251,11 @@ export default function StorageScreen() {
 
       <BottomNav active="storage" />
 
-      <DreamDetailModal
-        dream={selectedItem}
-        category={
-          selectedItem ? getCategoryById(selectedItem.categoryId)?.label : undefined
-        }
-        onClose={() => setSelectedItem(null)}
-        onPressRecord={(d) => {
-          setSelectedItem(null);
-          router.push({
-            pathname: "/(app)/dream/new",
-            params: { dreamItemId: d.id },
-          });
-        }}
-      />
-
       <RecordedDreamModal
         dream={selectedRecord}
         onClose={() => setSelectedRecord(null)}
+        onEdit={handleEditDream}
+        onDelete={handleDeleteDream}
       />
     </LinearGradient>
   );

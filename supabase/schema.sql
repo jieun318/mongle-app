@@ -53,6 +53,15 @@ create table if not exists public.profiles (
   created_at        timestamptz not null default now()
 );
 
+-- ── profiles 메타데이터 컬럼 ─────────────────────────────────
+--   avatar_emoji          : 사진이 없을 때 폴백 이모지
+--   notify_enabled        : 푸시 알림 전체 on/off
+--   notify_dream_reminder : '오늘 꿈 기록' 리마인더 on/off
+alter table public.profiles
+  add column if not exists avatar_emoji          text    not null default '🐷',
+  add column if not exists notify_enabled        boolean not null default true,
+  add column if not exists notify_dream_reminder boolean not null default true;
+
 
 -- ============================================================
 -- 4. dreams — 사용자가 기록한 꿈
@@ -266,6 +275,88 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row
   execute function public.handle_new_user();
+
+
+-- ============================================================
+-- RPC: delete_my_account — 회원 탈퇴
+--   현재 로그인한 사용자(auth.uid())를 auth.users 에서 삭제한다.
+--   profiles / dreams / bookmarks 는 ON DELETE CASCADE 로 자동 정리.
+--   security definer 이므로 반드시 auth.uid() 본인 행만 삭제하도록 제한.
+-- ============================================================
+create or replace function public.delete_my_account()
+returns void
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+  v_uid uuid := auth.uid();
+begin
+  if v_uid is null then
+    raise exception 'not authenticated' using errcode = '28000';
+  end if;
+
+  delete from auth.users where id = v_uid;
+end;
+$$;
+
+revoke all on function public.delete_my_account() from public;
+grant execute on function public.delete_my_account() to authenticated;
+
+
+-- ============================================================
+-- Storage: avatars 버킷
+--   비공개 버킷. 파일 경로 규칙: {user.id}/avatar.jpg
+--   표시 시 createSignedUrl 로 1시간 유효 URL 생성.
+--   본인 폴더({uid}/...) 안에서만 select/insert/update/delete 가능.
+-- ============================================================
+insert into storage.buckets (id, name, public)
+values ('avatars', 'avatars', false)
+on conflict (id) do nothing;
+
+drop policy if exists "avatars_select_own" on storage.objects;
+create policy "avatars_select_own"
+  on storage.objects
+  for select
+  to authenticated
+  using (
+    bucket_id = 'avatars'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+drop policy if exists "avatars_insert_own" on storage.objects;
+create policy "avatars_insert_own"
+  on storage.objects
+  for insert
+  to authenticated
+  with check (
+    bucket_id = 'avatars'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+drop policy if exists "avatars_update_own" on storage.objects;
+create policy "avatars_update_own"
+  on storage.objects
+  for update
+  to authenticated
+  using (
+    bucket_id = 'avatars'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  )
+  with check (
+    bucket_id = 'avatars'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+drop policy if exists "avatars_delete_own" on storage.objects;
+create policy "avatars_delete_own"
+  on storage.objects
+  for delete
+  to authenticated
+  using (
+    bucket_id = 'avatars'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
 
 
 -- ============================================================

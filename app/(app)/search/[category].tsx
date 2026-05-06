@@ -93,7 +93,10 @@ export default function CategoryListScreen() {
               onPress={() => setActiveFilter(tag)}
               style={[styles.filterTag, active && styles.filterTagActive]}
             >
-              <Text style={[styles.filterTagText, active && styles.filterTagTextActive]}>
+              <Text
+                numberOfLines={1}
+                style={[styles.filterTagText, active && styles.filterTagTextActive]}
+              >
                 {tag}
               </Text>
             </TouchableOpacity>
@@ -179,31 +182,37 @@ const styles = StyleSheet.create({
   searchIcon: { width: 16, height: 16, opacity: 0.55 },
   searchInput: { flex: 1, fontSize: 13, color: "#6858B8", padding: 0 },
 
-  filterScroll: { flexGrow: 0, marginTop: 12 },
+  filterScroll: { flexGrow: 0, flexShrink: 0, marginTop: 12 },
   filterScrollContent: {
     paddingHorizontal: 20,
-    gap: 6,
+    gap: 8,
     alignItems: "center",
   },
   filterTag: {
-    paddingHorizontal: 11,
-    paddingVertical: 4,
-    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 18,
     backgroundColor: "rgba(255,255,255,0.7)",
     borderWidth: 1,
     borderColor: "rgba(180,160,230,0.25)",
+    flexShrink: 0,
   },
   filterTagActive: {
     backgroundColor: "#7868C8",
-    borderColor: "#7868C8",
+    borderColor: "#5848A8",
+    shadowColor: "#5848A8",
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
   },
   filterTagText: {
     fontFamily: "OnglyphPDH",
-    fontSize: 13,
+    fontSize: 14,
     color: "#9888CC",
-    lineHeight: 15,
+    lineHeight: 18,
   },
-  filterTagTextActive: { color: "#fff" },
+  filterTagTextActive: { color: "#fff", fontWeight: "600" },
 
   list: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 120, gap: 8 },
 

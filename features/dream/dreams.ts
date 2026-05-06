@@ -89,6 +89,49 @@ export async function createDream(input: CreateDreamInput) {
     .single<DreamRecord>();
 }
 
+export interface UpdateDreamInput {
+  title?: string;
+  content?: string;
+  dreamDate?: string;
+  source?: DreamSource;
+  dreamItemId?: string | null;
+  categoryId?: string | null;
+  luckIndex?: number;
+  isWarning?: boolean;
+  emoji?: string;
+  moodTags?: DreamMoodTag[];
+  chatPreview?: ChatTurn[];
+}
+
+// 본인 꿈만 수정 가능 — RLS(dreams_update_own) 가 user_id = auth.uid() 강제.
+// 다른 사용자의 row 를 id 로 지정하면 RLS 가 0행 반환.
+export async function updateDream(id: string, input: UpdateDreamInput) {
+  const patch: Record<string, unknown> = {};
+  if (input.title !== undefined) patch.title = input.title;
+  if (input.content !== undefined) patch.content = input.content;
+  if (input.dreamDate !== undefined) patch.dream_date = input.dreamDate;
+  if (input.source !== undefined) patch.source = input.source;
+  if (input.dreamItemId !== undefined) patch.dream_item_id = input.dreamItemId;
+  if (input.categoryId !== undefined) patch.category_id = input.categoryId;
+  if (input.luckIndex !== undefined) patch.luck_index = input.luckIndex;
+  if (input.isWarning !== undefined) patch.is_warning = input.isWarning;
+  if (input.emoji !== undefined) patch.emoji = input.emoji;
+  if (input.moodTags !== undefined) patch.mood_tags = input.moodTags;
+  if (input.chatPreview !== undefined) patch.chat_preview = input.chatPreview;
+
+  return supabase
+    .from("dreams")
+    .update(patch)
+    .eq("id", id)
+    .select()
+    .single<DreamRecord>();
+}
+
+// 본인 꿈만 삭제 가능 — RLS(dreams_delete_own) 가 user_id = auth.uid() 강제.
+export async function deleteDream(id: string) {
+  return supabase.from("dreams").delete().eq("id", id);
+}
+
 export async function listMyDreams() {
   // dream_items 를 embedded join 으로 함께 조회.
   // PostgREST 문법: <별칭>:<관계테이블>(컬럼...) 또는 (*) 로 모든 컬럼.
@@ -97,6 +140,15 @@ export async function listMyDreams() {
     .select("*, dream_item:dream_items(*)")
     .order("created_at", { ascending: false })
     .returns<DreamRecord[]>();
+}
+
+// 단건 조회 — 편집 화면에서 사용. RLS 가 본인 row 만 통과시킨다.
+export async function getDream(id: string) {
+  return supabase
+    .from("dreams")
+    .select("*, dream_item:dream_items(*)")
+    .eq("id", id)
+    .single<DreamRecord>();
 }
 
 export function todayISODate(): string {

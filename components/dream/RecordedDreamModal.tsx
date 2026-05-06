@@ -9,10 +9,13 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import type { DreamRecord } from "@/features/dream/dreams";
 import { getCategoryById } from "@/features/dream/dreamData";
+import DreamEmoji from "@/components/dream/DreamEmoji";
 
 interface Props {
   dream: DreamRecord | null;
   onClose: () => void;
+  onEdit?: (dream: DreamRecord) => void;
+  onDelete?: (dream: DreamRecord) => void;
 }
 
 function formatDate(iso: string): string {
@@ -21,7 +24,12 @@ function formatDate(iso: string): string {
   return `${y}년 ${Number(m)}월 ${Number(d)}일`;
 }
 
-export default function RecordedDreamModal({ dream, onClose }: Props) {
+export default function RecordedDreamModal({
+  dream,
+  onClose,
+  onEdit,
+  onDelete,
+}: Props) {
   const category =
     dream?.category_id ? getCategoryById(dream.category_id)?.label : undefined;
   const isAi = dream?.source === "ai";
@@ -52,7 +60,7 @@ export default function RecordedDreamModal({ dream, onClose }: Props) {
                 end={{ x: 1, y: 1 }}
                 style={styles.emojiWrap}
               >
-                <Text style={styles.emoji}>{dream.emoji || "🌙"}</Text>
+                <DreamEmoji emoji={dream.emoji || "🌙"} size={64} />
               </LinearGradient>
 
               <View style={styles.badgeRow}>
@@ -162,6 +170,27 @@ export default function RecordedDreamModal({ dream, onClose }: Props) {
                 />
               </View>
 
+              {(onEdit || onDelete) ? (
+                <View style={styles.actionRow}>
+                  {onEdit ? (
+                    <TouchableOpacity
+                      style={styles.editBtn}
+                      onPress={() => onEdit(dream)}
+                    >
+                      <Text style={styles.editBtnText}>수정</Text>
+                    </TouchableOpacity>
+                  ) : null}
+                  {onDelete ? (
+                    <TouchableOpacity
+                      style={styles.deleteBtn}
+                      onPress={() => onDelete(dream)}
+                    >
+                      <Text style={styles.deleteBtnText}>삭제</Text>
+                    </TouchableOpacity>
+                  ) : null}
+                </View>
+              ) : null}
+
               <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
                 <Text style={styles.closeBtnText}>닫기</Text>
               </TouchableOpacity>
@@ -265,4 +294,26 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   closeBtnText: { fontSize: 14, fontWeight: "600", color: "#8868C8" },
+
+  actionRow: { flexDirection: "row", gap: 10, marginTop: 8 },
+  editBtn: {
+    flex: 1,
+    paddingVertical: 13,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: "#B898F0",
+    backgroundColor: "#F5F0FF",
+    alignItems: "center",
+  },
+  editBtnText: { fontSize: 14, fontWeight: "600", color: "#6848C0" },
+  deleteBtn: {
+    flex: 1,
+    paddingVertical: 13,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: "#F0B8B8",
+    backgroundColor: "#FFF5F5",
+    alignItems: "center",
+  },
+  deleteBtnText: { fontSize: 14, fontWeight: "600", color: "#D85858" },
 });

@@ -1,5 +1,6 @@
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { DreamItem } from "@/features/dream/dreamData";
+import DreamEmoji from "@/components/dream/DreamEmoji";
 
 interface Props {
   dream: DreamItem;
@@ -30,7 +31,7 @@ export default function DreamListItem({ dream, onPress }: Props) {
           { backgroundColor: dream.isWarning ? "#FFF0E0" : "#FFF0E8" },
         ]}
       >
-        <Text style={{ fontSize: 22 }}>{dream.emoji}</Text>
+        <DreamEmoji emoji={dream.emoji} size={22} />
       </View>
       <View style={styles.info}>
         <Text style={styles.title} numberOfLines={1}>{dream.title}</Text>

@@ -1,0 +1,596 @@
+[
+  {
+    "id": 1,
+    "category_id": "body",
+    "title": "이빨 빠지는 꿈",
+    "preview": "상실과 불안을 상징하는 대표적인 흉몽입니다.",
+    "description": "상실과 불안을 상징하는 흉몽으로, 빠진 이의 위치에 따라 주변 인물의 변화를 암시합니다.",
+    "emoji": "🦷",
+    "is_lucky": "unlucky",
+    "tags": [],
+    "keywords": [
+      "이빨",
+      "상실"
+    ]
+  },
+  {
+    "id": 2,
+    "category_id": "body",
+    "title": "이빨 깨지는 꿈",
+    "preview": "삶의 기반이 흔들리거나 가족에게 사고가 생길 수 있는 꿈입니다.",
+    "description": "삶의 기반이 흔들림을 의미하며, 썩은 이가 깨지면 묵은 문제가 해결되는 길몽으로 봅니다.",
+    "emoji": "🦷",
+    "is_lucky": "conditional",
+    "tags": [
+      "조건부"
+    ],
+    "keywords": [
+      "이빨",
+      "가족사고"
+    ],
+    "conditions": [
+      {
+        "condition": "썩은 이빨이 깨지는 경우",
+        "type": "길몽"
+      },
+      {
+        "condition": "멀쩡한 이빨이 깨지는 경우",
+        "type": "흉몽"
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "category_id": "body",
+    "title": "흔들리는 이빨 빠지는 꿈",
+    "preview": "걱정거리가 해소되거나 건강이 악화될 수 있는 꿈입니다.",
+    "description": "흔들리던 이빨이 빠지면 걱정거리가 사라지는 길몽이나, 모두 빠지면 건강 악화를 뜻합니다.",
+    "emoji": "🦷",
+    "is_lucky": "conditional",
+    "tags": [
+      "조건부"
+    ],
+    "keywords": [
+      "이빨",
+      "걱정해소"
+    ],
+    "conditions": [
+      {
+        "condition": "흔들리던 이빨 일부가 빠지는 경우",
+        "type": "길몽"
+      },
+      {
+        "condition": "모든 이빨이 다 빠지는 경우",
+        "type": "흉몽"
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "category_id": "body",
+    "title": "이빨에서 피나는 꿈",
+    "preview": "가족 전체에 우환이 생길 수 있는 흉몽입니다.",
+    "description": "건강 악화를 뜻하는 흉몽으로, 전체적으로 피가 나면 가족 전체에 우환이 생김을 암시합니다.",
+    "emoji": "🩸",
+    "is_lucky": "unlucky",
+    "tags": [],
+    "keywords": [
+      "이빨",
+      "가족우환"
+    ]
+  },
+  {
+    "id": 5,
+    "category_id": "body",
+    "title": "이빨 뽑히는 꿈",
+    "preview": "현재의 근심과 걱정거리가 시원하게 해결되는 길몽입니다.",
+    "description": "타인에 의해 이빨이 뽑히는 꿈은 현재의 근심과 어려움이 시원하게 해결되는 길몽입니다.",
+    "emoji": "🦷",
+    "is_lucky": "lucky",
+    "tags": [],
+    "keywords": [
+      "이빨",
+      "근심해소"
+    ]
+  },
+  {
+    "id": 6,
+    "category_id": "body",
+    "title": "이빨이 몽땅 빠지는 꿈",
+    "preview": "가족 내 큰 걱정거리가 해결되는 긍정적인 변화의 꿈입니다.",
+    "description": "이빨은 가족을 상징하므로 몽땅 빠지는 꿈은 가족 내 큰 걱정거리가 해결되는 변화를 뜻합니다.",
+    "emoji": "🦷",
+    "is_lucky": "lucky",
+    "tags": [],
+    "keywords": [
+      "이빨",
+      "가족변화"
+    ]
+  },
+  {
+    "id": 7,
+    "category_id": "body",
+    "title": "이빨 썩는 꿈",
+    "preview": "건강이 악화되거나 재물이 빠져나갈 수 있는 흉몽입니다.",
+    "description": "질병으로 건강이 악화되거나 재물이 빠져나갈 수 있음을 암시하는 흉몽입니다.",
+    "emoji": "🦷",
+    "is_lucky": "unlucky",
+    "tags": [],
+    "keywords": [
+      "이빨",
+      "건강악화"
+    ]
+  },
+  {
+    "id": 8,
+    "category_id": "body",
+    "title": "이빨 다 빠지는 꿈",
+    "preview": "인간관계 전체가 무너질 수 있음을 경고하는 흉몽입니다.",
+    "description": "윗니·아랫니·어금니 등 각 이빨이 상징하는 인간관계 전체가 무너질 수 있는 꿈입니다.",
+    "emoji": "🦷",
+    "is_lucky": "unlucky",
+    "tags": [],
+    "keywords": [
+      "이빨",
+      "인간관계"
+    ]
+  },
+  {
+    "id": 9,
+    "category_id": "body",
+    "title": "앞 이빨 빠지는 꿈",
+    "preview": "존속이나 가족, 직장 구성원에 문제가 생길 수 있는 꿈입니다.",
+    "description": "앞니 빠지는 꿈은 존속이나 가족, 나아가 직장 구성원에게 문제가 생길 수 있는 흉몽입니다.",
+    "emoji": "🦷",
+    "is_lucky": "unlucky",
+    "tags": [],
+    "keywords": [
+      "앞니",
+      "가족문제"
+    ]
+  },
+  {
+    "id": 10,
+    "category_id": "body",
+    "title": "이빨 뽑는 꿈",
+    "preview": "앓던 이는 길몽, 멀쩡한 이는 흉몽으로 상황에 따라 달라집니다.",
+    "description": "앓던 이를 뽑으면 걱정거리가 해소되는 길몽이지만, 멀쩡한 이를 뽑으면 흉몽입니다.",
+    "emoji": "🦷",
+    "is_lucky": "conditional",
+    "tags": [
+      "조건부"
+    ],
+    "keywords": [
+      "이빨",
+      "고통제거"
+    ],
+    "conditions": [
+      {
+        "condition": "앓던 이빨을 뽑는 경우",
+        "type": "길몽"
+      },
+      {
+        "condition": "멀쩡한 생 이빨을 뽑는 경우",
+        "type": "흉몽"
+      }
+    ]
+  },
+  {
+    "id": 11,
+    "category_id": "body",
+    "title": "금이빨 빠지는 꿈",
+    "preview": "예기치 않은 사고가 생길 수 있으니 매사에 주의해야 합니다.",
+    "description": "멀쩡한 금니가 빠지는 꿈은 예기치 않은 사고가 생길 조짐이니 매사에 주의해야 합니다.",
+    "emoji": "🦷",
+    "is_lucky": "unlucky",
+    "tags": [],
+    "keywords": [
+      "금니",
+      "사고주의"
+    ]
+  },
+  {
+    "id": 12,
+    "category_id": "body",
+    "title": "이빨이 부러지는 꿈",
+    "preview": "질병, 사업 실패, 예상치 못한 사고를 암시하는 흉몽입니다.",
+    "description": "질병, 사업 실패, 계획 좌절, 예상치 못한 사고 등 여러 불운이 겹쳐 닥칠 수 있는 흉몽입니다.",
+    "emoji": "🦷",
+    "is_lucky": "unlucky",
+    "tags": [],
+    "keywords": [
+      "이빨",
+      "사업실패"
+    ]
+  },
+  {
+    "id": 13,
+    "category_id": "body",
+    "title": "이빨 하나가 빠지는 꿈",
+    "preview": "일가친척 중 한 명과 이별하거나 조력자를 잃게 되는 꿈입니다.",
+    "description": "일가친척 중 한 사람이 세상을 떠나거나, 주변의 소중한 조력자와 이별하게 됩니다.",
+    "emoji": "🦷",
+    "is_lucky": "unlucky",
+    "tags": [],
+    "keywords": [
+      "이빨",
+      "이별"
+    ]
+  },
+  {
+    "id": 14,
+    "category_id": "body",
+    "title": "아이의 이빨이 새로 나는 꿈",
+    "preview": "간절히 바라던 일이 순조롭게 이루어지는 길몽입니다.",
+    "description": "간절히 바라던 일이 이루어지고, 추진하는 사업이 순조롭게 성공하는 길몽입니다.",
+    "emoji": "🦷",
+    "is_lucky": "lucky",
+    "tags": [],
+    "keywords": [
+      "이빨",
+      "소원성취"
+    ]
+  },
+  {
+    "id": 15,
+    "category_id": "body",
+    "title": "이빨이 흔들리는 꿈",
+    "preview": "신분이 위태롭거나 직장에서 면직될 수 있음을 암시합니다.",
+    "description": "신분이 위태로워지거나 사업이 불안정해지며 직장에서 면직될 수 있는 흉몽입니다.",
+    "emoji": "🦷",
+    "is_lucky": "unlucky",
+    "tags": [],
+    "keywords": [
+      "이빨",
+      "면직위험"
+    ]
+  },
+  {
+    "id": 16,
+    "category_id": "body",
+    "title": "이빨이 새로 나는 꿈",
+    "preview": "건강을 되찾고 귀인을 만나 금전 문제가 해결되는 길몽입니다.",
+    "description": "질병이 사라지고 건강을 회복하며, 여성은 귀인을 만나 금전 문제를 해결하게 됩니다.",
+    "emoji": "🦷",
+    "is_lucky": "lucky",
+    "tags": [],
+    "keywords": [
+      "이빨",
+      "건강회복"
+    ]
+  },
+  {
+    "id": 17,
+    "category_id": "body",
+    "title": "이빨이 검고 누렇게 변하는 꿈",
+    "preview": "집안이나 직장에서 좋지 않은 일이 발생할 징조입니다.",
+    "description": "이빨이 변색되는 꿈은 집안이나 직장에서 좋지 않은 일이 발생할 징조입니다.",
+    "emoji": "🦷",
+    "is_lucky": "unlucky",
+    "tags": [],
+    "keywords": [
+      "이빨변색",
+      "집안불운"
+    ]
+  },
+  {
+    "id": 18,
+    "category_id": "body",
+    "title": "잇몸이 아프고 이빨 사이가 벌어지는 꿈",
+    "preview": "집안에 우환이 생기고 부부싸움이 잦아지는 흉몽입니다.",
+    "description": "집안에 우환이 들끓고 부부싸움이 잦아지며 지출 증가와 사고 등이 발생하는 흉몽입니다.",
+    "emoji": "🦷",
+    "is_lucky": "unlucky",
+    "tags": [],
+    "keywords": [
+      "잇몸",
+      "부부불화"
+    ]
+  },
+  {
+    "id": 19,
+    "category_id": "body",
+    "title": "음식을 먹다가 이빨이 부러지는 꿈",
+    "preview": "가정불화가 법정 문제로 번지는 등 큰 불운이 닥치는 흉몽입니다.",
+    "description": "부부싸움이 법정 문제로 번지고 패가망신, 소송 등 큰 불운이 닥치는 흉몽입니다.",
+    "emoji": "🦷",
+    "is_lucky": "unlucky",
+    "tags": [],
+    "keywords": [
+      "이빨",
+      "소송"
+    ]
+  },
+  {
+    "id": 20,
+    "category_id": "body",
+    "title": "윗 이빨 중의 하나가 빠지는 꿈",
+    "preview": "윗사람 한 명에게 변동이 생기거나 관계가 변화하는 꿈입니다.",
+    "description": "윗니는 윗사람, 아랫니는 아랫사람의 변화를 뜻하며 가까운 관계에 변동이 생깁니다.",
+    "emoji": "🦷",
+    "is_lucky": "unlucky",
+    "tags": [],
+    "keywords": [
+      "윗니",
+      "관계변화"
+    ]
+  },
+  {
+    "id": 21,
+    "category_id": "body",
+    "title": "머리카락 빠지는 꿈",
+    "preview": "건강 악화나 소중한 것을 잃게 될 것을 경고하는 흉몽입니다.",
+    "description": "머리카락은 생명력과 명예를 상징하여, 빠지는 꿈은 건강 이상이나 소중한 것을 잃을 징조입니다.",
+    "emoji": "💇",
+    "is_lucky": "unlucky",
+    "tags": [],
+    "keywords": [
+      "머리카락",
+      "건강위험"
+    ]
+  },
+  {
+    "id": 22,
+    "category_id": "body",
+    "title": "머리카락 길어지는 꿈",
+    "preview": "풍성하게 길면 길몽, 거추장스럽게 길면 장애물을 암시합니다.",
+    "description": "풍성하게 길면 사업 발전의 길몽이지만, 거추장스럽게 길면 앞길이 막히는 흉몽입니다.",
+    "emoji": "💇",
+    "is_lucky": "conditional",
+    "tags": [
+      "조건부"
+    ],
+    "keywords": [
+      "머리카락",
+      "사업발전"
+    ],
+    "conditions": [
+      {
+        "condition": "풍성하고 탐스럽게 길어진 경우",
+        "type": "길몽"
+      },
+      {
+        "condition": "거추장스러울 정도로 방해가 되는 경우",
+        "type": "흉몽"
+      }
+    ]
+  },
+  {
+    "id": 23,
+    "category_id": "body",
+    "title": "머리카락 먹는 꿈",
+    "preview": "걱정거리가 늘어나고 구설수에 휘말릴 수 있는 흉몽입니다.",
+    "description": "머리카락을 먹는 꿈은 걱정거리가 늘고 구설수에 휘말리는 등 불운이 따르는 흉몽입니다.",
+    "emoji": "💇",
+    "is_lucky": "unlucky",
+    "tags": [],
+    "keywords": [
+      "머리카락",
+      "구설수"
+    ]
+  },
+  {
+    "id": 24,
+    "category_id": "body",
+    "title": "긴머리카락을 자르는 꿈",
+    "preview": "능력을 인정받지 못하거나 무시당할 수 있는 흉몽입니다.",
+    "description": "회사나 학교에서 능력을 인정받지 못하거나 누군가에게 무시당할 수 있는 흉몽입니다.",
+    "emoji": "✂️",
+    "is_lucky": "unlucky",
+    "tags": [],
+    "keywords": [
+      "머리카락",
+      "능력미인정"
+    ]
+  },
+  {
+    "id": 25,
+    "category_id": "body",
+    "title": "머리카락 잘리는 꿈",
+    "preview": "근심과 걱정이 사라지는 시원한 길몽입니다.",
+    "description": "머리카락은 근심걱정을 상징하므로, 잘리는 꿈은 걱정이 사라지는 길몽입니다.",
+    "emoji": "✂️",
+    "is_lucky": "lucky",
+    "tags": [],
+    "keywords": [
+      "머리카락",
+      "근심해소"
+    ]
+  },
+  {
+    "id": 26,
+    "category_id": "body",
+    "title": "머리카락이 하얗게 보이는 꿈",
+    "preview": "장수하고 운수가 크게 트이는 길몽입니다.",
+    "description": "머리카락이 하얗게 보이는 꿈은 장수하고 운수가 크게 트이는 길몽입니다.",
+    "emoji": "👴",
+    "is_lucky": "lucky",
+    "tags": [],
+    "keywords": [
+      "흰머리",
+      "장수"
+    ]
+  },
+  {
+    "id": 27,
+    "category_id": "body",
+    "title": "머리카락이 엉켜서 빗질하기가 어려운 꿈",
+    "preview": "근심이 생기고 하는 일마다 잘 풀리지 않는 흉몽입니다.",
+    "description": "머리카락이 엉키는 꿈은 근심과 걱정거리가 생기고 하는 일마다 잘 풀리지 않습니다.",
+    "emoji": "💇",
+    "is_lucky": "unlucky",
+    "tags": [],
+    "keywords": [
+      "머리카락",
+      "일난항"
+    ]
+  },
+  {
+    "id": 28,
+    "category_id": "body",
+    "title": "머리카락이 입속에 가득 찬 꿈",
+    "preview": "집안에 오래 고생할 병자가 생기는 흉몽입니다.",
+    "description": "머리카락이 입속에 가득 찬 꿈은 집안에 병자가 생겨 오래도록 고생하게 됩니다.",
+    "emoji": "💇",
+    "is_lucky": "unlucky",
+    "tags": [],
+    "keywords": [
+      "머리카락",
+      "집안병자"
+    ]
+  },
+  {
+    "id": 29,
+    "category_id": "body",
+    "title": "머리카락이 검어지는 꿈",
+    "preview": "부귀를 얻고 장수할 좋은 징조의 길몽입니다.",
+    "description": "머리카락이 검어지면 부귀를 얻고, 백발이 되면 장수할 좋은 징조의 길몽입니다.",
+    "emoji": "💇",
+    "is_lucky": "lucky",
+    "tags": [],
+    "keywords": [
+      "머리카락",
+      "부귀"
+    ]
+  },
+  {
+    "id": 30,
+    "category_id": "body",
+    "title": "자른 머리카락을 남에게 주거나 문 밖으로 버리는 꿈",
+    "preview": "근심이 서서히 해소되고 가정이 번영하는 길몽입니다.",
+    "description": "자른 머리카락을 버리는 꿈은 근심이 서서히 해소되고 가정이 안정되며 번영합니다.",
+    "emoji": "💇",
+    "is_lucky": "lucky",
+    "tags": [],
+    "keywords": [
+      "머리카락",
+      "가정번영"
+    ]
+  },
+  {
+    "id": 31,
+    "category_id": "body",
+    "title": "머리카락을 양쪽으로 가르는 꿈",
+    "preview": "집안에 환자나 우환이 생기는 흉몽입니다.",
+    "description": "머리카락을 양쪽으로 가르는 꿈은 근심이 생기거나 집안에 환자나 우환이 생깁니다.",
+    "emoji": "💇",
+    "is_lucky": "unlucky",
+    "tags": [],
+    "keywords": [
+      "머리카락",
+      "집안우환"
+    ]
+  },
+  {
+    "id": 32,
+    "category_id": "body",
+    "title": "머리카락을 억지로 자르는 꿈",
+    "preview": "하는 일이 부진해지고 가족에게 불행한 일이 생기는 흉몽입니다.",
+    "description": "억지로 머리카락을 자르는 꿈은 하는 일이 부진해지고 가족에게 불행한 일이 생깁니다.",
+    "emoji": "✂️",
+    "is_lucky": "unlucky",
+    "tags": [],
+    "keywords": [
+      "머리카락",
+      "가족불행"
+    ]
+  },
+  {
+    "id": 33,
+    "category_id": "body",
+    "title": "머리카락을 한데 묶는 꿈",
+    "preview": "좋은 인연을 만나거나 귀인의 도움으로 교제가 성사되는 길몽입니다.",
+    "description": "머리카락을 묶는 꿈은 좋은 인연을 만나거나 귀인의 도움으로 교제가 성사되는 길몽입니다.",
+    "emoji": "💇",
+    "is_lucky": "lucky",
+    "tags": [],
+    "keywords": [
+      "머리카락",
+      "좋은인연"
+    ]
+  },
+  {
+    "id": 34,
+    "category_id": "body",
+    "title": "머리카락을 자르는 꿈",
+    "preview": "스스로 자르면 걱정거리가 전부 해소되는 길몽입니다.",
+    "description": "스스로 머리카락을 자르면 걱정거리가 모두 해소되고 소원을 성취하는 길몽입니다.",
+    "emoji": "✂️",
+    "is_lucky": "lucky",
+    "tags": [],
+    "keywords": [
+      "머리카락",
+      "소원성취"
+    ]
+  },
+  {
+    "id": 35,
+    "category_id": "body",
+    "title": "머리카락이 갑자기 빠져 대머리가 되는 꿈",
+    "preview": "모함과 재산 손실, 가족 피해 등 큰 재난을 암시하는 흉몽입니다.",
+    "description": "갑작스러운 탈모 꿈은 모함과 재산 손실, 가족 피해 등 큰 재난이 닥칠 흉몽입니다.",
+    "emoji": "💇",
+    "is_lucky": "unlucky",
+    "tags": [],
+    "keywords": [
+      "대머리",
+      "모함"
+    ]
+  },
+  {
+    "id": 36,
+    "category_id": "body",
+    "title": "머리카락이 길어진 꿈",
+    "preview": "귀인의 도움으로 사업이 발전하고 어려움을 극복하는 길몽입니다.",
+    "description": "귀인의 도움으로 직장이나 사업이 발전하고 어려운 상황을 극복하게 되는 길몽입니다.",
+    "emoji": "💇",
+    "is_lucky": "lucky",
+    "tags": [],
+    "keywords": [
+      "머리카락",
+      "귀인도움"
+    ]
+  },
+  {
+    "id": 37,
+    "category_id": "body",
+    "title": "머리카락이 곱고 윤기가 나는 꿈",
+    "preview": "공적을 인정받아 상이나 훈장을 받고 명예를 얻는 길몽입니다.",
+    "description": "머리카락이 윤기 나는 꿈은 공적을 인정받아 상이나 훈장을 받고 명예를 얻는 길몽입니다.",
+    "emoji": "✨",
+    "is_lucky": "lucky",
+    "tags": [],
+    "keywords": [
+      "머리카락",
+      "명예"
+    ]
+  },
+  {
+    "id": 38,
+    "category_id": "body",
+    "title": "머리카락이 흰머리로 변하는 꿈",
+    "preview": "명예와 지위가 높아지고 수명이 길어지는 길몽입니다.",
+    "description": "흰머리로 변하는 꿈은 명예와 지위가 높아지고 근심이 해소되며 수명이 길어지는 길몽입니다.",
+    "emoji": "👴",
+    "is_lucky": "lucky",
+    "tags": [],
+    "keywords": [
+      "흰머리",
+      "명예상승"
+    ]
+  },
+  {
+    "id": 39,
+    "category_id": "body",
+    "title": "바람에 머리카락이 어지럽게 날리는 꿈",
+    "preview": "가정에 좋지 않은 일이 생기고 심리 상태가 불안정해지는 흉몽입니다.",
+    "description": "가정에 좋지 않은 일이 생기거나 심리 상태가 방향을 잃고 불안정해지는 흉몽입니다.",
+    "emoji": "🌬️",
+    "is_lucky": "unlucky",
+    "tags": [],
+    "keywords": [
+      "머리카락",
+      "심리불안정"
+    ]
+  }
+]

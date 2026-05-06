@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { DreamItem } from "@/features/dream/dreamData";
+import DreamEmoji from "@/components/dream/DreamEmoji";
 
 interface Props {
   dream: DreamItem | null;
@@ -48,7 +49,7 @@ export default function DreamDetailModal({
                 end={{ x: 1, y: 1 }}
                 style={styles.emojiWrap}
               >
-                <Text style={styles.emoji}>{dream.emoji}</Text>
+                <DreamEmoji emoji={dream.emoji} size={64} />
               </LinearGradient>
 
               {category && (

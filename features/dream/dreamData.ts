@@ -67,11 +67,19 @@ export function getCategoryById(id: string): DreamCategory | undefined {
 }
 
 // 카테고리 페이지 내부의 # 필터 칩 — 클라이언트 사이드 필터.
+//   - DB의 tags 컬럼: '길몽' / '흉몽' / '태몽' / '조건부' (mood 분류)
+//   - DB의 keywords 컬럼: 의미 태그 ('재물', '사고' 등) + 시드에서 주입한 주어 키워드
+//   - title 도 함께 검사 → 시드가 keywords 에 주어를 채워주지 못한 경우에도 매치.
 export function filterDreams(items: DreamItem[], filter: string): DreamItem[] {
   if (filter === "전체") return items;
   const key = filter.replace(/^#/, "");
-  if (key === "길몽" || key === "흉몽") {
+  if (key === "길몽" || key === "흉몽" || key === "태몽") {
     return items.filter((d) => d.tags.includes(key));
   }
-  return items.filter((d) => d.keywords.includes(key));
+  return items.filter(
+    (d) =>
+      d.title.includes(key) ||
+      d.keywords.includes(key) ||
+      d.tags.includes(key),
+  );
 }

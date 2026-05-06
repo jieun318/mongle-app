@@ -1,6 +1,7 @@
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import type { DreamRecord } from "@/features/dream/dreams";
+import DreamEmoji from "@/components/dream/DreamEmoji";
 
 interface Props {
   dream: DreamRecord;
@@ -56,7 +57,7 @@ export default function RecordedDreamCard({ dream, onPress }: Props) {
       </View>
 
       <View style={styles.titleRow}>
-        {emoji ? <Text style={styles.emoji}>{emoji}</Text> : null}
+        {emoji ? <DreamEmoji emoji={emoji} size={20} /> : null}
         <Text style={styles.title} numberOfLines={1}>
           {dream.title}
         </Text>

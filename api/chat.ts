@@ -1,4 +1,4 @@
-import { generateObject, streamText, type CoreMessage } from "ai";
+import { generateObject, streamText, type ModelMessage } from "ai";
 import { google } from "@ai-sdk/google";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
@@ -236,7 +236,7 @@ export default async function handler(req: Request): Promise<Response> {
     const streamResult = streamText({
       model: google("gemini-2.5-flash"),
       system: systemPrompt,
-      messages: messages as CoreMessage[],
+      messages: messages as ModelMessage[],
       maxOutputTokens: MAX_OUTPUT_TOKENS,
     });
 

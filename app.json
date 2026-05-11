@@ -6,6 +6,10 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
+    "web": {
+      "output": "server",
+      "bundler": "metro"
+    },
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",

@@ -7,7 +7,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "web": {
-      "output": "server",
+      "output": "static",
       "bundler": "metro"
     },
     "splash": {

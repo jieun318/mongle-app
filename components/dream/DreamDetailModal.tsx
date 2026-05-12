@@ -49,7 +49,7 @@ export default function DreamDetailModal({
                 end={{ x: 1, y: 1 }}
                 style={styles.emojiWrap}
               >
-                <DreamEmoji emoji={dream.emoji} size={64} />
+                <DreamEmoji emoji={dream.emoji} size={64} title={dream.title} />
               </LinearGradient>
 
               {category && (

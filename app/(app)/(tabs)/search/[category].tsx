@@ -53,10 +53,7 @@ export default function CategoryListScreen() {
   };
 
   return (
-    <LinearGradient
-      colors={["#EDE9FF", "#F5F0FF", "#FFF8F0"]}
-      style={{ flex: 1 }}
-    >
+    <LinearGradient colors={["#F5F3FA", "#F5F3FA"]} style={{ flex: 1 }}>
       <View style={styles.headerRow}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Text style={styles.backIcon}>‹</Text>
@@ -182,16 +179,16 @@ const styles = StyleSheet.create({
   searchIcon: { width: 16, height: 16, opacity: 0.55 },
   searchInput: { flex: 1, fontSize: 13, color: "#6858B8", padding: 0 },
 
-  filterScroll: { flexGrow: 0, flexShrink: 0, marginTop: 12 },
+  filterScroll: { flexGrow: 0, flexShrink: 0, marginTop: 14 },
   filterScrollContent: {
     paddingHorizontal: 20,
-    gap: 8,
+    gap: 6,
     alignItems: "center",
   },
   filterTag: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 18,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 16,
     backgroundColor: "rgba(255,255,255,0.7)",
     borderWidth: 1,
     borderColor: "rgba(180,160,230,0.25)",
@@ -199,20 +196,15 @@ const styles = StyleSheet.create({
   },
   filterTagActive: {
     backgroundColor: "#7868C8",
-    borderColor: "#5848A8",
-    shadowColor: "#5848A8",
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 3,
+    borderColor: "#7868C8",
   },
   filterTagText: {
     fontFamily: "OnglyphPDH",
-    fontSize: 14,
+    fontSize: 13,
     color: "#9888CC",
-    lineHeight: 18,
+    lineHeight: 15,
   },
-  filterTagTextActive: { color: "#fff", fontWeight: "600" },
+  filterTagTextActive: { color: "#fff" },
 
   list: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 120, gap: 8 },
 

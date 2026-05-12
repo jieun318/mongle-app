@@ -31,10 +31,7 @@ export default function SearchResultsScreen() {
   const { data: dreams = [], isFetching } = useSearchDreamItems(query);
 
   return (
-    <LinearGradient
-      colors={["#EDE9FF", "#F5F0FF", "#FFF8F0"]}
-      style={{ flex: 1 }}
-    >
+    <LinearGradient colors={["#F5F3FA", "#F5F3FA"]} style={{ flex: 1 }}>
       <View style={styles.headerRow}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Text style={styles.backIcon}>‹</Text>

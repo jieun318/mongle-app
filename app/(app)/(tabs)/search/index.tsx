@@ -45,10 +45,7 @@ export default function SearchScreen() {
   };
 
   return (
-    <LinearGradient
-      colors={["#EDE9FF", "#F5F0FF", "#FFF8F0"]}
-      style={{ flex: 1 }}
-    >
+    <LinearGradient colors={["#F5F3FA", "#F5F3FA"]} style={{ flex: 1 }}>
       <ScrollView
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}

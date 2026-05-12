@@ -14,8 +14,6 @@ import DreamEmoji from "@/components/dream/DreamEmoji";
 interface Props {
   dream: DreamRecord | null;
   onClose: () => void;
-  onEdit?: (dream: DreamRecord) => void;
-  onDelete?: (dream: DreamRecord) => void;
 }
 
 function formatDate(iso: string): string {
@@ -27,8 +25,6 @@ function formatDate(iso: string): string {
 export default function RecordedDreamModal({
   dream,
   onClose,
-  onEdit,
-  onDelete,
 }: Props) {
   const category =
     dream?.category_id ? getCategoryById(dream.category_id)?.label : undefined;
@@ -60,34 +56,47 @@ export default function RecordedDreamModal({
                 end={{ x: 1, y: 1 }}
                 style={styles.emojiWrap}
               >
-                <DreamEmoji emoji={dream.emoji || "🌙"} size={64} />
+                <DreamEmoji
+                  emoji={dream.emoji || "🌙"}
+                  size={64}
+                  title={dream.dream_item?.title ?? dream.title}
+                />
               </LinearGradient>
 
-              <View style={styles.badgeRow}>
-                <View
-                  style={[
-                    styles.sourceBadge,
-                    isAi ? styles.sourceBadgeAi : styles.sourceBadgeCard,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.sourceBadgeText,
-                      isAi ? styles.sourceBadgeTextAi : styles.sourceBadgeTextCard,
-                    ]}
-                  >
-                    {isAi ? "🤖 AI 챗봇" : "🔮 카드 해몽"}
-                  </Text>
+              {isAi || category ? (
+                <View style={styles.badgeRow}>
+                  {isAi ? (
+                    <View style={[styles.sourceBadge, styles.sourceBadgeAi]}>
+                      <Text
+                        style={[
+                          styles.sourceBadgeText,
+                          styles.sourceBadgeTextAi,
+                        ]}
+                      >
+                        🤖 AI 챗봇
+                      </Text>
+                    </View>
+                  ) : null}
+                  {category ? (
+                    <View style={styles.categoryBadge}>
+                      <Text style={styles.categoryBadgeText}>{category}</Text>
+                    </View>
+                  ) : null}
                 </View>
-                {category ? (
-                  <View style={styles.categoryBadge}>
-                    <Text style={styles.categoryBadgeText}>{category}</Text>
-                  </View>
-                ) : null}
-              </View>
+              ) : null}
 
               <Text style={styles.title}>{dream.title}</Text>
               <Text style={styles.dateText}>{formatDate(dream.dream_date)}</Text>
+
+              {!isAi && dream.dream_item?.description ? (
+                <>
+                  <View style={styles.divider} />
+                  <Text style={styles.smLabel}>해몽</Text>
+                  <Text style={styles.desc}>
+                    {dream.dream_item.description}
+                  </Text>
+                </>
+              ) : null}
 
               {dream.content ? (
                 <>
@@ -169,27 +178,6 @@ export default function RecordedDreamModal({
                   style={[styles.progressFill, { width: `${dream.luck_index}%` }]}
                 />
               </View>
-
-              {(onEdit || onDelete) ? (
-                <View style={styles.actionRow}>
-                  {onEdit ? (
-                    <TouchableOpacity
-                      style={styles.editBtn}
-                      onPress={() => onEdit(dream)}
-                    >
-                      <Text style={styles.editBtnText}>수정</Text>
-                    </TouchableOpacity>
-                  ) : null}
-                  {onDelete ? (
-                    <TouchableOpacity
-                      style={styles.deleteBtn}
-                      onPress={() => onDelete(dream)}
-                    >
-                      <Text style={styles.deleteBtnText}>삭제</Text>
-                    </TouchableOpacity>
-                  ) : null}
-                </View>
-              ) : null}
 
               <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
                 <Text style={styles.closeBtnText}>닫기</Text>
@@ -294,26 +282,4 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   closeBtnText: { fontSize: 14, fontWeight: "600", color: "#8868C8" },
-
-  actionRow: { flexDirection: "row", gap: 10, marginTop: 8 },
-  editBtn: {
-    flex: 1,
-    paddingVertical: 13,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: "#B898F0",
-    backgroundColor: "#F5F0FF",
-    alignItems: "center",
-  },
-  editBtnText: { fontSize: 14, fontWeight: "600", color: "#6848C0" },
-  deleteBtn: {
-    flex: 1,
-    paddingVertical: 13,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: "#F0B8B8",
-    backgroundColor: "#FFF5F5",
-    alignItems: "center",
-  },
-  deleteBtnText: { fontSize: 14, fontWeight: "600", color: "#D85858" },
 });

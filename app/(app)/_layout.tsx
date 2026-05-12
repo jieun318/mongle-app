@@ -1,15 +1,12 @@
 import { Stack } from "expo-router";
 
+// (app) 의 stack — (tabs) 그룹은 4개 메인 탭이 모두 살아있는 상태로 유지되고,
+// dream/new 같은 디테일 화면은 어느 탭 위에서든 push 로 얹힌다.
 export default function AppLayout() {
-  // 하단 탭 4개 (홈/검색/보관함/마이페이지) 는 router.replace 로 이동하므로
-  // 슬라이드 애니메이션을 끄고 즉시 전환되게 한다. 상세 화면(검색결과/카테고리/
-  // 꿈 기록/프로필 편집 등) 은 기본 슬라이드 애니메이션을 그대로 사용.
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="index"          options={{ animation: "none" }} />
-      <Stack.Screen name="search/index"   options={{ animation: "none" }} />
-      <Stack.Screen name="storage/index"  options={{ animation: "none" }} />
-      <Stack.Screen name="mypage/index"   options={{ animation: "none" }} />
+      <Stack.Screen name="(tabs)" options={{ animation: "none" }} />
+      <Stack.Screen name="dream/new" />
     </Stack>
   );
 }

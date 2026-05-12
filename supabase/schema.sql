@@ -123,6 +123,28 @@ create index if not exists bookmarks_dream_item_id_idx on public.bookmarks (drea
 
 
 -- ============================================================
+-- 6. daily_fortunes — 사용자별 일일 운세 영속화
+--   - 구슬 일일 운세를 DB 에 저장 (mypage 주간 운세와 동일 소스)
+-- ============================================================
+create table if not exists public.daily_fortunes (
+  user_id    uuid not null references auth.users(id) on delete cascade,
+  date       date not null,
+  grade      text not null,
+  payload    jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  primary key (user_id, date)
+);
+
+alter table public.daily_fortunes drop constraint if exists daily_fortunes_grade_check;
+alter table public.daily_fortunes
+  add constraint daily_fortunes_grade_check
+  check (grade in ('대길', '소길', '평범', '조심'));
+
+create index if not exists daily_fortunes_user_date_idx
+  on public.daily_fortunes (user_id, date desc);
+
+
+-- ============================================================
 -- 권한 부여 (GRANT)
 --   SQL Editor 로 직접 만든 테이블은 자동 grant 가 걸리지 않아
 --   "permission denied for table ..." 에러가 발생합니다.
@@ -134,19 +156,21 @@ grant usage on schema public to anon, authenticated;
 grant select on public.categories  to anon, authenticated;
 grant select on public.dream_items to anon, authenticated;
 
-grant select, insert, update, delete on public.dreams    to authenticated;
-grant select, insert, update          on public.profiles to authenticated;
-grant select, insert, delete          on public.bookmarks to authenticated;
+grant select, insert, update, delete on public.dreams         to authenticated;
+grant select, insert, update          on public.profiles       to authenticated;
+grant select, insert, delete          on public.bookmarks      to authenticated;
+grant select, insert, update          on public.daily_fortunes to authenticated;
 
 
 -- ============================================================
 -- RLS 활성화
 -- ============================================================
-alter table public.categories  enable row level security;
-alter table public.dream_items enable row level security;
-alter table public.profiles    enable row level security;
-alter table public.dreams      enable row level security;
-alter table public.bookmarks   enable row level security;
+alter table public.categories      enable row level security;
+alter table public.dream_items     enable row level security;
+alter table public.profiles        enable row level security;
+alter table public.dreams          enable row level security;
+alter table public.bookmarks       enable row level security;
+alter table public.daily_fortunes  enable row level security;
 
 
 -- ============================================================
@@ -247,6 +271,30 @@ create policy "bookmarks_delete_own"
   for delete
   to authenticated
   using (auth.uid() = user_id);
+
+
+-- ───── daily_fortunes: 본인 데이터만 ─────
+drop policy if exists "daily_fortunes_select_own" on public.daily_fortunes;
+create policy "daily_fortunes_select_own"
+  on public.daily_fortunes
+  for select
+  to authenticated
+  using (auth.uid() = user_id);
+
+drop policy if exists "daily_fortunes_insert_own" on public.daily_fortunes;
+create policy "daily_fortunes_insert_own"
+  on public.daily_fortunes
+  for insert
+  to authenticated
+  with check (auth.uid() = user_id);
+
+drop policy if exists "daily_fortunes_update_own" on public.daily_fortunes;
+create policy "daily_fortunes_update_own"
+  on public.daily_fortunes
+  for update
+  to authenticated
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
 
 
 -- ============================================================

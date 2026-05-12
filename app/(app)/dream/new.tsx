@@ -133,7 +133,7 @@ export default function NewDreamScreen() {
   };
 
   return (
-    <LinearGradient colors={["#EDE9FF", "#F5F0FF", "#FFF8F0"]} style={{ flex: 1 }}>
+    <LinearGradient colors={["#F5F3FA", "#F5F3FA"]} style={{ flex: 1 }}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -156,7 +156,11 @@ export default function NewDreamScreen() {
         >
           {sourceItem && !isEdit ? (
             <View style={styles.sourceBanner}>
-              <DreamEmoji emoji={sourceItem.emoji} size={28} />
+              <DreamEmoji
+                emoji={sourceItem.emoji}
+                size={28}
+                title={sourceItem.title}
+              />
               <View style={{ flex: 1 }}>
                 <Text style={styles.sourceLabel}>해몽 카드 기반</Text>
                 <Text style={styles.sourceTitle} numberOfLines={1}>

@@ -5,15 +5,13 @@
     "scheme": "mongle",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/images/appicon.png",
     "web": {
       "output": "static",
       "bundler": "metro"
     },
     "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#EEE8F8"
+      "backgroundColor": "#F8F3FF"
     },
     "ios": {
       "supportsTablet": false,
@@ -22,7 +20,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#EEE8F8"
+        "backgroundColor": "#E8DEFF"
       },
       "package": "com.mongle.app"
     },
@@ -34,7 +32,8 @@
           "photosPermission": "프로필 사진을 등록하기 위해 사진 라이브러리 접근이 필요해요.",
           "cameraPermission": "프로필 사진을 촬영하기 위해 카메라 접근이 필요해요."
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ]
   }
 }

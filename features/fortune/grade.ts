@@ -1,6 +1,9 @@
 // luck_index → 운세 등급 매핑
-//   - 마이페이지 주간 캘린더: 3단계 (대길/평범/조심)
+//   - 마이페이지 주간 캘린더: 3단계 (대길/평범/조심) — 꿈 luck 기반 (legacy)
 //   - 지난 운세 카드: 4단계 (대길/소길/평범/조심)
+//   - 일일 운세 grade key 직접 매핑: 4단계 (gradeFromKey)
+
+import type { FortuneGrade } from "@/types/fortune";
 
 export type WeekGrade = "good" | "normal" | "warn" | "none";
 
@@ -54,4 +57,18 @@ export function cardGradeFromLuck(luck: number | null | undefined): CardGradeInf
   if (luck >= 60) return CARD_GRADE_MAP.good;
   if (luck >= 40) return CARD_GRADE_MAP.normal;
   return CARD_GRADE_MAP.warn;
+}
+
+// 일일 운세 grade key (대길/소길/평범/조심) 를 표시 정보로 변환.
+// null/undefined 면 "기록 없음" 셀로.
+export function gradeFromKey(
+  grade: FortuneGrade | null | undefined,
+): CardGradeInfo {
+  switch (grade) {
+    case "대길": return CARD_GRADE_MAP.great;
+    case "소길": return CARD_GRADE_MAP.good;
+    case "평범": return CARD_GRADE_MAP.normal;
+    case "조심": return CARD_GRADE_MAP.warn;
+    default:     return CARD_GRADE_MAP.none;
+  }
 }

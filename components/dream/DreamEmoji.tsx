@@ -1,22 +1,31 @@
 import { Image, ImageSourcePropType, StyleProp, Text, TextStyle } from "react-native";
 
-// 특정 emoji 를 PNG 이미지로 대체.
-// 추가하려면 (emoji → require('...png')) 한 줄만 더하면 됨.
-const EMOJI_IMAGE_OVERRIDES: Record<string, ImageSourcePropType> = {
-  "🐍": require("@/assets/images/Snake.png"),
-};
+// 같은 emoji 라도 "어떤 꿈" 인지에 따라 PNG 로 대체할지 결정.
+// 예: 🐍 는 기본적으로 그냥 텍스트, 단 '흰 뱀' 꿈일 때만 흰뱀 PNG 사용.
+const WHITE_SNAKE_PNG: ImageSourcePropType = require("@/assets/images/Snake.png");
+
+function resolveOverride(
+  emoji: string,
+  title?: string,
+): ImageSourcePropType | null {
+  if (emoji === "🐍" && title && /흰\s*뱀/.test(title)) {
+    return WHITE_SNAKE_PNG;
+  }
+  return null;
+}
 
 interface Props {
   emoji: string;
   size: number;
+  title?: string;
   style?: StyleProp<TextStyle>;
 }
 
-// dream_items 의 emoji 1개를 렌더. 오버라이드가 있으면 Image, 없으면 Text.
+// dream_items 의 emoji 1개를 렌더. title 컨텍스트에 따라 특정 꿈만 PNG 로 대체.
 //   - size 는 Text 의 fontSize 와 Image 의 width/height 양쪽에 사용.
-//   - PNG 비율은 정사각형 가정 (현재 Snake.png 가 그렇게 저장돼 있음).
-export default function DreamEmoji({ emoji, size, style }: Props) {
-  const override = EMOJI_IMAGE_OVERRIDES[emoji];
+//   - PNG 비율은 정사각형 가정.
+export default function DreamEmoji({ emoji, size, title, style }: Props) {
+  const override = resolveOverride(emoji, title);
   if (override) {
     return (
       <Image

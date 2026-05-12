@@ -39,6 +39,8 @@ export interface DreamRecord {
   emoji: string;
   mood_tags: DreamMoodTag[];
   chat_preview: ChatTurn[];
+  // AI 가 추출한 해몽 본문 요약 (공감 멘트/질문 제외). 카드 서브텍스트와 상세 "해몽 요약" 카드에 사용.
+  interpretation_summary: string;
   // Supabase 의 embedded select 로 join 된 dream_items 마스터 row.
   // dream_item_id 가 null 이거나 원본이 삭제됐으면 null.
   dream_item: DreamItemRow | null;
@@ -56,6 +58,7 @@ export interface CreateDreamInput {
   emoji?: string;
   moodTags?: DreamMoodTag[];
   chatPreview?: ChatTurn[];
+  interpretationSummary?: string;
 }
 
 export async function createDream(input: CreateDreamInput) {
@@ -84,6 +87,7 @@ export async function createDream(input: CreateDreamInput) {
       emoji: input.emoji ?? "",
       mood_tags: input.moodTags ?? [],
       chat_preview: input.chatPreview ?? [],
+      interpretation_summary: input.interpretationSummary ?? "",
     })
     .select()
     .single<DreamRecord>();
@@ -101,6 +105,7 @@ export interface UpdateDreamInput {
   emoji?: string;
   moodTags?: DreamMoodTag[];
   chatPreview?: ChatTurn[];
+  interpretationSummary?: string;
 }
 
 // 본인 꿈만 수정 가능 — RLS(dreams_update_own) 가 user_id = auth.uid() 강제.
@@ -118,6 +123,8 @@ export async function updateDream(id: string, input: UpdateDreamInput) {
   if (input.emoji !== undefined) patch.emoji = input.emoji;
   if (input.moodTags !== undefined) patch.mood_tags = input.moodTags;
   if (input.chatPreview !== undefined) patch.chat_preview = input.chatPreview;
+  if (input.interpretationSummary !== undefined)
+    patch.interpretation_summary = input.interpretationSummary;
 
   return supabase
     .from("dreams")

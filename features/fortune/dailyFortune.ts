@@ -1,5 +1,10 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Fortune, FortuneGrade } from "@/types/fortune";
+import { supabase } from "@/lib/supabase";
+import {
+  loadDailyFortuneFromDB,
+  saveDailyFortuneToDB,
+} from "./dailyFortuneRepo";
 
 export { LUCKY_SMOKE, getSmokePalette } from "./smokePalette";
 
@@ -17,7 +22,7 @@ const GRADE_META: Record<FortuneGrade, {
   "대길": { title: "아주 좋은 날",      icon: "🌟", color: "#92400E", bgColor: "#FEF9C3", weight: 1 },
   "소길": { title: "좋은 날",            icon: "🌿", color: "#166534", bgColor: "#DCFCE7", weight: 3 },
   "평범": { title: "보통의 날",          icon: "🌤", color: "#0369A1", bgColor: "#E0F2FE", weight: 4 },
-  "조심": { title: "주의가 필요한 날",   icon: "🌧", color: "#991B1B", bgColor: "#FEE2E2", weight: 2 },
+  "조심": { title: "주의가 필요한 날",   icon: "⚠️", color: "#991B1B", bgColor: "#FEE2E2", weight: 2 },
 };
 
 const MESSAGES: Record<FortuneGrade, readonly string[]> = {
@@ -135,43 +140,37 @@ async function getDeviceId(): Promise<string> {
   return id;
 }
 
-export async function getDailyFortune(): Promise<Fortune> {
-  const now = new Date();
-  const dKey = dateKey(now);
-
-  // 같은 날짜면 캐시된 운세 그대로
+// 시드 ID: 로그인된 경우 userId 우선 (같은 계정이면 어느 기기에서든 동일 운세),
+//          비로그인 시 deviceId 폴백.
+async function getSeedId(): Promise<string> {
   try {
-    const cached = await AsyncStorage.getItem(FORTUNE_CACHE_KEY);
-    if (cached) {
-      const parsed = JSON.parse(cached) as { dateKey: string; fortune: Fortune };
-      if (parsed.dateKey === dKey) return parsed.fortune;
-    }
-  } catch {
-    // 캐시 손상 시 무시하고 새로 생성
-  }
+    const { data } = await supabase.auth.getUser();
+    if (data.user?.id) return data.user.id;
+  } catch {}
+  return getDeviceId();
+}
 
-  const deviceId = await getDeviceId();
-  const seed = hashString(`${deviceId}::${dKey}`);
+function generateFortune(seedId: string, dKey: string, now: Date): Fortune {
+  const seed = hashString(`${seedId}::${dKey}`);
   const rng = mulberry32(seed);
 
   const grade = pickWeighted(
     rng,
     GRADE_KEYS,
-    GRADE_KEYS.map((g) => GRADE_META[g].weight)
+    GRADE_KEYS.map((g) => GRADE_META[g].weight),
   );
   const meta = GRADE_META[grade];
   const message = pickOne(rng, MESSAGES[grade]);
   const tip = pickOne(rng, TIPS);
   const luckyColor = pickOne(rng, LUCKY_COLORS);
 
-  // 행운의 숫자: 1~49 사이 1~2개
   const n1 = 1 + Math.floor(rng() * 49);
   let n2 = 1 + Math.floor(rng() * 49);
   while (n2 === n1) n2 = 1 + Math.floor(rng() * 49);
   const twoNumbers = rng() < 0.7;
   const luckyNumber = twoNumbers ? `${n1}, ${n2}` : `${n1}`;
 
-  const fortune: Fortune = {
+  return {
     date: dateDisplay(now),
     grade,
     gradeTitle: meta.title,
@@ -183,13 +182,59 @@ export async function getDailyFortune(): Promise<Fortune> {
     luckyColor,
     caution: tip,
   };
+}
 
+async function cacheLocally(dKey: string, fortune: Fortune): Promise<void> {
   try {
     await AsyncStorage.setItem(
       FORTUNE_CACHE_KEY,
-      JSON.stringify({ dateKey: dKey, fortune })
+      JSON.stringify({ dateKey: dKey, fortune }),
     );
   } catch {}
+}
+
+// 우선순위: 캐시 / DB / 새로 생성 — 어느 경로든 마지막에 DB·캐시 동기화 보장.
+//   - cache 있고 DB 없음(이전 빌드에서 캐시만 저장된 경우) → cache 를 DB 로 백필
+//   - cache 없고 DB 있음 → DB 값을 cache 로 저장
+//   - 둘 다 없음 → 새로 생성 후 양쪽 저장
+//   - 비로그인 시 saveDailyFortuneToDB 는 no-op
+export async function getDailyFortune(): Promise<Fortune> {
+  const now = new Date();
+  const dKey = dateKey(now);
+
+  // 캐시 읽기
+  let cached: Fortune | null = null;
+  try {
+    const raw = await AsyncStorage.getItem(FORTUNE_CACHE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as { dateKey: string; fortune: Fortune };
+      if (parsed.dateKey === dKey) cached = parsed.fortune;
+    }
+  } catch {
+    // 캐시 손상 시 무시
+  }
+
+  // DB 확인 (로그인된 경우만 의미 있음)
+  const dbFortune = await loadDailyFortuneFromDB(dKey).catch(() => null);
+
+  // 우선순위: 캐시 > DB > 새로 생성
+  let fortune: Fortune;
+  if (cached) {
+    fortune = cached;
+  } else if (dbFortune) {
+    fortune = dbFortune;
+  } else {
+    const seedId = await getSeedId();
+    fortune = generateFortune(seedId, dKey, now);
+  }
+
+  // 동기화 — 캐시에 없으면 채우고, DB 에 없으면 upsert.
+  if (!cached) {
+    await cacheLocally(dKey, fortune);
+  }
+  if (!dbFortune) {
+    await saveDailyFortuneToDB(dKey, fortune).catch(() => {});
+  }
 
   return fortune;
 }

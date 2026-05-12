@@ -41,7 +41,7 @@ export default function BottomNav({ active }: BottomNavProps) {
             <TouchableOpacity
               key={key}
               style={styles.navItem}
-              onPress={() => router.replace(href)}
+              onPress={() => router.navigate(href)}
               activeOpacity={0.7}
             >
               <Icon size={24} color={isActive ? ACTIVE_COLOR : INACTIVE_COLOR} />

@@ -10,15 +10,13 @@ import {
 import { SettingsIcon, PencilIcon } from "@/components/ui/icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import BottomNav from "@/components/ui/BottomNav";
+import { gradeFromKey } from "@/features/fortune/grade";
 import {
-  computeMypageStats,
-  computeThisWeekFortune,
-  listMyDreams,
-  type DreamRecord,
-} from "@/features/dream/dreams";
-import { gradeFromLuck } from "@/features/fortune/grade";
+  loadThisWeekFortunes,
+  type WeekDayFortune,
+} from "@/features/fortune/dailyFortuneRepo";
 import {
   getAvatarSignedUrl,
   getMyProfile,
@@ -36,11 +34,15 @@ export default function MypageScreen() {
   const [profile, setProfile] = useState<ProfileRecord | null>(null);
   const [email, setEmail] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [dreams, setDreams] = useState<DreamRecord[]>([]);
+  const [week, setWeek] = useState<WeekDayFortune[]>([]);
   const [loading, setLoading] = useState(true);
+  const hasLoadedRef = useRef(false); // 첫 로드 후로는 스피너 안 띄우고 백그라운드 갱신
 
   const load = useCallback(async () => {
-    const [p, ds] = await Promise.all([getMyProfile(), listMyDreams()]);
+    const [p, wk] = await Promise.all([
+      getMyProfile(),
+      loadThisWeekFortunes(),
+    ]);
     if (!p.error) {
       setProfile(p.data);
       setEmail(p.email);
@@ -50,17 +52,17 @@ export default function MypageScreen() {
         : null;
       setAvatarUrl(url);
     }
-    if (!ds.error) {
-      setDreams(ds.data ?? []);
-    }
+    setWeek(wk);
   }, []);
 
   useFocusEffect(
     useCallback(() => {
       let cancelled = false;
-      setLoading(true);
+      if (!hasLoadedRef.current) setLoading(true);
       load().finally(() => {
-        if (!cancelled) setLoading(false);
+        if (cancelled) return;
+        setLoading(false);
+        hasLoadedRef.current = true;
       });
       return () => {
         cancelled = true;
@@ -68,11 +70,8 @@ export default function MypageScreen() {
     }, [load]),
   );
 
-  const stats = useMemo(() => computeMypageStats(dreams), [dreams]);
-  const week = useMemo(() => computeThisWeekFortune(dreams), [dreams]);
-
   return (
-    <LinearGradient colors={["#EDE9FF", "#F5F0FF", "#FFF8F0"]} style={{ flex: 1 }}>
+    <LinearGradient colors={["#F5F3FA", "#F5F3FA"]} style={{ flex: 1 }}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>마이페이지</Text>
         <TouchableOpacity
@@ -122,22 +121,6 @@ export default function MypageScreen() {
             <Text style={styles.editChevron}>›</Text>
           </TouchableOpacity>
 
-          {/* 통계 3개 */}
-          <View style={styles.statsRow}>
-            <View style={styles.statBox}>
-              <Text style={styles.statValue}>{stats.total}</Text>
-              <Text style={styles.statLabel}>기록된 꿈</Text>
-            </View>
-            <View style={styles.statBox}>
-              <Text style={styles.statValue}>{stats.streak}일</Text>
-              <Text style={styles.statLabel}>연속 기록</Text>
-            </View>
-            <View style={styles.statBox}>
-              <Text style={styles.statValue}>{stats.topType ?? "—"}</Text>
-              <Text style={styles.statLabel}>최다 유형</Text>
-            </View>
-          </View>
-
           {/* 이번 주 운세 */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
@@ -145,14 +128,14 @@ export default function MypageScreen() {
               <TouchableOpacity
                 onPress={() => router.push("/(app)/mypage/fortune-history")}
               >
-                <Text style={styles.sectionLink}>지난 운세 전체 보기 ›</Text>
+                <Text style={styles.sectionLink}>지난 운세 보기 ›</Text>
               </TouchableOpacity>
             </View>
 
             <View style={styles.weekRow}>
               {week.map((day) => {
-                const grade = gradeFromLuck(day.luck);
-                const isEmpty = day.luck === null;
+                const grade = gradeFromKey(day.grade);
+                const isEmpty = day.grade === null;
                 return (
                   <View key={day.ymd} style={styles.weekCell}>
                     <Text style={styles.weekday}>{day.weekdayLabel}</Text>
@@ -170,6 +153,46 @@ export default function MypageScreen() {
                 );
               })}
             </View>
+
+            {/* 이번 주 운세 본문 리스트 — 운세 본 날만 표시 */}
+            {week.some((d) => d.payload) ? (
+              <View style={styles.dayList}>
+                {week
+                  .filter((d) => d.payload)
+                  .map((d) => {
+                    const grade = gradeFromKey(d.grade);
+                    return (
+                      <View key={d.ymd} style={styles.dayCard}>
+                        <View style={styles.dayHead}>
+                          <Text style={styles.dayDate}>
+                            {d.weekdayLabel} · {d.date}일
+                          </Text>
+                          <View
+                            style={[
+                              styles.dayBadge,
+                              { backgroundColor: grade.bg },
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.dayBadgeText,
+                                { color: grade.color },
+                              ]}
+                            >
+                              {grade.emoji} {grade.label}
+                            </Text>
+                          </View>
+                        </View>
+                        {d.payload?.message ? (
+                          <Text style={styles.dayMessage}>
+                            {d.payload.message}
+                          </Text>
+                        ) : null}
+                      </View>
+                    );
+                  })}
+              </View>
+            ) : null}
           </View>
         </ScrollView>
       )}
@@ -244,20 +267,6 @@ const styles = StyleSheet.create({
   joinDate: { fontSize: 11, color: "#A898D0", marginTop: 4 },
   editChevron: { fontSize: 24, color: "#C0B0E8" },
 
-  statsRow: { flexDirection: "row", gap: 8 },
-  statBox: {
-    flex: 1,
-    backgroundColor: "rgba(255,255,255,0.92)",
-    borderRadius: 14,
-    paddingVertical: 14,
-    alignItems: "center",
-    gap: 4,
-    borderWidth: 1,
-    borderColor: "rgba(180,160,230,0.18)",
-  },
-  statValue: { fontSize: 17, fontWeight: "700", color: "#3828A0" },
-  statLabel: { fontSize: 11, color: "#9888CC" },
-
   section: {
     backgroundColor: "rgba(255,255,255,0.92)",
     borderRadius: 18,
@@ -292,4 +301,25 @@ const styles = StyleSheet.create({
   weekBadgeEmpty: { backgroundColor: "#F4F0FA" },
   weekBadgeEmoji: { fontSize: 18 },
   weekDate: { fontSize: 11, fontWeight: "700", color: "#5848A8" },
+
+  dayList: { gap: 8, marginTop: 4 },
+  dayCard: {
+    backgroundColor: "#F8F6FB",
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: "rgba(180,160,230,0.18)",
+  },
+  dayHead: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+  },
+  dayDate: { fontSize: 12, fontWeight: "700", color: "#5848A8" },
+  dayBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
+  dayBadgeText: { fontSize: 11, fontWeight: "700" },
+  dayMessage: { fontSize: 12, color: "#7868B8", lineHeight: 18 },
 });

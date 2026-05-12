@@ -12,11 +12,13 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import BottomNav from "@/components/ui/BottomNav";
 import { SearchIcon } from "@/components/ui/icons";
 import RecordedDreamCard from "@/components/dream/RecordedDreamCard";
 import RecordedDreamModal from "@/components/dream/RecordedDreamModal";
+import AiDreamCard from "@/components/dream/AiDreamCard";
+import AiDreamModal from "@/components/dream/AiDreamModal";
 import {
   DreamRecord,
   DreamSource,
@@ -46,13 +48,15 @@ export default function StorageScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const hasLoadedRef = useRef(false); // 첫 로드 후엔 스피너 X, 백그라운드 갱신만
 
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState<FilterTab>("all");
   const [selectedRecord, setSelectedRecord] = useState<DreamRecord | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
-  // 보관함에서는 source 와 무관하게 사용자의 기록(DreamRecord)을 띄운다.
-  // 수정/삭제는 record 단위로 동작하므로 RecordedDreamModal 로 통일.
+  const closeMenu = useCallback(() => setOpenMenuId(null), []);
+
   const openDream = useCallback((d: DreamRecord) => {
     setSelectedRecord(d);
   }, []);
@@ -71,9 +75,11 @@ export default function StorageScreen() {
   useFocusEffect(
     useCallback(() => {
       let cancelled = false;
-      setLoading(true);
+      if (!hasLoadedRef.current) setLoading(true);
       load().finally(() => {
-        if (!cancelled) setLoading(false);
+        if (cancelled) return;
+        setLoading(false);
+        hasLoadedRef.current = true;
       });
       return () => {
         cancelled = true;
@@ -89,6 +95,7 @@ export default function StorageScreen() {
 
   const handleEditDream = useCallback(
     (d: DreamRecord) => {
+      setOpenMenuId(null);
       setSelectedRecord(null);
       router.push({
         pathname: "/(app)/dream/new",
@@ -111,7 +118,8 @@ export default function StorageScreen() {
               Alert.alert("삭제 실패", error.message);
               return;
             }
-            // 모달 닫고 즉시 로컬 state 에서 제거 (낙관적 업데이트)
+            // 즉시 로컬 state 에서 제거 (낙관적 업데이트)
+            setOpenMenuId(null);
             setSelectedRecord(null);
             setDreams((prev) => prev.filter((row) => row.id !== d.id));
           },
@@ -138,7 +146,7 @@ export default function StorageScreen() {
   }, [dreams, query, tab]);
 
   return (
-    <LinearGradient colors={["#EDE9FF", "#F5F0FF", "#FFF8F0"]} style={{ flex: 1 }}>
+    <LinearGradient colors={["#F5F3FA", "#F5F3FA"]} style={{ flex: 1 }}>
       <View style={styles.header}>
         <Text style={styles.headerText}>꿈 보관함</Text>
         <Text style={styles.subText}>내가 모아둔 꿈 조각들이에요</Text>
@@ -212,6 +220,8 @@ export default function StorageScreen() {
         <ScrollView
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
+          onScrollBeginDrag={closeMenu}
+          keyboardShouldPersistTaps="handled"
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
@@ -238,25 +248,40 @@ export default function StorageScreen() {
               ) : null}
             </View>
           ) : (
-            filtered.map((d) => (
-              <RecordedDreamCard
-                key={d.id}
-                dream={d}
-                onPress={() => openDream(d)}
-              />
-            ))
+            filtered.map((d) => {
+              const Card = d.source === "ai" ? AiDreamCard : RecordedDreamCard;
+              return (
+                <Card
+                  key={d.id}
+                  dream={d}
+                  onPress={() => openDream(d)}
+                  menuOpen={openMenuId === d.id}
+                  onMenuToggle={() =>
+                    setOpenMenuId((cur) => (cur === d.id ? null : d.id))
+                  }
+                  onMenuClose={closeMenu}
+                  onEdit={() => handleEditDream(d)}
+                  onDelete={() => handleDeleteDream(d)}
+                />
+              );
+            })
           )}
         </ScrollView>
       )}
 
       <BottomNav active="storage" />
 
-      <RecordedDreamModal
-        dream={selectedRecord}
-        onClose={() => setSelectedRecord(null)}
-        onEdit={handleEditDream}
-        onDelete={handleDeleteDream}
-      />
+      {selectedRecord?.source === "ai" ? (
+        <AiDreamModal
+          dream={selectedRecord}
+          onClose={() => setSelectedRecord(null)}
+        />
+      ) : (
+        <RecordedDreamModal
+          dream={selectedRecord}
+          onClose={() => setSelectedRecord(null)}
+        />
+      )}
     </LinearGradient>
   );
 }

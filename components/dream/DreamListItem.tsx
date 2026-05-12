@@ -31,7 +31,7 @@ export default function DreamListItem({ dream, onPress }: Props) {
           { backgroundColor: dream.isWarning ? "#FFF0E0" : "#FFF0E8" },
         ]}
       >
-        <DreamEmoji emoji={dream.emoji} size={22} />
+        <DreamEmoji emoji={dream.emoji} size={22} title={dream.title} />
       </View>
       <View style={styles.info}>
         <Text style={styles.title} numberOfLines={1}>{dream.title}</Text>

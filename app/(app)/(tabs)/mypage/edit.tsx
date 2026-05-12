@@ -13,9 +13,45 @@ import {
   Linking,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import * as ImagePicker from "expo-image-picker";
+
+// Alert.alert 는 react-native-web 에서 no-op 이므로 web 분기에서 브라우저 dialog 사용.
+// 모달 UI 를 따로 만들 수도 있지만 시스템 dialog 가 가장 단순하고 신뢰성 있음.
+const showNotice = (title: string, message?: string, onOk?: () => void) => {
+  if (Platform.OS === "web") {
+    if (typeof window !== "undefined") {
+      window.alert(message ? `${title}\n\n${message}` : title);
+    }
+    onOk?.();
+    return;
+  }
+  Alert.alert(
+    title,
+    message,
+    onOk ? [{ text: "확인", onPress: onOk }] : undefined,
+  );
+};
+
+const confirmDestructive = (
+  title: string,
+  message: string,
+  confirmLabel: string,
+  onConfirm: () => void,
+) => {
+  if (Platform.OS === "web") {
+    if (typeof window !== "undefined" && window.confirm(`${title}\n\n${message}`)) {
+      onConfirm();
+    }
+    return;
+  }
+  Alert.alert(title, message, [
+    { text: "취소", style: "cancel" },
+    { text: confirmLabel, style: "destructive", onPress: onConfirm },
+  ]);
+};
 import {
   AVATAR_OPTIONS,
   changePassword,
@@ -28,6 +64,7 @@ import {
 
 export default function EditProfileScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
@@ -63,18 +100,20 @@ export default function EditProfileScreen() {
   }, []);
 
   const handlePickImage = async () => {
-    // 갤러리 권한 체크
-    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (perm.status !== "granted") {
-      Alert.alert(
-        "권한 필요",
-        "프로필 사진을 등록하려면 사진 라이브러리 접근 권한이 필요해요.",
-        [
-          { text: "취소", style: "cancel" },
-          { text: "설정 열기", onPress: () => Linking.openSettings() },
-        ],
-      );
-      return;
+    // 갤러리 권한 체크 (web 에선 expo-image-picker 가 file input 으로 폴백되어 권한 단계 없음)
+    if (Platform.OS !== "web") {
+      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (perm.status !== "granted") {
+        Alert.alert(
+          "권한 필요",
+          "프로필 사진을 등록하려면 사진 라이브러리 접근 권한이 필요해요.",
+          [
+            { text: "취소", style: "cancel" },
+            { text: "설정 열기", onPress: () => Linking.openSettings() },
+          ],
+        );
+        return;
+      }
     }
 
     const picked = await ImagePicker.launchImageLibraryAsync({
@@ -91,7 +130,7 @@ export default function EditProfileScreen() {
     setUploading(false);
 
     if (error) {
-      Alert.alert("업로드 실패", error.message);
+      showNotice("업로드 실패", error.message);
       return;
     }
     if (data?.profile_image_url) {
@@ -102,30 +141,23 @@ export default function EditProfileScreen() {
   };
 
   const handleRemoveImage = () => {
-    Alert.alert("사진 제거", "프로필 사진을 제거하시겠어요?", [
-      { text: "취소", style: "cancel" },
-      {
-        text: "제거",
-        style: "destructive",
-        onPress: async () => {
-          setUploading(true);
-          const { error } = await removeAvatar();
-          setUploading(false);
-          if (error) {
-            Alert.alert("제거 실패", error.message);
-            return;
-          }
-          setImagePath(null);
-          setImageUrl(null);
-        },
-      },
-    ]);
+    confirmDestructive("사진 제거", "프로필 사진을 제거하시겠어요?", "제거", async () => {
+      setUploading(true);
+      const { error } = await removeAvatar();
+      setUploading(false);
+      if (error) {
+        showNotice("제거 실패", error.message);
+        return;
+      }
+      setImagePath(null);
+      setImageUrl(null);
+    });
   };
 
   const handleSaveProfile = async () => {
     const trimmed = nickname.trim();
     if (trimmed.length > 10) {
-      Alert.alert("닉네임은 10자 이내로 입력해주세요");
+      showNotice("닉네임은 10자 이내로 입력해주세요");
       return;
     }
     setSavingProfile(true);
@@ -136,25 +168,23 @@ export default function EditProfileScreen() {
     });
     setSavingProfile(false);
     if (error) {
-      Alert.alert("저장 실패", error.message);
+      showNotice("저장 실패", error.message);
       return;
     }
-    Alert.alert("저장 완료", "프로필이 수정됐어요", [
-      { text: "확인", onPress: () => router.back() },
-    ]);
+    showNotice("저장 완료", "프로필이 수정됐어요", () => router.back());
   };
 
   const handleChangePassword = async () => {
     if (!currentPw || !newPw || !confirmPw) {
-      Alert.alert("모든 비밀번호 칸을 채워주세요");
+      showNotice("모든 비밀번호 칸을 채워주세요");
       return;
     }
     if (newPw.length < 8) {
-      Alert.alert("새 비밀번호는 8자 이상으로 입력해주세요");
+      showNotice("새 비밀번호는 8자 이상으로 입력해주세요");
       return;
     }
     if (newPw !== confirmPw) {
-      Alert.alert("새 비밀번호가 일치하지 않아요");
+      showNotice("새 비밀번호가 일치하지 않아요");
       return;
     }
     setSavingPassword(true);
@@ -164,13 +194,13 @@ export default function EditProfileScreen() {
     });
     setSavingPassword(false);
     if (error) {
-      Alert.alert("변경 실패", error.message);
+      showNotice("변경 실패", error.message);
       return;
     }
     setCurrentPw("");
     setNewPw("");
     setConfirmPw("");
-    Alert.alert("변경 완료", "비밀번호가 변경됐어요");
+    showNotice("변경 완료", "비밀번호가 변경됐어요");
   };
 
   return (
@@ -179,7 +209,7 @@ export default function EditProfileScreen() {
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <View style={styles.headerRow}>
+        <View style={[styles.headerRow, { paddingTop: insets.top + 8 }]}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
             <Text style={styles.backIcon}>‹</Text>
           </TouchableOpacity>
@@ -359,7 +389,6 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingTop: 60,
     paddingHorizontal: 16,
     gap: 4,
   },

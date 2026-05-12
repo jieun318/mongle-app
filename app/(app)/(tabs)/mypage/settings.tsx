@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import Constants from "expo-constants";
 
@@ -53,6 +54,10 @@ export default function SettingsScreen() {
   const [fortuneTime, setFortuneTime] = useState(DEFAULT_FORTUNE_NOTIF_TIME);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [pendingTime, setPendingTime] = useState<Date | null>(null); // iOS 모달용
+
+  // 인앱 confirm 다이얼로그 — Alert.alert / window.confirm 대신 사용.
+  // type: 'logout' | 'delete' 로 어떤 액션을 띄울지 구분.
+  const [confirmType, setConfirmType] = useState<null | "logout" | "delete">(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -140,55 +145,37 @@ export default function SettingsScreen() {
     setShowTimePicker(true);
   };
 
-  // Alert.alert 은 react-native-web 에서 동작 안 함 (다이얼로그가 안 뜨고 onPress 콜백도 안 호출됨).
-  // 웹에선 브라우저 window.confirm 으로, 네이티브에선 기존 Alert.alert 로 분기.
-  const confirmDestructive = (
-    title: string,
-    message: string,
-    confirmLabel: string,
-    onConfirm: () => void,
-  ) => {
-    if (Platform.OS === "web") {
-      if (typeof window !== "undefined" && window.confirm(`${title}\n\n${message}`)) {
-        onConfirm();
-      }
-      return;
-    }
-    Alert.alert(title, message, [
-      { text: "취소", style: "cancel" },
-      { text: confirmLabel, style: "destructive", onPress: onConfirm },
-    ]);
-  };
-
   const handleLogout = () => {
-    confirmDestructive("로그아웃", "정말 로그아웃 하시겠어요?", "로그아웃", async () => {
-      setActing(true);
-      await signOut();
-      setActing(false);
-      router.replace("/(auth)/login");
-    });
+    setConfirmType("logout");
   };
 
   const handleDeleteAccount = () => {
-    confirmDestructive(
-      "회원 탈퇴",
-      "탈퇴하면 기록한 모든 꿈과 프로필이 영구 삭제돼요.\n정말 진행하시겠어요?",
-      "탈퇴하기",
-      async () => {
-        setActing(true);
-        const { error } = await deleteMyAccount();
-        setActing(false);
-        if (error) {
-          if (Platform.OS === "web" && typeof window !== "undefined") {
-            window.alert(`탈퇴 실패\n\n${error.message}`);
-          } else {
-            Alert.alert("탈퇴 실패", error.message);
-          }
-          return;
-        }
-        router.replace("/(auth)/login");
-      },
-    );
+    setConfirmType("delete");
+  };
+
+  const performLogout = async () => {
+    setConfirmType(null);
+    setActing(true);
+    await signOut();
+    setActing(false);
+    router.replace("/(auth)/login");
+  };
+
+  const performDeleteAccount = async () => {
+    setConfirmType(null);
+    setActing(true);
+    const { error } = await deleteMyAccount();
+    setActing(false);
+    if (error) {
+      // 실패 알림은 네이티브 Alert / 웹 window.alert 로. 자주 나는 경로 아님.
+      if (Platform.OS === "web" && typeof window !== "undefined") {
+        window.alert(`탈퇴 실패\n\n${error.message}`);
+      } else {
+        Alert.alert("탈퇴 실패", error.message);
+      }
+      return;
+    }
+    router.replace("/(auth)/login");
   };
 
   return (
@@ -308,6 +295,28 @@ export default function SettingsScreen() {
           </View>
         </ScrollView>
       )}
+
+      <ConfirmDialog
+        visible={confirmType === "logout"}
+        title="로그아웃"
+        message="정말 로그아웃 하시겠어요?"
+        confirmLabel="로그아웃"
+        cancelLabel="취소"
+        destructive
+        onConfirm={performLogout}
+        onCancel={() => setConfirmType(null)}
+      />
+
+      <ConfirmDialog
+        visible={confirmType === "delete"}
+        title="회원 탈퇴"
+        message="탈퇴하면 기록한 모든 꿈과 프로필이 영구 삭제돼요. 정말 진행하시겠어요?"
+        confirmLabel="탈퇴하기"
+        cancelLabel="취소"
+        destructive
+        onConfirm={performDeleteAccount}
+        onCancel={() => setConfirmType(null)}
+      />
 
       {/* 시간 선택기 — iOS: 모달 + 완료 버튼, Android: 네이티브 다이얼로그 */}
       {showTimePicker &&

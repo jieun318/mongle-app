@@ -1,9 +1,10 @@
-import { View, Text, TouchableOpacity, StyleSheet, Image, Alert } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import InputField from "@/components/ui/InputField";
 import PasswordField from "@/components/ui/PasswordField";
 import Button from "@/components/ui/Button";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { signupSchema } from "@/types/authSchema";
 import { signUpWithEmail } from "@/features/auth/auth";
 
@@ -19,8 +20,13 @@ export default function SignupForm() {
     password?: string;
     passwordConfirm?: string;
   }>({});
-  // 필드와 무관한 가입 실패(네트워크/서버 오류 등)는 버튼 위에 별도로 표시.
-  const [submitError, setSubmitError] = useState<string | null>(null);
+  // 인앱 알림 모달 — 필드와 무관한 가입 실패, 또는 이메일 인증 안내 같은 메시지를 띄움.
+  // onConfirm 으로 모달 닫은 뒤 후속 동작(예: 로그인 화면 이동) 을 받을 수 있다.
+  const [notice, setNotice] = useState<{
+    title: string;
+    message?: string;
+    onConfirm?: () => void;
+  } | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const handleSignup = async () => {
@@ -38,11 +44,9 @@ export default function SignupForm() {
         password: fieldErrors.password?.[0],
         passwordConfirm: fieldErrors.passwordConfirm?.[0],
       });
-      setSubmitError(null);
       return;
     }
     setErrors({});
-    setSubmitError(null);
     setSubmitting(true);
     const { data, error } = await signUpWithEmail({
       email: email.trim(),
@@ -51,8 +55,8 @@ export default function SignupForm() {
     });
     setSubmitting(false);
     if (error) {
-      // Alert.alert 은 react-native-web 에서 동작하지 않으므로 inline 으로 표시.
       // 중복 이메일은 Supabase v2 의 code 필드로 안전하게 판별 (영문 message 변경 대비 fallback 포함).
+      // 필드 단위 에러(이메일)는 inline 으로, 그 외는 모달로.
       const code = (error as { code?: string }).code;
       const isDuplicate =
         code === "user_already_exists" ||
@@ -60,7 +64,10 @@ export default function SignupForm() {
       if (isDuplicate) {
         setErrors({ email: "이미 가입된 이메일이에요" });
       } else {
-        setSubmitError(error.message || "가입 중 오류가 발생했어요");
+        setNotice({
+          title: "회원가입 실패",
+          message: error.message || "가입 중 오류가 발생했어요",
+        });
       }
       return;
     }
@@ -70,11 +77,11 @@ export default function SignupForm() {
       // 이메일 인증이 꺼져 있는 경우 즉시 로그인됨
       router.replace("/(app)");
     } else {
-      Alert.alert(
-        "가입 메일을 보냈어요",
-        "메일함에서 인증 링크를 눌러주세요. 인증이 끝나면 로그인할 수 있어요.",
-        [{ text: "확인", onPress: () => router.replace("/(auth)/login") }],
-      );
+      setNotice({
+        title: "가입 메일을 보냈어요",
+        message: "메일함에서 인증 링크를 눌러주세요. 인증이 끝나면 로그인할 수 있어요.",
+        onConfirm: () => router.replace("/(auth)/login"),
+      });
     }
   };
 
@@ -157,12 +164,6 @@ export default function SignupForm() {
           ) : null}
         </View>
 
-        {submitError ? (
-          <Text style={[styles.errorText, styles.submitError]}>
-            {submitError}
-          </Text>
-        ) : null}
-
         <View style={{ marginTop: 8 }}>
           <Button
             label={submitting ? "가입 중..." : "회원가입"}
@@ -177,6 +178,17 @@ export default function SignupForm() {
           <Text style={styles.loginLink}>로그인하기</Text>
         </TouchableOpacity>
       </View>
+
+      <ConfirmDialog
+        visible={!!notice}
+        title={notice?.title ?? ""}
+        message={notice?.message}
+        onConfirm={() => {
+          const cb = notice?.onConfirm;
+          setNotice(null);
+          cb?.();
+        }}
+      />
     </View>
   );
 }
@@ -196,7 +208,6 @@ const styles = StyleSheet.create({
   label: { fontSize: 12, fontWeight: "700", color: "#5C4A7A" },
   validText: { fontSize: 11, color: "#22c55e", paddingLeft: 4 },
   errorText: { fontSize: 11, color: "#f87171", paddingLeft: 4 },
-  submitError: { fontSize: 12, textAlign: "center", paddingLeft: 0, marginTop: 4 },
   loginRow: { flexDirection: "row", marginTop: 24, alignItems: "center" },
   loginText: { fontSize: 13, color: "#9B8BB4" },
   loginLink: { fontSize: 13, color: "#5B3E8F", fontWeight: "700" },

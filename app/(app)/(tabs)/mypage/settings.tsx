@@ -11,6 +11,7 @@ import {
   Modal,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -41,6 +42,7 @@ import {
 
 export default function SettingsScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(true);
   const [notify, setNotify] = useState(true);
   const [notifyReminder, setNotifyReminder] = useState(false);
@@ -138,49 +140,60 @@ export default function SettingsScreen() {
     setShowTimePicker(true);
   };
 
-  const handleLogout = () => {
-    Alert.alert("로그아웃", "정말 로그아웃 하시겠어요?", [
+  // Alert.alert 은 react-native-web 에서 동작 안 함 (다이얼로그가 안 뜨고 onPress 콜백도 안 호출됨).
+  // 웹에선 브라우저 window.confirm 으로, 네이티브에선 기존 Alert.alert 로 분기.
+  const confirmDestructive = (
+    title: string,
+    message: string,
+    confirmLabel: string,
+    onConfirm: () => void,
+  ) => {
+    if (Platform.OS === "web") {
+      if (typeof window !== "undefined" && window.confirm(`${title}\n\n${message}`)) {
+        onConfirm();
+      }
+      return;
+    }
+    Alert.alert(title, message, [
       { text: "취소", style: "cancel" },
-      {
-        text: "로그아웃",
-        style: "destructive",
-        onPress: async () => {
-          setActing(true);
-          await signOut();
-          setActing(false);
-          router.replace("/(auth)/login");
-        },
-      },
+      { text: confirmLabel, style: "destructive", onPress: onConfirm },
     ]);
   };
 
+  const handleLogout = () => {
+    confirmDestructive("로그아웃", "정말 로그아웃 하시겠어요?", "로그아웃", async () => {
+      setActing(true);
+      await signOut();
+      setActing(false);
+      router.replace("/(auth)/login");
+    });
+  };
+
   const handleDeleteAccount = () => {
-    Alert.alert(
+    confirmDestructive(
       "회원 탈퇴",
       "탈퇴하면 기록한 모든 꿈과 프로필이 영구 삭제돼요.\n정말 진행하시겠어요?",
-      [
-        { text: "취소", style: "cancel" },
-        {
-          text: "탈퇴하기",
-          style: "destructive",
-          onPress: async () => {
-            setActing(true);
-            const { error } = await deleteMyAccount();
-            setActing(false);
-            if (error) {
-              Alert.alert("탈퇴 실패", error.message);
-              return;
-            }
-            router.replace("/(auth)/login");
-          },
-        },
-      ],
+      "탈퇴하기",
+      async () => {
+        setActing(true);
+        const { error } = await deleteMyAccount();
+        setActing(false);
+        if (error) {
+          if (Platform.OS === "web" && typeof window !== "undefined") {
+            window.alert(`탈퇴 실패\n\n${error.message}`);
+          } else {
+            Alert.alert("탈퇴 실패", error.message);
+          }
+          return;
+        }
+        router.replace("/(auth)/login");
+      },
     );
   };
 
   return (
     <LinearGradient colors={["#F5F3FA", "#F5F3FA"]} style={{ flex: 1 }}>
-      <View style={styles.headerRow}>
+      <View style={[styles.headerRow, { paddingTop: insets.top + 8 }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Text style={styles.backIcon}>‹</Text>
         </TouchableOpacity>
@@ -349,7 +362,6 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingTop: 60,
     paddingHorizontal: 16,
     gap: 4,
   },

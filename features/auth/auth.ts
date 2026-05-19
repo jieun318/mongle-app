@@ -31,24 +31,6 @@ export function useSession() {
   return { session, loading };
 }
 
-export async function signUpWithEmail(opts: {
-  email: string;
-  password: string;
-  nickname: string;
-}) {
-  return supabase.auth.signUp({
-    email: opts.email,
-    password: opts.password,
-    options: {
-      data: { nickname: opts.nickname },
-    },
-  });
-}
-
-export async function signInWithEmail(email: string, password: string) {
-  return supabase.auth.signInWithPassword({ email, password });
-}
-
 export async function signOut() {
   return supabase.auth.signOut();
 }

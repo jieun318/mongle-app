@@ -170,13 +170,22 @@ function friendlyStreamErrorMessage(err: unknown): string {
   if (status === 429 || /quota|RESOURCE_EXHAUSTED/i.test(raw + body)) {
     return "오늘 AI 사용량 한도에 도달했어요. 잠시 후 다시 시도해주세요.";
   }
-  if (status === 401 || status === 403) {
-    return "AI 서비스 인증에 실패했어요.";
+  // 키 누락(LoadAPIKeyError) / 키 무효 — 서버 환경변수 설정 문제
+  if (
+    status === 401 ||
+    status === 403 ||
+    /api[\s._-]?key|API_KEY_INVALID|LoadAPIKeyError|permission|unauthorized/i.test(
+      raw + body,
+    )
+  ) {
+    return "AI 서비스 키 설정에 문제가 있어요. (서버 환경변수 확인 필요)";
   }
   if (status && status >= 500) {
     return "AI 서버가 응답하지 않아요. 잠시 후 다시 시도해주세요.";
   }
-  return "답변 생성 중 오류가 발생했어요. 잠시 후 다시 시도해주세요.";
+  // 일반 에러 — 진단을 위해 실제 원인 일부를 함께 노출 (임시)
+  const cause = raw.slice(0, 160).replace(/\s+/g, " ").trim();
+  return `답변 생성 중 오류가 발생했어요.${cause ? ` (원인: ${cause})` : ""}`;
 }
 
 export default async function handler(req: Request): Promise<Response> {
@@ -262,12 +271,20 @@ export default async function handler(req: Request): Promise<Response> {
     const firstUserText =
       messages.find((m) => m.role === "user")?.content ?? "";
 
+    // AI SDK v6 의 streamText 는 모델 호출이 실패해도 textStream 으로 throw 하지 않고
+    // 조용히 빈 스트림으로 끝낸다. 에러는 onError 콜백으로만 전달되므로 여기서 잡아둔다.
+    let capturedError: unknown = null;
+
     // streamText 는 동기 호출이라 즉시 stream 객체를 돌려준다 (실제 토큰은 백그라운드로 도착).
     const streamResult = streamText({
       model: google("gemini-2.5-flash"),
       system: systemPrompt,
       messages: messages as ModelMessage[],
       maxOutputTokens: MAX_OUTPUT_TOKENS,
+      onError({ error }) {
+        capturedError = error;
+        console.error("[chat api] streamText onError:", error);
+      },
     });
 
     // 메타는 await 하지 않고 promise 만 보관 — 본 텍스트 스트림이 끝난 뒤에 sentinel 로 붙인다.
@@ -278,20 +295,31 @@ export default async function handler(req: Request): Promise<Response> {
     const encoder = new TextEncoder();
     const combinedStream = new ReadableStream({
       async start(controller) {
+        let emittedAnyText = false;
         try {
           for await (const chunk of streamResult.textStream) {
+            if (chunk) emittedAnyText = true;
             controller.enqueue(encoder.encode(chunk));
           }
-          // 본 답변이 끝난 뒤 메타를 sentinel 로 추가. 한글/이모지가 그대로 들어가도 안전 (본문 body).
-          const meta = await metaPromise;
-          controller.enqueue(
-            encoder.encode(`\n<<META>>${JSON.stringify(meta)}<</META>>`),
-          );
+          // 텍스트가 한 글자도 안 나왔는데 onError 가 잡힌 경우 = 모델 호출 실패.
+          // (streamText 가 throw 하지 않으므로 catch 로는 안 잡힘 → 여기서 처리)
+          if (!emittedAnyText && capturedError) {
+            const message = friendlyStreamErrorMessage(capturedError);
+            controller.enqueue(
+              encoder.encode(`\n<<ERROR>>${message}<</ERROR>>`),
+            );
+          } else {
+            // 본 답변이 끝난 뒤 메타를 sentinel 로 추가. 한글/이모지가 그대로 들어가도 안전 (본문 body).
+            const meta = await metaPromise;
+            controller.enqueue(
+              encoder.encode(`\n<<META>>${JSON.stringify(meta)}<</META>>`),
+            );
+          }
         } catch (streamErr) {
           console.error("[chat api] stream pipe error:", streamErr);
           // controller.error 로 던지면 클라이언트는 빈 본문만 보게 됨.
           // 대신 사용자 친화 메시지를 sentinel 로 흘려보내고 정상 close.
-          const message = friendlyStreamErrorMessage(streamErr);
+          const message = friendlyStreamErrorMessage(streamErr ?? capturedError);
           controller.enqueue(encoder.encode(`\n<<ERROR>>${message}<</ERROR>>`));
         }
         controller.close();

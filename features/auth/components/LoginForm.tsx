@@ -20,6 +20,11 @@ import {
   signInWithApple,
 } from "@/features/auth/auth";
 
+// 애플 로그인 임시 비활성화 플래그.
+// Apple Developer 가입 + Supabase Apple provider 설정이 끝나면 true 로만 바꾸면
+// iOS 에서 애플 버튼이 다시 노출된다. (안드로이드는 플래그와 무관하게 항상 숨김)
+const APPLE_LOGIN_ENABLED = false;
+
 export default function LoginForm() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -164,7 +169,7 @@ export default function LoginForm() {
             )}
           </TouchableOpacity>
 
-          {Platform.OS === "ios" && (
+          {APPLE_LOGIN_ENABLED && Platform.OS === "ios" && (
             <TouchableOpacity
               style={[styles.socialBtn, { backgroundColor: "#fff" }]}
               onPress={() => handleSocial("apple")}

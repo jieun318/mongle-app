@@ -1,11 +1,24 @@
-import { View, Text, TouchableOpacity, StyleSheet, Image, Alert } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
+  Alert,
+  Platform,
+  ActivityIndicator,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import InputField from "@/components/ui/InputField";
 import PasswordField from "@/components/ui/PasswordField";
 import Button from "@/components/ui/Button";
 import { loginSchema } from "@/types/authSchema";
-import { signInWithEmail } from "@/features/auth/auth";
+import {
+  signInWithEmail,
+  signInWithKakao,
+  signInWithApple,
+} from "@/features/auth/auth";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -14,6 +27,26 @@ export default function LoginForm() {
   const [keepLogin, setKeepLogin] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [submitting, setSubmitting] = useState(false);
+  const [social, setSocial] = useState<null | "kakao" | "apple">(null);
+
+  const handleSocial = async (provider: "kakao" | "apple") => {
+    if (social) return;
+    setSocial(provider);
+    const { error, canceled } =
+      provider === "kakao"
+        ? await signInWithKakao()
+        : await signInWithApple();
+    setSocial(null);
+    if (canceled) return;
+    if (error) {
+      Alert.alert(
+        provider === "kakao" ? "카카오 로그인 실패" : "애플 로그인 실패",
+        error.message,
+      );
+      return;
+    }
+    router.replace("/(app)");
+  };
 
   const handleLogin = async () => {
     const result = loginSchema.safeParse({ email, password });
@@ -117,20 +150,37 @@ export default function LoginForm() {
         <View style={styles.socialBtns}>
           <TouchableOpacity
             style={[styles.socialBtn, { backgroundColor: "#FEE500" }]}
+            onPress={() => handleSocial("kakao")}
+            disabled={social !== null}
+            activeOpacity={0.85}
           >
-            <Image
-              source={require("@/assets/images/kakao.png")}
-              style={styles.socialIcon}
-            />
+            {social === "kakao" ? (
+              <ActivityIndicator color="#3D2B5E" />
+            ) : (
+              <Image
+                source={require("@/assets/images/kakao.png")}
+                style={styles.socialIcon}
+              />
+            )}
           </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.socialBtn, { backgroundColor: "#fff" }]}
-          >
-            <Image
-              source={require("@/assets/images/apple.png")}
-              style={styles.socialIcon}
-            />
-          </TouchableOpacity>
+
+          {Platform.OS === "ios" && (
+            <TouchableOpacity
+              style={[styles.socialBtn, { backgroundColor: "#fff" }]}
+              onPress={() => handleSocial("apple")}
+              disabled={social !== null}
+              activeOpacity={0.85}
+            >
+              {social === "apple" ? (
+                <ActivityIndicator color="#000" />
+              ) : (
+                <Image
+                  source={require("@/assets/images/apple.png")}
+                  style={styles.socialIcon}
+                />
+              )}
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 

@@ -15,7 +15,8 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.mongle.app"
+      "bundleIdentifier": "com.mongle.app",
+      "usesAppleSignIn": true
     },
     "android": {
       "adaptiveIcon": {
@@ -33,7 +34,9 @@
           "cameraPermission": "프로필 사진을 촬영하기 위해 카메라 접근이 필요해요."
         }
       ],
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "expo-web-browser",
+      "expo-apple-authentication"
     ]
   }
 }

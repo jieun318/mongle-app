@@ -27,5 +27,8 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
+    // 카카오 OAuth 는 네이티브에서 브라우저로 열고 code 를 수동 교환한다.
+    // PKCE 플로우여야 exchangeCodeForSession 으로 세션 발급이 된다.
+    flowType: "pkce",
   },
 });

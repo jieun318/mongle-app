@@ -19,6 +19,20 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
 
 const supabaseAuth = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// 앱이 mongle-app.vercel.app 외의 도메인(프리뷰 배포 등)에서 호출될 수 있어
+// CORS 를 허용한다. 쿠키가 아니라 Authorization Bearer 토큰만 쓰므로
+// 요청 Origin 을 그대로 반사해도 안전 (credentials 모드 아님).
+function corsHeaders(req: Request): Record<string, string> {
+  const origin = req.headers.get("origin") ?? "*";
+  return {
+    "Access-Control-Allow-Origin": origin,
+    Vary: "Origin",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Max-Age": "86400",
+  };
+}
+
 // 입력 한도 — 비용 폭증 방지
 const MAX_MESSAGES = 20;
 const MAX_MESSAGE_CHARS = 1000;
@@ -166,8 +180,18 @@ function friendlyStreamErrorMessage(err: unknown): string {
 }
 
 export default async function handler(req: Request): Promise<Response> {
+  const cors = corsHeaders(req);
+
+  // CORS preflight — 브라우저가 본 요청 전에 OPTIONS 를 먼저 보낸다.
+  if (req.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: cors });
+  }
+
   if (req.method !== "POST") {
-    return Response.json({ error: "Method not allowed" }, { status: 405 });
+    return Response.json(
+      { error: "Method not allowed" },
+      { status: 405, headers: cors },
+    );
   }
 
   try {
@@ -178,7 +202,10 @@ export default async function handler(req: Request): Promise<Response> {
       : null;
 
     if (!token) {
-      return Response.json({ error: "로그인이 필요해요" }, { status: 401 });
+      return Response.json(
+        { error: "로그인이 필요해요" },
+        { status: 401, headers: cors },
+      );
     }
 
     const {
@@ -187,7 +214,10 @@ export default async function handler(req: Request): Promise<Response> {
     } = await supabaseAuth.auth.getUser(token);
 
     if (authErr || !user) {
-      return Response.json({ error: "세션이 만료됐어요" }, { status: 401 });
+      return Response.json(
+        { error: "세션이 만료됐어요" },
+        { status: 401, headers: cors },
+      );
     }
 
     // 2) 입력 검증
@@ -196,7 +226,7 @@ export default async function handler(req: Request): Promise<Response> {
     if (!parsed.success) {
       return Response.json(
         { error: "요청 형식이 올바르지 않아요" },
-        { status: 400 },
+        { status: 400, headers: cors },
       );
     }
     const { messages, nickname } = parsed.data;
@@ -270,6 +300,7 @@ export default async function handler(req: Request): Promise<Response> {
 
     return new Response(combinedStream, {
       headers: {
+        ...cors,
         "Content-Type": "text/plain; charset=utf-8",
         "Cache-Control": "no-cache",
       },
@@ -283,7 +314,7 @@ export default async function handler(req: Request): Promise<Response> {
         error: "답변을 가져오지 못했어요. 잠시 후 다시 시도해주세요.",
         detail: process.env.NODE_ENV === "production" ? undefined : detail,
       },
-      { status: 500 },
+      { status: 500, headers: cors },
     );
   }
 }

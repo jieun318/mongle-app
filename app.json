@@ -16,14 +16,20 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.mongle.app",
-      "usesAppleSignIn": true
+      "usesAppleSignIn": true,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#E8DEFF"
       },
-      "package": "com.mongle.app"
+      "package": "com.mongle.app",
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "plugins": [
       "expo-router",
@@ -37,6 +43,12 @@
       "@react-native-community/datetimepicker",
       "expo-web-browser",
       "expo-apple-authentication"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "76bbf748-44bf-4f6f-81d3-3c59602f1320"
+      }
+    }
   }
 }

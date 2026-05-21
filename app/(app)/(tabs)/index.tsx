@@ -55,6 +55,7 @@ import FortuneGradeGuide from "@/components/fortune/FortuneGradeGuide";
 import GradeBadgeCard from "@/components/fortune/GradeBadgeCard";
 import { Fortune } from "@/types/fortune";
 import {
+  commitDailyFortuneToDB,
   getDailyFortune,
   getSmokePalette,
   rollRandomFortune,
@@ -563,6 +564,8 @@ export default function HomeScreen() {
     // 첫 탭 → 봤다고 저장 (자정 지나면 자동 리셋)
     AsyncStorage.setItem(VIEWED_DATE_KEY, getTodayKey()).catch(() => {});
     setAlreadyViewed(true);
+    // 이 시점부터 mypage 의 이번 주 운세에 오늘 운세가 표시된다.
+    commitDailyFortuneToDB(fortune).catch(() => {});
 
     isAnimating.current = true;
 

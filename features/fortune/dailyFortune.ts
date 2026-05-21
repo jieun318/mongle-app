@@ -193,11 +193,11 @@ async function cacheLocally(dKey: string, fortune: Fortune): Promise<void> {
   } catch {}
 }
 
-// 우선순위: 캐시 / DB / 새로 생성 — 어느 경로든 마지막에 DB·캐시 동기화 보장.
-//   - cache 있고 DB 없음(이전 빌드에서 캐시만 저장된 경우) → cache 를 DB 로 백필
-//   - cache 없고 DB 있음 → DB 값을 cache 로 저장
-//   - 둘 다 없음 → 새로 생성 후 양쪽 저장
-//   - 비로그인 시 saveDailyFortuneToDB 는 no-op
+// 우선순위: 캐시 > DB > 새로 생성. 캐시에 없으면 채우지만 DB 에는 자동 저장하지 않는다.
+//   - 홈 화면 마운트 시 자동 호출되므로, 여기서 DB 저장을 해버리면 사용자가 구슬을
+//     누르기 전에도 mypage 의 이번 주 운세에 표시되는 문제가 있었다.
+//   - DB 영속화는 사용자가 구슬을 탭하는 시점에 commitDailyFortuneToDB 로 명시 호출.
+//   - cache 없고 DB 있음 (이전에 이미 봐서 저장된 경우) → DB 값을 cache 로 백필.
 export async function getDailyFortune(): Promise<Fortune> {
   const now = new Date();
   const dKey = dateKey(now);
@@ -228,15 +228,19 @@ export async function getDailyFortune(): Promise<Fortune> {
     fortune = generateFortune(seedId, dKey, now);
   }
 
-  // 동기화 — 캐시에 없으면 채우고, DB 에 없으면 upsert.
+  // 캐시 백필만 수행 — DB 저장은 commitDailyFortuneToDB 에서.
   if (!cached) {
     await cacheLocally(dKey, fortune);
   }
-  if (!dbFortune) {
-    await saveDailyFortuneToDB(dKey, fortune).catch(() => {});
-  }
 
   return fortune;
+}
+
+// 사용자가 구슬을 처음 탭한 시점에 호출 — 이번 주 운세 위젯에 표시되기 시작한다.
+// upsert 라 여러 번 호출돼도 안전. 비로그인 시 no-op.
+export async function commitDailyFortuneToDB(fortune: Fortune): Promise<void> {
+  const dKey = dateKey(new Date());
+  await saveDailyFortuneToDB(dKey, fortune).catch(() => {});
 }
 
 // DEV: 캐시 비우고 새로 뽑기

@@ -22,7 +22,7 @@ create table if not exists public.categories (
 -- ============================================================
 -- 2. dream_items — 꿈 해몽 사전 (마스터 데이터)
 -- ============================================================
-create table if not exists public.dream_items (\
+create table if not exists public.dream_items (
   id             text primary key,
   category_id    text not null references public.categories(id),
   title          text not null,

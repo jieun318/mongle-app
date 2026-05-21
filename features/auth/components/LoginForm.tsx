@@ -10,12 +10,25 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { signInWithKakao, signInWithApple } from "@/features/auth/auth";
+import { supabase } from "@/lib/supabase";
 
 // 애플 로그인 임시 비활성화 플래그.
 // Apple Developer 가입 + Supabase Apple provider 설정이 끝나면 true 로만 바꾸면
 // iOS 에서 애플 버튼이 다시 노출된다. (안드로이드는 플래그와 무관하게 항상 숨김)
 const APPLE_LOGIN_ENABLED = false;
+
+// 개발용 우회 로그인 — __DEV__ 에서만 노출.
+// Supabase 익명 로그인(signInAnonymously)으로 진짜 authenticated 세션을 만들어
+// 챗봇/프로필/운세 등 RLS 보호 기능까지 그대로 동작하게 한다.
+// (사전 조건: Supabase Dashboard → Authentication → Anonymous Sign-ins 토글 ON)
+const DEV_USER_KEY = "auth.devUser";
+const DEV_USER = {
+  id: "dev-user-001",
+  name: "테스트유저",
+  email: "dev@mongle.com",
+};
 
 export default function LoginForm() {
   const router = useRouter();
@@ -41,6 +54,25 @@ export default function LoginForm() {
   };
 
   const showApple = APPLE_LOGIN_ENABLED && Platform.OS === "ios";
+
+  const handleDevLogin = async () => {
+    if (social) return;
+    try {
+      // raw_user_meta_data.nickname 을 같이 넘기면 handle_new_user 트리거가
+      // profiles.nickname 을 "테스트유저"로 채워준다 (없으면 기본 '몽글이').
+      const { error } = await supabase.auth.signInAnonymously({
+        options: { data: { nickname: DEV_USER.name } },
+      });
+      if (error) throw error;
+      await AsyncStorage.setItem(DEV_USER_KEY, JSON.stringify(DEV_USER));
+      router.replace("/(app)");
+    } catch (e) {
+      Alert.alert(
+        "개발 로그인 실패",
+        e instanceof Error ? e.message : String(e),
+      );
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -94,6 +126,17 @@ export default function LoginForm() {
             )}
           </TouchableOpacity>
         )}
+
+        {__DEV__ && (
+          <TouchableOpacity
+            onPress={handleDevLogin}
+            disabled={social !== null}
+            activeOpacity={0.6}
+            style={styles.devBtn}
+          >
+            <Text style={styles.devLabel}>개발용 우회 로그인</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <Text style={styles.terms}>
@@ -139,6 +182,9 @@ const styles = StyleSheet.create({
   appleIcon: { tintColor: "#fff" },
   kakaoLabel: { fontSize: 15, fontWeight: "700", color: "#3D2B5E" },
   appleLabel: { fontSize: 15, fontWeight: "700", color: "#fff" },
+
+  devBtn: { alignItems: "center", paddingVertical: 6 },
+  devLabel: { fontSize: 14, color: "#9B8BB4" },
 
   terms: {
     marginTop: "auto",

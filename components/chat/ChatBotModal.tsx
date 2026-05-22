@@ -343,6 +343,33 @@ export default function ChatBotModal({ visible, onClose, onSaved }: Props) {
       const token = session?.access_token;
       if (!token) throw new Error("로그인이 필요해요");
 
+      // 진단용 — 401 원인 좁히기 위해 토큰 메타만 콘솔에 노출 (raw token 은 안 찍음)
+      try {
+        const [, payloadB64] = token.split(".");
+        const padded = payloadB64 + "=".repeat((4 - (payloadB64.length % 4)) % 4);
+        const payload = JSON.parse(
+          decodeURIComponent(
+            atob(padded.replace(/-/g, "+").replace(/_/g, "/"))
+              .split("")
+              .map((c) => "%" + c.charCodeAt(0).toString(16).padStart(2, "0"))
+              .join(""),
+          ),
+        );
+        const nowSec = Math.floor(Date.now() / 1000);
+        console.log("[chat] token diag:", {
+          len: token.length,
+          iss: payload.iss,
+          sub: payload.sub?.slice(0, 8) + "…",
+          is_anon: payload.is_anonymous,
+          role: payload.role,
+          exp: payload.exp,
+          nowSec,
+          expIn: payload.exp - nowSec,
+        });
+      } catch (e) {
+        console.warn("[chat] token decode failed:", e);
+      }
+
       // RN 의 fetch 는 Response.body 스트리밍을 지원하지 않는다 (전체 응답을 버퍼링).
       // XMLHttpRequest 의 onprogress 가 점진적으로 responseText 를 누적해주므로
       // 그걸로 토큰 도착 시점마다 UI 를 업데이트한다.

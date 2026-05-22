@@ -223,14 +223,6 @@ export default async function handler(req: Request): Promise<Response> {
     } = await supabaseAuth.auth.getUser(token);
 
     if (authErr || !user) {
-      // 진단용 — Vercel logs 에 401 원인 노출.
-      // SUPABASE_URL 끝 4자만 (다른 프로젝트 URL 박혔는지 확인용), authErr 원문.
-      console.error("[chat api] auth 401:", {
-        tokenLen: token.length,
-        urlSuffix: SUPABASE_URL.slice(-12),
-        authErr: authErr?.message,
-        authStatus: (authErr as { status?: number } | null)?.status,
-      });
       return Response.json(
         {
           error: "세션이 만료됐어요",

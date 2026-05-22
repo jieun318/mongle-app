@@ -109,30 +109,6 @@ export async function updateMyProfile(input: UpdateProfileInput) {
     .single<ProfileRecord>();
 }
 
-// Supabase 의 비밀번호 변경은 현재 비밀번호 재인증을 자체 검증하지 않음.
-// 보안을 위해 먼저 현재 비밀번호로 reauth(signInWithPassword) 후 update 한다.
-export async function changePassword(opts: {
-  currentPassword: string;
-  newPassword: string;
-}) {
-  const { data: userRes } = await supabase.auth.getUser();
-  const email = userRes.user?.email;
-  if (!email) return { error: { message: "이메일을 찾을 수 없어요" } };
-
-  const { error: signinErr } = await supabase.auth.signInWithPassword({
-    email,
-    password: opts.currentPassword,
-  });
-  if (signinErr) {
-    return { error: { message: "현재 비밀번호가 올바르지 않아요" } };
-  }
-
-  const { error } = await supabase.auth.updateUser({
-    password: opts.newPassword,
-  });
-  return { error };
-}
-
 // 회원 탈퇴 — schema.sql 의 delete_my_account() RPC 호출.
 // auth.users 가 삭제되면 profiles / dreams / bookmarks 는
 // ON DELETE CASCADE 로 자동 정리된다.

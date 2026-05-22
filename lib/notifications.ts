@@ -4,9 +4,15 @@ import { Platform } from "react-native";
 const FORTUNE_NOTIF_ID = "fortune-daily-reminder";
 const ANDROID_CHANNEL_ID = "fortune";
 
+const DREAM_REMINDER_ID = "dream-daily-reminder";
+const DREAM_ANDROID_CHANNEL_ID = "dream-reminder";
+
 export const FORTUNE_NOTIF_ENABLED_KEY = "fortune.notify.enabled";
 export const FORTUNE_NOTIF_TIME_KEY = "fortune.notify.time"; // "HH:MM"
 export const DEFAULT_FORTUNE_NOTIF_TIME = "09:00";
+
+export const DREAM_REMINDER_TIME_KEY = "dream.reminder.time"; // "HH:MM"
+export const DEFAULT_DREAM_REMINDER_TIME = "08:00";
 
 // 앱 시작 시 1회 호출 — foreground 에서도 알림이 보이도록
 export function setupNotificationHandler() {
@@ -69,6 +75,52 @@ export async function cancelDailyFortune(): Promise<void> {
     const all = await Notifications.getAllScheduledNotificationsAsync();
     for (const n of all) {
       if (n.identifier === FORTUNE_NOTIF_ID) {
+        await Notifications.cancelScheduledNotificationAsync(n.identifier);
+      }
+    }
+  } catch {}
+}
+
+async function ensureDreamReminderChannel() {
+  if (Platform.OS === "android") {
+    await Notifications.setNotificationChannelAsync(DREAM_ANDROID_CHANNEL_ID, {
+      name: "꿈 기록 리마인드",
+      importance: Notifications.AndroidImportance.DEFAULT,
+    });
+  }
+}
+
+export async function scheduleDreamReminder(
+  hour: number,
+  minute: number,
+): Promise<boolean> {
+  await ensureDreamReminderChannel();
+  await cancelDreamReminder();
+
+  try {
+    await Notifications.scheduleNotificationAsync({
+      identifier: DREAM_REMINDER_ID,
+      content: {
+        title: "어젯밤 어떤 꿈을 꾸셨나요? 🌙",
+        body: "지금 적지 않으면 금방 잊어버려요. 오늘의 꿈을 기록해보세요.",
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DAILY,
+        hour,
+        minute,
+      },
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function cancelDreamReminder(): Promise<void> {
+  try {
+    const all = await Notifications.getAllScheduledNotificationsAsync();
+    for (const n of all) {
+      if (n.identifier === DREAM_REMINDER_ID) {
         await Notifications.cancelScheduledNotificationAsync(n.identifier);
       }
     }

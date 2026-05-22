@@ -54,7 +54,6 @@ const confirmDestructive = (
 };
 import {
   AVATAR_OPTIONS,
-  changePassword,
   getAvatarSignedUrl,
   getMyProfile,
   removeAvatar,
@@ -67,16 +66,12 @@ export default function EditProfileScreen() {
   const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
-  const [savingPassword, setSavingPassword] = useState(false);
 
   const [avatar, setAvatar] = useState<string>("🌙");
   const [nickname, setNickname] = useState("");
   const [imagePath, setImagePath] = useState<string | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [currentPw, setCurrentPw] = useState("");
-  const [newPw, setNewPw] = useState("");
-  const [confirmPw, setConfirmPw] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -172,35 +167,6 @@ export default function EditProfileScreen() {
       return;
     }
     showNotice("저장 완료", "프로필이 수정됐어요", () => router.back());
-  };
-
-  const handleChangePassword = async () => {
-    if (!currentPw || !newPw || !confirmPw) {
-      showNotice("모든 비밀번호 칸을 채워주세요");
-      return;
-    }
-    if (newPw.length < 8) {
-      showNotice("새 비밀번호는 8자 이상으로 입력해주세요");
-      return;
-    }
-    if (newPw !== confirmPw) {
-      showNotice("새 비밀번호가 일치하지 않아요");
-      return;
-    }
-    setSavingPassword(true);
-    const { error } = await changePassword({
-      currentPassword: currentPw,
-      newPassword: newPw,
-    });
-    setSavingPassword(false);
-    if (error) {
-      showNotice("변경 실패", error.message);
-      return;
-    }
-    setCurrentPw("");
-    setNewPw("");
-    setConfirmPw("");
-    showNotice("변경 완료", "비밀번호가 변경됐어요");
   };
 
   return (
@@ -327,57 +293,6 @@ export default function EditProfileScreen() {
                 </Text>
               </LinearGradient>
             </TouchableOpacity>
-
-            <View style={styles.divider} />
-
-            {/* 비밀번호 변경 */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>비밀번호 변경</Text>
-
-              <Text style={styles.label}>현재 비밀번호</Text>
-              <TextInput
-                style={styles.input}
-                value={currentPw}
-                onChangeText={setCurrentPw}
-                placeholder="현재 비밀번호"
-                placeholderTextColor="#C4B8D6"
-                secureTextEntry
-                autoCapitalize="none"
-              />
-
-              <Text style={styles.label}>새 비밀번호</Text>
-              <TextInput
-                style={styles.input}
-                value={newPw}
-                onChangeText={setNewPw}
-                placeholder="8자 이상"
-                placeholderTextColor="#C4B8D6"
-                secureTextEntry
-                autoCapitalize="none"
-              />
-
-              <Text style={styles.label}>새 비밀번호 확인</Text>
-              <TextInput
-                style={styles.input}
-                value={confirmPw}
-                onChangeText={setConfirmPw}
-                placeholder="다시 입력"
-                placeholderTextColor="#C4B8D6"
-                secureTextEntry
-                autoCapitalize="none"
-              />
-            </View>
-
-            <TouchableOpacity
-              style={styles.secondaryBtn}
-              onPress={handleChangePassword}
-              activeOpacity={0.85}
-              disabled={savingPassword}
-            >
-              <Text style={styles.secondaryBtnText}>
-                {savingPassword ? "변경 중..." : "비밀번호 변경"}
-              </Text>
-            </TouchableOpacity>
           </ScrollView>
         )}
       </KeyboardAvoidingView>
@@ -411,13 +326,6 @@ const styles = StyleSheet.create({
     gap: 10,
     borderWidth: 1,
     borderColor: "rgba(180,160,230,0.18)",
-  },
-  sectionTitle: {
-    fontFamily: "OnglyphPDH",
-    fontSize: 15,
-    color: "#5848A8",
-    letterSpacing: 0.5,
-    marginBottom: 4,
   },
   label: { fontSize: 12, fontWeight: "700", color: "#7868B8" },
 
@@ -492,16 +400,4 @@ const styles = StyleSheet.create({
   primaryBtn: { borderRadius: 16, overflow: "hidden" },
   primaryBtnGradient: { paddingVertical: 14, alignItems: "center" },
   primaryBtnText: { fontSize: 14, fontWeight: "700", color: "#fff" },
-
-  secondaryBtn: {
-    paddingVertical: 14,
-    alignItems: "center",
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: "#D8C8F0",
-    backgroundColor: "#fff",
-  },
-  secondaryBtnText: { fontSize: 14, fontWeight: "700", color: "#7868C8" },
-
-  divider: { height: 1, backgroundColor: "rgba(180,160,230,0.2)", marginVertical: 4 },
 });

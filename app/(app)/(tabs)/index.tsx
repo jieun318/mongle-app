@@ -594,6 +594,12 @@ export default function HomeScreen() {
     if (isAnimating.current) return;
     if (!fortune) return; // 운세 로드 전 탭 무시
 
+    // 매 탭마다 commit 시도 — upsert 라 멱등하고, 이전 탭의 저장이 실패했을 때
+    // (네트워크/세션 타이밍 등) 다시 탭하면 복구된다. AsyncStorage 의 VIEWED_DATE_KEY 만
+    // 보고 일찍 return 해 버리면, 첫 commit 실패 시 mypage 의 이번 주 운세에 영원히
+    // 안 뜨는 버그가 생긴다.
+    commitDailyFortuneToDB(fortune).catch(() => {});
+
     // 오늘 이미 봤으면 애니 생략하고 결과만 즉시 표시
     if (alreadyViewed) {
       setShowModal(true);
@@ -603,8 +609,6 @@ export default function HomeScreen() {
     // 첫 탭 → 봤다고 저장 (자정 지나면 자동 리셋)
     AsyncStorage.setItem(VIEWED_DATE_KEY, getTodayKey()).catch(() => {});
     setAlreadyViewed(true);
-    // 이 시점부터 mypage 의 이번 주 운세에 오늘 운세가 표시된다.
-    commitDailyFortuneToDB(fortune).catch(() => {});
 
     isAnimating.current = true;
 

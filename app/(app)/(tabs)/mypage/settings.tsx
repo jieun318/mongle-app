@@ -31,10 +31,14 @@ import { signOut } from "@/features/auth/auth";
 import {
   scheduleDailyFortune,
   cancelDailyFortune,
+  scheduleDreamReminder,
+  cancelDreamReminder,
   requestNotificationPermission,
   FORTUNE_NOTIF_ENABLED_KEY,
   FORTUNE_NOTIF_TIME_KEY,
   DEFAULT_FORTUNE_NOTIF_TIME,
+  DREAM_REMINDER_TIME_KEY,
+  DEFAULT_DREAM_REMINDER_TIME,
   parseHHMM,
   formatHHMM,
   formatTimeKR,
@@ -49,10 +53,12 @@ export default function SettingsScreen() {
   const [notifyReminder, setNotifyReminder] = useState(false);
   const [acting, setActing] = useState(false);
 
-  // 운세 알림 (로컬 스케줄)
+  // 운세 알림 / 꿈 리마인드 (로컬 스케줄 — 시간은 AsyncStorage, on/off 는 토글 시점에 expo-notifications 등록)
   const [notifyFortune, setNotifyFortune] = useState(false);
   const [fortuneTime, setFortuneTime] = useState(DEFAULT_FORTUNE_NOTIF_TIME);
-  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [reminderTime, setReminderTime] = useState(DEFAULT_DREAM_REMINDER_TIME);
+  // 둘 다 같은 picker 컴포넌트 재사용 — 어느 토글에서 열었는지 target 으로 구분
+  const [pickerTarget, setPickerTarget] = useState<null | "fortune" | "reminder">(null);
   const [pendingTime, setPendingTime] = useState<Date | null>(null); // iOS 모달용
 
   // 인앱 confirm 다이얼로그 — Alert.alert / window.confirm 대신 사용.
@@ -67,6 +73,7 @@ export default function SettingsScreen() {
         AsyncStorage.multiGet([
           FORTUNE_NOTIF_ENABLED_KEY,
           FORTUNE_NOTIF_TIME_KEY,
+          DREAM_REMINDER_TIME_KEY,
         ]),
       ]);
       if (cancelled) return;
@@ -79,6 +86,9 @@ export default function SettingsScreen() {
       if (map[FORTUNE_NOTIF_TIME_KEY]) {
         setFortuneTime(map[FORTUNE_NOTIF_TIME_KEY]!);
       }
+      if (map[DREAM_REMINDER_TIME_KEY]) {
+        setReminderTime(map[DREAM_REMINDER_TIME_KEY]!);
+      }
       setLoading(false);
     })();
     return () => {
@@ -86,26 +96,29 @@ export default function SettingsScreen() {
     };
   }, []);
 
+  // 개별 토글 상태를 OS 스케줄러에 반영 — 마스터 ON 복귀나 시간 변경 후 일괄 재등록할 때 사용
+  const applyScheduleForFortune = async (): Promise<boolean> => {
+    if (!notifyFortune) {
+      await cancelDailyFortune();
+      return true;
+    }
+    const { hour, minute } = parseHHMM(fortuneTime);
+    return scheduleDailyFortune(hour, minute);
+  };
+
+  const applyScheduleForReminder = async (): Promise<boolean> => {
+    if (!notifyReminder) {
+      await cancelDreamReminder();
+      return true;
+    }
+    const { hour, minute } = parseHHMM(reminderTime);
+    return scheduleDreamReminder(hour, minute);
+  };
+
   const handleToggleNotify = async (next: boolean) => {
-    setNotify(next);
-    const { error } = await updateMyProfile({ notifyEnabled: next });
-    if (error) {
-      setNotify(!next);
-      Alert.alert("저장 실패", error.message);
-    }
-  };
-
-  const handleToggleReminder = async (next: boolean) => {
-    setNotifyReminder(next);
-    const { error } = await updateMyProfile({ notifyDreamReminder: next });
-    if (error) {
-      setNotifyReminder(!next);
-      Alert.alert("저장 실패", error.message);
-    }
-  };
-
-  const handleToggleFortuneNotify = async (next: boolean) => {
     if (next) {
+      // 마스터 복귀 — 권한 확인 후 개별 토글이 ON 인 항목만 재등록.
+      // 개별 토글 상태(DB/AsyncStorage)는 마스터 OFF 동안에도 유지돼 있으므로 그대로 적용.
       const granted = await requestNotificationPermission();
       if (!granted) {
         Alert.alert(
@@ -114,11 +127,80 @@ export default function SettingsScreen() {
         );
         return;
       }
-      const { hour, minute } = parseHHMM(fortuneTime);
-      const ok = await scheduleDailyFortune(hour, minute);
-      if (!ok) {
-        Alert.alert("스케줄 실패", "잠시 후 다시 시도해 주세요.");
-        return;
+      await applyScheduleForFortune();
+      await applyScheduleForReminder();
+    } else {
+      // 마스터 OFF — 개별 토글 상태는 보존, OS 스케줄만 전부 취소
+      await cancelDailyFortune();
+      await cancelDreamReminder();
+    }
+
+    setNotify(next);
+    const { error } = await updateMyProfile({ notifyEnabled: next });
+    if (error) {
+      // 롤백: UI + 스케줄 둘 다 원상복구
+      setNotify(!next);
+      if (next) {
+        await cancelDailyFortune();
+        await cancelDreamReminder();
+      } else {
+        await applyScheduleForFortune();
+        await applyScheduleForReminder();
+      }
+      Alert.alert("저장 실패", error.message);
+    }
+  };
+
+  const handleToggleReminder = async (next: boolean) => {
+    if (next) {
+      // 마스터가 ON 일 때만 실제 OS 스케줄 등록. OFF 면 상태만 저장하고 마스터 복귀 시 재등록.
+      if (notify) {
+        const granted = await requestNotificationPermission();
+        if (!granted) {
+          Alert.alert(
+            "알림 권한 필요",
+            "기기 설정에서 몽글의 알림을 허용해 주세요.",
+          );
+          return;
+        }
+        const { hour, minute } = parseHHMM(reminderTime);
+        const ok = await scheduleDreamReminder(hour, minute);
+        if (!ok) {
+          Alert.alert("스케줄 실패", "잠시 후 다시 시도해 주세요.");
+          return;
+        }
+      }
+    } else {
+      await cancelDreamReminder();
+    }
+
+    setNotifyReminder(next);
+    const { error } = await updateMyProfile({ notifyDreamReminder: next });
+    if (error) {
+      setNotifyReminder(!next);
+      if (next) await cancelDreamReminder();
+      Alert.alert("저장 실패", error.message);
+    }
+  };
+
+  const handleToggleFortuneNotify = async (next: boolean) => {
+    if (next) {
+      // 마스터가 ON 일 때만 실제 OS 스케줄 등록. OFF 면 상태만 저장하고 마스터 복귀 시 재등록.
+      if (notify) {
+        const granted = await requestNotificationPermission();
+        if (!granted) {
+          Alert.alert(
+            "알림 권한 필요",
+            "기기 설정에서 몽글의 알림을 허용해 주세요.",
+          );
+          return;
+        }
+        const { hour, minute } = parseHHMM(fortuneTime);
+        const ok = await scheduleDailyFortune(hour, minute);
+        if (!ok) {
+          Alert.alert("스케줄 실패", "잠시 후 다시 시도해 주세요.");
+          return;
+        }
       }
       setNotifyFortune(true);
       AsyncStorage.setItem(FORTUNE_NOTIF_ENABLED_KEY, "true").catch(() => {});
@@ -129,20 +211,41 @@ export default function SettingsScreen() {
     }
   };
 
-  const persistTime = async (date: Date) => {
+  const persistFortuneTime = async (date: Date) => {
     const h = date.getHours();
     const m = date.getMinutes();
     const newTime = formatHHMM(h, m);
     setFortuneTime(newTime);
     AsyncStorage.setItem(FORTUNE_NOTIF_TIME_KEY, newTime).catch(() => {});
-    if (notifyFortune) {
+    // 마스터 + 개별 둘 다 ON 일 때만 재스케줄
+    if (notify && notifyFortune) {
       await scheduleDailyFortune(h, m);
     }
   };
 
-  const openTimePicker = () => {
-    setPendingTime(timeStringToDate(fortuneTime));
-    setShowTimePicker(true);
+  const persistReminderTime = async (date: Date) => {
+    const h = date.getHours();
+    const m = date.getMinutes();
+    const newTime = formatHHMM(h, m);
+    setReminderTime(newTime);
+    AsyncStorage.setItem(DREAM_REMINDER_TIME_KEY, newTime).catch(() => {});
+    if (notify && notifyReminder) {
+      await scheduleDreamReminder(h, m);
+    }
+  };
+
+  const openTimePicker = (target: "fortune" | "reminder") => {
+    const current = target === "fortune" ? fortuneTime : reminderTime;
+    setPendingTime(timeStringToDate(current));
+    setPickerTarget(target);
+  };
+
+  const persistPickedTime = async (date: Date) => {
+    if (pickerTarget === "fortune") {
+      await persistFortuneTime(date);
+    } else if (pickerTarget === "reminder") {
+      await persistReminderTime(date);
+    }
   };
 
   const handleLogout = () => {
@@ -217,15 +320,44 @@ export default function SettingsScreen() {
             <View style={styles.row}>
               <View style={{ flex: 1 }}>
                 <Text style={styles.rowLabel}>꿈 기록 리마인드</Text>
-                <Text style={styles.rowDesc}>아침마다 어젯밤 꿈을 적게 알려줘요</Text>
+                <Text style={styles.rowDesc}>
+                  {IS_EXPO_GO
+                    ? "Dev 빌드에서 사용 가능 (Expo Go 미지원)"
+                    : "정한 시간에 어젯밤 꿈을 적게 알려줘요"}
+                </Text>
               </View>
               <Switch
                 value={notifyReminder}
                 onValueChange={handleToggleReminder}
+                disabled={IS_EXPO_GO || !notify}
                 trackColor={{ true: "#B898F0", false: "#D8D0E8" }}
                 thumbColor="#fff"
               />
             </View>
+
+            {/* 마스터 OFF 면 시간 행 숨김 — OS 스케줄러에 실제로 등록 안 돼 있으니
+                혼란 방지 위해 미노출 */}
+            {notify && notifyReminder && !IS_EXPO_GO && (
+              <>
+                <View style={styles.divider} />
+                <TouchableOpacity
+                  style={styles.row}
+                  onPress={() => openTimePicker("reminder")}
+                  activeOpacity={0.7}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.rowLabel}>리마인드 시간</Text>
+                  </View>
+                  <Text style={styles.timeValue}>
+                    {(() => {
+                      const { hour, minute } = parseHHMM(reminderTime);
+                      return formatTimeKR(hour, minute);
+                    })()}
+                  </Text>
+                  <Text style={styles.actionChevron}> ›</Text>
+                </TouchableOpacity>
+              </>
+            )}
 
             <View style={styles.divider} />
 
@@ -241,18 +373,18 @@ export default function SettingsScreen() {
               <Switch
                 value={notifyFortune}
                 onValueChange={handleToggleFortuneNotify}
-                disabled={IS_EXPO_GO}
+                disabled={IS_EXPO_GO || !notify}
                 trackColor={{ true: "#B898F0", false: "#D8D0E8" }}
                 thumbColor="#fff"
               />
             </View>
 
-            {notifyFortune && !IS_EXPO_GO && (
+            {notify && notifyFortune && !IS_EXPO_GO && (
               <>
                 <View style={styles.divider} />
                 <TouchableOpacity
                   style={styles.row}
-                  onPress={openTimePicker}
+                  onPress={() => openTimePicker("fortune")}
                   activeOpacity={0.7}
                 >
                   <View style={{ flex: 1 }}>
@@ -318,51 +450,59 @@ export default function SettingsScreen() {
         onCancel={() => setConfirmType(null)}
       />
 
-      {/* 시간 선택기 — iOS: 모달 + 완료 버튼, Android: 네이티브 다이얼로그 */}
-      {showTimePicker &&
-        (Platform.OS === "ios" ? (
-          <Modal transparent animationType="fade">
-            <TouchableOpacity
-              style={StyleSheet.absoluteFillObject}
-              activeOpacity={1}
-              onPress={() => setShowTimePicker(false)}
-            >
-              <View style={styles.iosPickerBackdrop} />
-            </TouchableOpacity>
-            <View style={styles.iosPickerSheet}>
-              <DateTimePicker
-                value={pendingTime ?? timeStringToDate(fortuneTime)}
-                mode="time"
-                display="spinner"
-                onChange={(_, d) => {
-                  if (d) setPendingTime(d);
-                }}
-              />
+      {/* 시간 선택기 — iOS: 모달 + 완료 버튼, Android: 네이티브 다이얼로그.
+          target 으로 fortune / reminder 어느 토글에서 열렸는지 구분해 해당 시간 저장. */}
+      {pickerTarget !== null &&
+        (() => {
+          const currentTime =
+            pickerTarget === "fortune" ? fortuneTime : reminderTime;
+          return Platform.OS === "ios" ? (
+            <Modal transparent animationType="fade">
               <TouchableOpacity
-                style={styles.iosPickerDone}
+                style={StyleSheet.absoluteFillObject}
+                activeOpacity={1}
                 onPress={() => {
-                  setShowTimePicker(false);
-                  if (pendingTime) persistTime(pendingTime);
+                  setPickerTarget(null);
                   setPendingTime(null);
                 }}
               >
-                <Text style={styles.iosPickerDoneText}>완료</Text>
+                <View style={styles.iosPickerBackdrop} />
               </TouchableOpacity>
-            </View>
-          </Modal>
-        ) : (
-          <DateTimePicker
-            value={timeStringToDate(fortuneTime)}
-            mode="time"
-            is24Hour
-            onChange={(event, d) => {
-              setShowTimePicker(false);
-              if (event.type === "set" && d) {
-                persistTime(d);
-              }
-            }}
-          />
-        ))}
+              <View style={styles.iosPickerSheet}>
+                <DateTimePicker
+                  value={pendingTime ?? timeStringToDate(currentTime)}
+                  mode="time"
+                  display="spinner"
+                  onChange={(_, d) => {
+                    if (d) setPendingTime(d);
+                  }}
+                />
+                <TouchableOpacity
+                  style={styles.iosPickerDone}
+                  onPress={() => {
+                    if (pendingTime) persistPickedTime(pendingTime);
+                    setPickerTarget(null);
+                    setPendingTime(null);
+                  }}
+                >
+                  <Text style={styles.iosPickerDoneText}>완료</Text>
+                </TouchableOpacity>
+              </View>
+            </Modal>
+          ) : (
+            <DateTimePicker
+              value={timeStringToDate(currentTime)}
+              mode="time"
+              is24Hour
+              onChange={(event, d) => {
+                setPickerTarget(null);
+                if (event.type === "set" && d) {
+                  persistPickedTime(d);
+                }
+              }}
+            />
+          );
+        })()}
     </LinearGradient>
   );
 }

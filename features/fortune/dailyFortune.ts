@@ -1,10 +1,28 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Fortune, FortuneGrade } from "@/types/fortune";
+import {
+  CategoryScore,
+  Fortune,
+  FortuneCategory,
+  FortuneCategoryKey,
+  FortuneGrade,
+  FortuneLucky,
+} from "@/types/fortune";
 import { supabase } from "@/lib/supabase";
 import {
   loadDailyFortuneFromDB,
   saveDailyFortuneToDB,
 } from "./dailyFortuneRepo";
+import { OVERALL_MESSAGES, OVERALL_TIPS } from "./content/overall";
+import {
+  CATEGORY_POOLS,
+  SCORE_WEIGHTS,
+} from "./content/categories";
+import {
+  LUCKY_COLORS,
+  LUCKY_DIRECTIONS,
+  LUCKY_ITEMS,
+  LUCKY_TIMES,
+} from "./content/lucky";
 
 export { LUCKY_SMOKE, getSmokePalette } from "./smokePalette";
 
@@ -25,66 +43,13 @@ const GRADE_META: Record<FortuneGrade, {
   "조심": { title: "주의가 필요한 날",   icon: "⚠️", color: "#991B1B", bgColor: "#FEE2E2", weight: 2 },
 };
 
-const MESSAGES: Record<FortuneGrade, readonly string[]> = {
-  "대길": [
-    "오늘은 바라던 일이 술술 풀리는 날이에요.\n망설이던 일을 시작해보세요.",
-    "기다려온 좋은 소식이 찾아올 거예요.\n마음을 열어두세요.",
-    "주변 사람들의 응원이 큰 힘이 되는 하루예요.",
-    "노력한 만큼의 결실이 보이기 시작할 거예요.",
-    "행운이 가까이 있어요.\n작은 신호도 놓치지 마세요.",
-    "오늘 시작한 일이 뜻밖의 행운으로 이어질 수 있어요.",
-    "자신감을 가지고 움직이세요.\n모든 일이 매끄럽게 풀려요.",
-  ],
-  "소길": [
-    "오늘은 뜻밖의 인연이 찾아올 거예요.\n마음을 열고 새로운 만남을 받아들여 보세요.",
-    "작은 즐거움이 곳곳에 숨어있는 하루예요.",
-    "다정한 한마디가 누군가의 하루를 바꿀 수 있어요.",
-    "조용히 미소 짓게 하는 좋은 일이 생길 거예요.",
-    "오랜만에 만나는 사람과 즐거운 시간이 기다려요.",
-    "새로운 취미나 관심사가 눈에 들어올 수 있어요.",
-    "마음에 두었던 일을 살짝 시도해보기 좋은 날이에요.",
-  ],
-  "평범": [
-    "특별한 일은 없지만 평온한 하루를 보낼 거예요.",
-    "익숙한 일에서 작은 깨달음을 얻을 수 있는 날이에요.",
-    "급하지 않게 차근차근 진행하면 좋은 흐름이 생겨요.",
-    "오늘은 충전의 날.\n무리하지 말고 자신을 돌봐주세요.",
-    "지금 머무는 자리에서 안정감을 느낄 수 있을 거예요.",
-    "주변을 정리하는 것만으로도 마음이 가벼워져요.",
-    "잠시 멈춰 서서 하늘을 보는 여유를 가져보세요.",
-  ],
-  "조심": [
-    "오늘은 신중하게 행동하는 게 좋아요.\n결정을 서두르지 마세요.",
-    "감정이 크게 흔들릴 수 있어요.\n한 박자 쉬어가세요.",
-    "예상치 못한 변수가 생길 수 있으니 여유를 두세요.",
-    "사소한 말다툼을 피하는 게 좋은 날이에요.",
-    "물건을 잃어버리지 않도록 주의하세요.",
-    "큰 결정은 다음으로 미루는 게 안전해요.",
-    "피곤할 수 있으니 충분히 쉬어주세요.",
-  ],
-};
-
-const TIPS: readonly string[] = [
-  "성급한 판단은 금물!\n결정을 서두르기보다 한 번 더 생각해보세요",
-  "오늘 만나는 사람에게 먼저 인사를 건네보세요",
-  "물 한 잔 마시고 깊게 숨을 쉬어보세요",
-  "감사한 일 하나를 기록해보면 마음이 가벼워져요",
-  "익숙한 길 대신 새로운 길로 다녀보세요",
-  "오늘만큼은 휴대폰을 잠시 내려놓아도 좋아요",
-  "작은 친절을 베풀면 더 큰 행운이 돌아올 수 있어요",
-  "모르는 것은 솔직하게 묻는 용기가 필요해요",
-  "혼자만의 시간을 짧게라도 가져보세요",
-  "잠들기 전 오늘의 좋은 순간을 떠올려보세요",
-  "오늘 한 가지는 미루지 말고 끝내보세요",
-  "주변 사람에게 고맙다는 말을 전해보세요",
-];
-
-const LUCKY_COLORS: readonly string[] = [
-  "라벤더", "보라", "파랑", "하늘", "초록", "민트", "연두",
-  "노랑", "주황", "빨강", "분홍", "코랄", "베이지", "금색",
-];
-
 const GRADE_KEYS: readonly FortuneGrade[] = ["대길", "소길", "평범", "조심"];
+
+const CATEGORY_KEYS: readonly FortuneCategoryKey[] = [
+  "love", "work", "money", "health", "social",
+];
+
+const SCORE_KEYS: readonly CategoryScore[] = [5, 4, 3, 2, 1];
 
 // 시드 기반 RNG (mulberry32)
 function mulberry32(seed: number) {
@@ -150,25 +115,76 @@ async function getSeedId(): Promise<string> {
   return getDeviceId();
 }
 
-function generateFortune(seedId: string, dKey: string, now: Date): Fortune {
-  const seed = hashString(`${seedId}::${dKey}`);
-  const rng = mulberry32(seed);
+// 카테고리별 sub-seed — 종합 시드와 별개 namespace.
+// 무료(overall/lucky) 영역의 변경이 유료(categories) 영역에 영향 주지 않도록 분리.
+function generateCategory(
+  baseSeedId: string,
+  dKey: string,
+  key: FortuneCategoryKey,
+): FortuneCategory {
+  const subSeed = hashString(`${baseSeedId}::${dKey}::cat::${key}`);
+  const rng = mulberry32(subSeed);
 
-  const grade = pickWeighted(
+  const score = pickWeighted(
     rng,
-    GRADE_KEYS,
-    GRADE_KEYS.map((g) => GRADE_META[g].weight),
+    SCORE_KEYS,
+    SCORE_KEYS.map((s) => SCORE_WEIGHTS[s]),
   );
-  const meta = GRADE_META[grade];
-  const message = pickOne(rng, MESSAGES[grade]);
-  const tip = pickOne(rng, TIPS);
-  const luckyColor = pickOne(rng, LUCKY_COLORS);
+  const pool = CATEGORY_POOLS[key];
+  const message = pickOne(rng, pool.messages[score]);
+  const tip = pickOne(rng, pool.tips[score]);
+
+  return { score, message, tip };
+}
+
+function generateAllCategories(
+  baseSeedId: string,
+  dKey: string,
+): Record<FortuneCategoryKey, FortuneCategory> {
+  return CATEGORY_KEYS.reduce(
+    (acc, key) => {
+      acc[key] = generateCategory(baseSeedId, dKey, key);
+      return acc;
+    },
+    {} as Record<FortuneCategoryKey, FortuneCategory>,
+  );
+}
+
+function generateLucky(seedId: string, dKey: string): FortuneLucky {
+  const subSeed = hashString(`${seedId}::${dKey}::lucky`);
+  const rng = mulberry32(subSeed);
 
   const n1 = 1 + Math.floor(rng() * 49);
   let n2 = 1 + Math.floor(rng() * 49);
   while (n2 === n1) n2 = 1 + Math.floor(rng() * 49);
   const twoNumbers = rng() < 0.7;
-  const luckyNumber = twoNumbers ? `${n1}, ${n2}` : `${n1}`;
+  const number = twoNumbers ? `${n1}, ${n2}` : `${n1}`;
+
+  return {
+    number,
+    color: pickOne(rng, LUCKY_COLORS),
+    item: pickOne(rng, LUCKY_ITEMS),
+    direction: pickOne(rng, LUCKY_DIRECTIONS),
+    time: pickOne(rng, LUCKY_TIMES),
+  };
+}
+
+function generateFortune(seedId: string, dKey: string, now: Date): Fortune {
+  // 종합 등급 / 메시지 / 팁 — 기존 시드 키 유지 (이전 사용자의 오늘 등급이 안 바뀌게)
+  const overallSeed = hashString(`${seedId}::${dKey}`);
+  const overallRng = mulberry32(overallSeed);
+
+  const grade = pickWeighted(
+    overallRng,
+    GRADE_KEYS,
+    GRADE_KEYS.map((g) => GRADE_META[g].weight),
+  );
+  const meta = GRADE_META[grade];
+  const message = pickOne(overallRng, OVERALL_MESSAGES[grade]);
+  const caution = pickOne(overallRng, OVERALL_TIPS);
+
+  const lucky = generateLucky(seedId, dKey);
+  const categories = generateAllCategories(seedId, dKey);
 
   return {
     date: dateDisplay(now),
@@ -178,10 +194,32 @@ function generateFortune(seedId: string, dKey: string, now: Date): Fortune {
     gradeBgColor: meta.bgColor,
     gradeIcon: meta.icon,
     message,
-    luckyNumber,
-    luckyColor,
-    caution: tip,
+    caution,
+    luckyNumber: lucky.number,
+    luckyColor: lucky.color,
+    lucky,
+    categories,
   };
+}
+
+// legacy DB row 호환: categories / lucky 가 비어있으면 시드로 채워서 반환.
+// score 가 비정상이면 (이전 시드 알고리즘이 다르면) 다시 생성.
+function backfillFortune(stored: Fortune, seedId: string, dKey: string): Fortune {
+  let out = stored;
+  if (!out.categories) {
+    out = { ...out, categories: generateAllCategories(seedId, dKey) };
+  }
+  if (!out.lucky) {
+    const lucky = generateLucky(seedId, dKey);
+    out = {
+      ...out,
+      lucky,
+      // top-level 도 비어있다면 같이 채움 (이전엔 둘 다 채워져 있었지만 방어적으로).
+      luckyNumber: out.luckyNumber || lucky.number,
+      luckyColor: out.luckyColor || lucky.color,
+    };
+  }
+  return out;
 }
 
 async function cacheLocally(dKey: string, fortune: Fortune): Promise<void> {
@@ -201,6 +239,7 @@ async function cacheLocally(dKey: string, fortune: Fortune): Promise<void> {
 export async function getDailyFortune(): Promise<Fortune> {
   const now = new Date();
   const dKey = dateKey(now);
+  const seedId = await getSeedId();
 
   // 캐시 읽기
   let cached: Fortune | null = null;
@@ -220,11 +259,10 @@ export async function getDailyFortune(): Promise<Fortune> {
   // 우선순위: 캐시 > DB > 새로 생성
   let fortune: Fortune;
   if (cached) {
-    fortune = cached;
+    fortune = backfillFortune(cached, seedId, dKey);
   } else if (dbFortune) {
-    fortune = dbFortune;
+    fortune = backfillFortune(dbFortune, seedId, dKey);
   } else {
-    const seedId = await getSeedId();
     fortune = generateFortune(seedId, dKey, now);
   }
 
@@ -254,35 +292,6 @@ export async function resetDailyFortune(): Promise<Fortune> {
 // DEV: 랜덤 시드로 운세 한 번 굴려보기 — 캐시 건드리지 않음 (UI 테스트용)
 export function rollRandomFortune(): Fortune {
   const now = new Date();
-  const seed = (Math.random() * 0xffffffff) >>> 0;
-  const rng = mulberry32(seed);
-
-  const grade = pickWeighted(
-    rng,
-    GRADE_KEYS,
-    GRADE_KEYS.map((g) => GRADE_META[g].weight)
-  );
-  const meta = GRADE_META[grade];
-  const message = pickOne(rng, MESSAGES[grade]);
-  const tip = pickOne(rng, TIPS);
-  const luckyColor = pickOne(rng, LUCKY_COLORS);
-
-  const n1 = 1 + Math.floor(rng() * 49);
-  let n2 = 1 + Math.floor(rng() * 49);
-  while (n2 === n1) n2 = 1 + Math.floor(rng() * 49);
-  const twoNumbers = rng() < 0.7;
-  const luckyNumber = twoNumbers ? `${n1}, ${n2}` : `${n1}`;
-
-  return {
-    date: dateDisplay(now),
-    grade,
-    gradeTitle: meta.title,
-    gradeColor: meta.color,
-    gradeBgColor: meta.bgColor,
-    gradeIcon: meta.icon,
-    message,
-    luckyNumber,
-    luckyColor,
-    caution: tip,
-  };
+  const seed = `dev-${(Math.random() * 0xffffffff) >>> 0}`;
+  return generateFortune(seed, dateKey(now), now);
 }

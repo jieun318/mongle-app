@@ -53,13 +53,23 @@ import NoticeModal from "@/components/notice/NoticeModal";
 import { hasUnreadNotices } from "@/features/notice/notices";
 import FortuneGradeGuide from "@/components/fortune/FortuneGradeGuide";
 import GradeBadgeCard from "@/components/fortune/GradeBadgeCard";
-import { Fortune } from "@/types/fortune";
+import CategoryCard from "@/components/fortune/CategoryCard";
+import DetailUnlockCard from "@/components/fortune/DetailUnlockCard";
+import AdSlot from "@/components/ads/AdSlot";
+import { Fortune, FortuneCategoryKey } from "@/types/fortune";
 import {
   commitDailyFortuneToDB,
   getDailyFortune,
   getSmokePalette,
   rollRandomFortune,
 } from "@/features/fortune/dailyFortune";
+import { useEntitlement } from "@/features/entitlement/useEntitlement";
+
+// 카테고리는 가장 일반적 관심사 3개만 노출 (모달이 무겁지 않도록).
+// 시드는 5개 모두 생성되므로, 향후 마이페이지/디테일 화면에서 health/social 도 활용 가능.
+const CATEGORY_ORDER: readonly FortuneCategoryKey[] = [
+  "love", "work", "money",
+];
 
 const COLOR_MAP: Record<string, { bg: string; text: string }> = {
   라벤더: { bg: "#E6E0FA", text: "#3D2B5E" },
@@ -186,6 +196,34 @@ const BLOBS = [
   { cx: 45, cy: 50, size: 45, colorIdx: 1 },
 ] as const;
 
+function LuckyCell({
+  label,
+  value,
+  swatch,
+}: {
+  label: string;
+  value: string;
+  swatch?: string;
+}) {
+  return (
+    <View style={styles.luckyCell}>
+      <Text style={styles.luckyCellLabel}>{label}</Text>
+      {swatch ? (
+        <View
+          style={[styles.luckyCellSwatch, { backgroundColor: swatch }]}
+        />
+      ) : null}
+      <Text
+        style={styles.luckyCellValue}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+      >
+        {value}
+      </Text>
+    </View>
+  );
+}
+
 export default function HomeScreen() {
   const router = useRouter();
   const [fortune, setFortune] = useState<Fortune | null>(null);
@@ -199,6 +237,7 @@ export default function HomeScreen() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [showNotice, setShowNotice] = useState(false);
   const [hasUnread, setHasUnread] = useState(false);
+  const entitlement = useEntitlement();
 
   // 마운트 시 + 포그라운드 복귀 시 안 읽은 공지 여부 확인
   useEffect(() => {
@@ -1174,34 +1213,54 @@ export default function HomeScreen() {
                   <Text style={styles.messageLabel}>오늘의 메세지</Text>
                   <Text style={styles.messageText}>❝{fortune.message}❞</Text>
                 </View>
-                <View style={styles.luckyRow}>
-                  <View style={styles.luckyBox}>
-                    <Text style={styles.luckyLabel}>행운의 숫자</Text>
-                    <Text style={styles.luckyValue}>{fortune.luckyNumber}</Text>
-                  </View>
-                  <View style={styles.luckyBox}>
-                    <Text style={styles.luckyLabel}>행운의 색</Text>
-                    <View style={styles.luckyColorRow}>
-                      <View
-                        style={[
-                          styles.colorSwatch,
-                          {
-                            backgroundColor: getLuckyColorStyle(
-                              fortune.luckyColor,
-                            ).bg,
-                          },
-                        ]}
-                      />
-                      <Text style={styles.luckyValue}>
-                        {fortune.luckyColor}
-                      </Text>
-                    </View>
-                  </View>
+
+                <Text style={styles.sectionLabel}>오늘의 행운</Text>
+                <View style={styles.luckyGrid}>
+                  <LuckyCell label="숫자" value={fortune.luckyNumber} />
+                  <LuckyCell
+                    label="색"
+                    value={fortune.luckyColor}
+                    swatch={getLuckyColorStyle(fortune.luckyColor).bg}
+                  />
+                  <LuckyCell
+                    label="아이템"
+                    value={fortune.lucky?.item ?? "—"}
+                  />
                 </View>
+
                 <View style={styles.tipBox}>
                   <Text style={styles.tipLabel}>💡 오늘의 팁</Text>
                   <Text style={styles.tipText}>{fortune.caution}</Text>
                 </View>
+
+                {fortune.categories && (
+                  <View style={styles.categoriesSection}>
+                    {entitlement.canSeeDetail ? (
+                      <>
+                        <Text style={styles.sectionLabel}>
+                          카테고리별 자세히 보기
+                        </Text>
+                        <View style={styles.categoriesList}>
+                          {CATEGORY_ORDER.map((key) => (
+                            <CategoryCard
+                              key={key}
+                              categoryKey={key}
+                              category={fortune.categories![key]}
+                            />
+                          ))}
+                        </View>
+                      </>
+                    ) : (
+                      <DetailUnlockCard
+                        onWatchAd={entitlement.unlockDetailToday}
+                        onSubscribe={entitlement.unlockDetailToday}
+                      />
+                    )}
+                  </View>
+                )}
+
+                <AdSlot slot="fortune_modal_bottom" />
+
                 <TouchableOpacity
                   style={styles.closeBtn}
                   onPress={handleModalClose}
@@ -1408,12 +1467,14 @@ const styles = StyleSheet.create({
   modalBubbleEmoji: { fontSize: 64, lineHeight: 80 },
   modalDate: { fontSize: 13, color: "#9B8BB4" },
   messageBox: {
-    backgroundColor: "#F3EEFF",
+    backgroundColor: "#EBE2FA",
     borderRadius: 16,
     padding: 16,
-    marginBottom: 12,
+    marginBottom: 16,
     alignItems: "center",
     gap: 8,
+    borderWidth: 1,
+    borderColor: "#D8C9F2",
   },
   messageLabel: { fontSize: 12, color: "#9B8BB4" },
   messageText: {
@@ -1422,18 +1483,48 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: 24,
   },
-  luckyRow: { flexDirection: "row", gap: 12, marginBottom: 12 },
-  luckyBox: {
-    flex: 1,
-    backgroundColor: "#F9F7FF",
-    borderRadius: 16,
-    padding: 16,
-    gap: 6,
+  sectionLabel: {
+    fontSize: 12,
+    color: "#9B8BB4",
+    marginBottom: 8,
+    paddingHorizontal: 2,
   },
-  luckyLabel: { fontSize: 12, color: "#9B8BB4" },
-  luckyColorRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  colorSwatch: { width: 22, height: 22, borderRadius: 6 },
-  luckyValue: { fontSize: 20, fontWeight: "700", color: "#3D2B5E" },
+  categoriesSection: { marginBottom: 16 },
+  categoriesList: { gap: 8 },
+
+  luckyGrid: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 16,
+  },
+  luckyCell: {
+    flex: 1,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 8,
+    alignItems: "center",
+    gap: 6,
+    minHeight: 84,
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#E8E2F0",
+  },
+  luckyCellLabel: { fontSize: 11, color: "#9B8BB4" },
+  // 색 swatch — 둥근 사각형 (원보다 색을 더 명확히 보여줌)
+  luckyCellSwatch: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.06)",
+  },
+  luckyCellValue: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#3D2B5E",
+    textAlign: "center",
+  },
   tipBox: {
     backgroundColor: "#F3EEFF",
     borderRadius: 16,

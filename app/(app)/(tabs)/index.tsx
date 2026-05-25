@@ -61,7 +61,6 @@ import {
   commitDailyFortuneToDB,
   getDailyFortune,
   getSmokePalette,
-  rollRandomFortune,
 } from "@/features/fortune/dailyFortune";
 import { useEntitlement } from "@/features/entitlement/useEntitlement";
 
@@ -646,26 +645,6 @@ export default function HomeScreen() {
     }, 1700);
   };
 
-  // DEV: 구슬 길게 눌러 운세 랜덤 굴리기 + 색 미리보기 (배포 전 제거)
-  const handleOrbLongPress = () => {
-    if (!__DEV__) return;
-    setFortune(rollRandomFortune());
-    smokeOp.stopAnimation();
-    smokeOp.setValue(0);
-    Animated.sequence([
-      Animated.timing(smokeOp, {
-        toValue: 1,
-        duration: 1500,
-        useNativeDriver: true,
-      }),
-      Animated.delay(2200),
-      Animated.timing(smokeOp, {
-        toValue: 0,
-        duration: 500,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  };
 
   const handleModalClose = () => {
     setShowModal(false);
@@ -844,12 +823,7 @@ export default function HomeScreen() {
       <View style={styles.body}>
         <Text style={[styles.title, { color: theme.title }]}>오늘의 운세</Text>
 
-        <TouchableOpacity
-          activeOpacity={1}
-          onPress={handlePress}
-          onLongPress={handleOrbLongPress}
-          delayLongPress={500}
-        >
+        <TouchableOpacity activeOpacity={1} onPress={handlePress}>
           <Animated.View
             style={{
               alignItems: "center",
@@ -1255,10 +1229,7 @@ export default function HomeScreen() {
                         </View>
                       </>
                     ) : (
-                      <DetailUnlockCard
-                        onWatchAd={entitlement.unlockDetailToday}
-                        onSubscribe={entitlement.unlockDetailToday}
-                      />
+                      <DetailUnlockCard />
                     )}
                   </View>
                 )}

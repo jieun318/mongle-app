@@ -62,7 +62,8 @@
 ### 2.5 컴포넌트 / UI
 - `components/fortune/CategoryCard.tsx` — 카테고리 1장 (별점 + 메시지 + 팁)
 - `components/fortune/DetailUnlockCard.tsx` — 잠긴 게이트 카드
-  - "광고 보고 열기 (오늘 1회)" / "프리미엄 가입 (매일 자동)" 두 버튼
+  - 광고/결제 SDK 도입 전까지 "곧 만나요 ✨" 안내만 노출 (버튼 비활성).
+  - SDK 도입 시 광고 버튼(rewarded ad) + 프리미엄 링크(결제 화면) 재부착.
 - `app/(app)/(tabs)/index.tsx` 홈 모달:
   - 종합 메시지 → **게이트 1개 OR 카테고리 5장** → 행운 5항목 → 팁 → AdSlot → 확인
   - `canSeeDetail` 분기로 토글 (잠긴 상태가 기본)
@@ -106,10 +107,10 @@
 
 ### 3.4 잠금 UI 검증
 - [ ] `DEV_FORCE_PREMIUM = true` 로 토글 후 펼친 카테고리 디자인 확인
-- [ ] 광고 시청 후 해제되는 **자정 리셋** 동작 정의
-  - 지금은 컴포넌트 unmount 시 리셋됨 → 모달 닫고 다시 열면 잠긴 상태로 돌아옴
-  - 글로벌 상태로 승격 필요 (Context 또는 Zustand) — `detailUnlockedToday` 를
-    오늘 날짜 키와 함께 AsyncStorage 에 저장
+- [ ] 광고 시청 후 해제되는 **자정 리셋** 동작 정의 (광고 SDK 도입 시)
+  - 현재 `DetailUnlockCard` 는 "곧 만나요" 안내만 노출 → 해제 동작 자체가 없음.
+  - SDK 도입 시 `detailUnlockedToday` 를 오늘 날짜 키와 함께 AsyncStorage 에
+    저장해서 모달 재오픈 시에도 유지되도록 글로벌 상태로 승격 필요.
 
 ### 3.5 DB 마이그레이션 (필요 시점에)
 - 지금은 불필요 — `daily_fortunes.payload jsonb` 안에 카테고리/lucky 다 들어감.

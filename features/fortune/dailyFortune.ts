@@ -288,10 +288,3 @@ export async function resetDailyFortune(): Promise<Fortune> {
   } catch {}
   return getDailyFortune();
 }
-
-// DEV: 랜덤 시드로 운세 한 번 굴려보기 — 캐시 건드리지 않음 (UI 테스트용)
-export function rollRandomFortune(): Fortune {
-  const now = new Date();
-  const seed = `dev-${(Math.random() * 0xffffffff) >>> 0}`;
-  return generateFortune(seed, dateKey(now), now);
-}

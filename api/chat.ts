@@ -183,9 +183,7 @@ function friendlyStreamErrorMessage(err: unknown): string {
   if (status && status >= 500) {
     return "AI 서버가 응답하지 않아요. 잠시 후 다시 시도해주세요.";
   }
-  // 일반 에러 — 진단을 위해 실제 원인 일부를 함께 노출 (임시)
-  const cause = raw.slice(0, 160).replace(/\s+/g, " ").trim();
-  return `답변 생성 중 오류가 발생했어요.${cause ? ` (원인: ${cause})` : ""}`;
+  return "답변 생성 중 오류가 발생했어요. 잠시 후 다시 시도해주세요.";
 }
 
 export default async function handler(req: Request): Promise<Response> {
@@ -223,11 +221,9 @@ export default async function handler(req: Request): Promise<Response> {
     } = await supabaseAuth.auth.getUser(token);
 
     if (authErr || !user) {
+      console.error("[chat api] auth failed:", authErr?.message ?? "no user");
       return Response.json(
-        {
-          error: "세션이 만료됐어요",
-          detail: authErr?.message ?? "no user",
-        },
+        { error: "세션이 만료됐어요" },
         { status: 401, headers: cors },
       );
     }

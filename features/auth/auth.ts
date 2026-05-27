@@ -35,15 +35,44 @@ export async function signOut() {
   return supabase.auth.signOut();
 }
 
-// 카카오: Supabase OAuth 를 시스템 브라우저로 열고, mongle://auth-callback 으로
-// 돌아온 code 를 PKCE 로 세션 교환한다 (Android/iOS 공통).
+// 카카오 로그인 — 플랫폼별로 흐름이 다르다.
+//  - 네이티브: 시스템 브라우저로 OAuth URL 을 열고, mongle://auth-callback 으로
+//    돌아온 code 를 PKCE 로 세션 교환.
+//  - 웹: Supabase 가 직접 풀페이지 redirect 처리. /auth-callback 라우트에서
+//    detectSessionInUrl 이 code 를 자동으로 세션으로 교환.
 export async function signInWithKakao(): Promise<SocialResult> {
+  if (Platform.OS === "web") return signInWithKakaoWeb();
+  return signInWithKakaoNative();
+}
+
+async function signInWithKakaoWeb(): Promise<SocialResult> {
+  try {
+    if (typeof window === "undefined") {
+      return { error: new Error("브라우저 환경이 아니에요") };
+    }
+    const redirectTo = `${window.location.origin}/auth-callback`;
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "kakao",
+      options: { redirectTo, scopes: "profile_nickname profile_image" },
+    });
+    // 성공 시 Supabase 가 풀페이지 redirect 를 시작하므로 이 아래는 실행되지 않음.
+    return { error: error ?? null };
+  } catch (e) {
+    return { error: e instanceof Error ? e : new Error(String(e)) };
+  }
+}
+
+async function signInWithKakaoNative(): Promise<SocialResult> {
   try {
     const redirectTo = makeRedirectUri({ scheme: "mongle", path: "auth-callback" });
 
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "kakao",
-      options: { redirectTo, skipBrowserRedirect: true },
+      options: {
+        redirectTo,
+        skipBrowserRedirect: true,
+        scopes: "profile_nickname profile_image",
+      },
     });
     if (error) return { error };
     if (!data?.url) return { error: new Error("카카오 인증 URL 을 만들지 못했어요") };

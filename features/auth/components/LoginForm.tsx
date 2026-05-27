@@ -87,24 +87,33 @@ export default function LoginForm() {
       </View>
 
       <View style={styles.socialWrap}>
-        <TouchableOpacity
-          style={[styles.socialBtn, styles.kakaoBtn]}
-          onPress={() => handleSocial("kakao")}
-          disabled={social !== null}
-          activeOpacity={0.85}
-        >
-          {social === "kakao" ? (
-            <ActivityIndicator color="#3D2B5E" />
-          ) : (
-            <>
-              <Image
-                source={require("@/assets/images/kakao.png")}
-                style={styles.socialIcon}
-              />
-              <Text style={styles.kakaoLabel}>카카오로 시작하기</Text>
-            </>
-          )}
-        </TouchableOpacity>
+        {Platform.OS === "web" && !__DEV__ ? (
+          <View style={styles.webNotice}>
+            <Text style={styles.webNoticeTitle}>곧 앱으로 만나요 ✨</Text>
+            <Text style={styles.webNoticeBody}>
+              모바일 앱에서 카카오 로그인으로 이용할 수 있어요.
+            </Text>
+          </View>
+        ) : (
+          <TouchableOpacity
+            style={[styles.socialBtn, styles.kakaoBtn]}
+            onPress={() => handleSocial("kakao")}
+            disabled={social !== null}
+            activeOpacity={0.85}
+          >
+            {social === "kakao" ? (
+              <ActivityIndicator color="#3D2B5E" />
+            ) : (
+              <>
+                <Image
+                  source={require("@/assets/images/kakao.png")}
+                  style={styles.socialIcon}
+                />
+                <Text style={styles.kakaoLabel}>카카오로 시작하기</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        )}
 
         {showApple && (
           <TouchableOpacity
@@ -185,6 +194,22 @@ const styles = StyleSheet.create({
 
   devBtn: { alignItems: "center", paddingVertical: 6 },
   devLabel: { fontSize: 14, color: "#9B8BB4" },
+
+  webNotice: {
+    backgroundColor: "#F5F1FA",
+    borderRadius: 14,
+    paddingVertical: 22,
+    paddingHorizontal: 18,
+    alignItems: "center",
+    gap: 8,
+  },
+  webNoticeTitle: { fontSize: 16, fontWeight: "700", color: "#5C4A7A" },
+  webNoticeBody: {
+    fontSize: 13,
+    color: "#9888CC",
+    textAlign: "center",
+    lineHeight: 19,
+  },
 
   terms: {
     marginTop: "auto",

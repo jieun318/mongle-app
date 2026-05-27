@@ -40,3 +40,6 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# 아이콘/스플래시 생성 미리보기 PNG (스크립트는 보관)
+assets/_preview/*.png

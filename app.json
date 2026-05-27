@@ -11,7 +11,9 @@
       "bundler": "metro"
     },
     "splash": {
-      "backgroundColor": "#F8F3FF"
+      "image": "./assets/splash.png",
+      "resizeMode": "cover",
+      "backgroundColor": "#9888CC"
     },
     "ios": {
       "supportsTablet": false,
@@ -24,7 +26,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#E8DEFF"
+        "backgroundColor": "#B0A0DD"
       },
       "package": "com.mongle.app",
       "permissions": [

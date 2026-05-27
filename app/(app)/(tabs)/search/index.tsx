@@ -13,6 +13,7 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import BottomNav from "@/components/ui/BottomNav";
 import { SearchIcon } from "@/components/ui/icons";
+import ChatBotModal from "@/components/chat/ChatBotModal";
 import {
   CATEGORIES,
   TRENDING_KEYWORDS,
@@ -27,6 +28,7 @@ const CARD_W = (SCREEN_W - GRID_PADDING * 2 - GRID_GAP * 2) / 3;
 export default function SearchScreen() {
   const router = useRouter();
   const [query, setQuery] = useState("");
+  const [showChat, setShowChat] = useState(false);
 
   const goCategory = (cat: DreamCategory) => {
     router.push(`/(app)/search/${cat.id}`);
@@ -98,7 +100,11 @@ export default function SearchScreen() {
           ))}
         </View>
 
-        <View style={styles.cta}>
+        <TouchableOpacity
+          style={styles.cta}
+          activeOpacity={0.85}
+          onPress={() => setShowChat(true)}
+        >
           <Text style={styles.ctaText}>
             원하는 꿈 조각이 없나요?{"\n"}
             옆에 있는 몽이를 클릭해 바로 물어보세요!
@@ -108,10 +114,12 @@ export default function SearchScreen() {
             style={styles.ctaMascot}
             resizeMode="contain"
           />
-        </View>
+        </TouchableOpacity>
       </ScrollView>
 
       <BottomNav active="search" />
+
+      <ChatBotModal visible={showChat} onClose={() => setShowChat(false)} />
     </LinearGradient>
   );
 }

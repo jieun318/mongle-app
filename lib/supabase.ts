@@ -1,5 +1,6 @@
 import "react-native-url-polyfill/auto";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Platform } from "react-native";
 import { createClient } from "@supabase/supabase-js";
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
@@ -21,14 +22,19 @@ const noopStorage = {
 };
 const authStorage = typeof window === "undefined" ? noopStorage : AsyncStorage;
 
+// 웹에선 Supabase 가 풀페이지 redirect 후 URL 의 ?code 를 자동으로 세션으로 교환한다.
+// 네이티브에선 브라우저를 직접 열고 code 를 수동 교환하므로 자동 처리는 꺼둔다.
+const detectSessionInUrl =
+  Platform.OS === "web" && typeof window !== "undefined";
+
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
     storage: authStorage,
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: false,
-    // 카카오 OAuth 는 네이티브에서 브라우저로 열고 code 를 수동 교환한다.
-    // PKCE 플로우여야 exchangeCodeForSession 으로 세션 발급이 된다.
+    detectSessionInUrl,
+    // PKCE 플로우여야 exchangeCodeForSession / detectSessionInUrl 양쪽에서
+    // 세션 발급이 된다.
     flowType: "pkce",
   },
 });

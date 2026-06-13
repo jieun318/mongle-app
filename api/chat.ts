@@ -273,6 +273,16 @@ export default async function handler(req: Request): Promise<Response> {
     const firstUserText =
       messages.find((m) => m.role === "user")?.content ?? "";
 
+    // 대화가 길어질수록 질문을 줄이고 자연스럽게 마무리하도록 단계별 안내를 덧붙인다.
+    // (질문이 끝없이 이어지면 사용자가 "언제 끝나지?" 하고 불편해짐)
+    const conversationStage =
+      userMsgCount >= 3
+        ? `\n\n[대화 단계 안내] 이미 여러 차례 이야기를 주고받았습니다. 이번 답변에서는 새로운 질문을 절대 하지 말고, 위의 "💭 오늘의 꿈 요약" 형식으로 대화를 따뜻하게 마무리하세요.`
+        : userMsgCount === 2
+          ? `\n\n[대화 단계 안내] 사용자가 추가 이야기를 들려줬습니다. 해몽을 짧게 보태되 새 질문은 최대 1개까지만 하고, 대화가 마무리되는 분위기라면 질문 없이 "💭 오늘의 꿈 요약" 형식으로 정리하세요.`
+          : "";
+    const finalSystemPrompt = systemPrompt + conversationStage;
+
     // AI SDK v6 의 streamText 는 모델 호출이 실패해도 textStream 으로 throw 하지 않고
     // 조용히 빈 스트림으로 끝낸다. 에러는 onError 콜백으로만 전달되므로 여기서 잡아둔다.
     let capturedError: unknown = null;
@@ -280,7 +290,7 @@ export default async function handler(req: Request): Promise<Response> {
     // streamText 는 동기 호출이라 즉시 stream 객체를 돌려준다 (실제 토큰은 백그라운드로 도착).
     const streamResult = streamText({
       model: google("gemini-2.5-flash"),
-      system: systemPrompt,
+      system: finalSystemPrompt,
       messages: messages as ModelMessage[],
       maxOutputTokens: MAX_OUTPUT_TOKENS,
       // gemini-2.5-flash 는 기본적으로 "thinking" 토큰을 쓰는데, 그 토큰이

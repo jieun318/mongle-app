@@ -372,16 +372,21 @@ export default function ChatBotModal({ visible, onClose, onSaved }: Props) {
       role: "user",
       content: trimmed,
     };
-    // 공감 한 줄은 클라이언트가 즉시 만들어 띄움 (사용자가 마냥 기다리지 않게).
+    // 공감 한 줄은 "첫 꿈 입력"에만 띄운다. 이후 후속 질문에 답할 때마다
+    // 공감 한 줄이 반복되면 어색하므로, 이전에 보낸 사용자 메시지가 없을 때만 stub 추가.
     // AI 는 해몽만 단일 버블로 스트리밍.
-    const stubMsg: ChatMessage = {
-      id: makeId(),
-      role: "assistant",
-      content: pickEmpathy(trimmed),
-      isStub: true,
-    };
+    const isFirstDream =
+      messages.filter((m) => m.role === "user").length === 0;
+    const stubMsg: ChatMessage | null = isFirstDream
+      ? {
+          id: makeId(),
+          role: "assistant",
+          content: pickEmpathy(trimmed),
+          isStub: true,
+        }
+      : null;
     const next = [...messages, userMsg];
-    setMessages([...next, stubMsg]);
+    setMessages(stubMsg ? [...next, stubMsg] : next);
     setInput("");
     setLoading(true);
     setStreaming(true);

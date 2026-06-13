@@ -82,9 +82,64 @@ const CONTEXTUAL_EMPATHY: ReadonlyArray<{
   { keywords: ["요리", "음식"], line: "음식이 나오는 꿈, 마음이 따뜻해졌겠어요 🍽️" },
 ];
 
-// 어느 키워드에도 안 걸리면, 사용자가 입력한 텍스트에서 "꿈" 앞 토픽을 뽑아 자연스러운 한 줄을 만든다.
-// 예: "자전거 타는 꿈을 꿨어요" → "자전거 타는 꿈, 인상 깊었겠어요 🌙"
-//     "꿈에서 산을 봤어" → 매칭 안 됨 → 보편 폴백
+// 키워드에 안 걸린 꿈도 분위기(공포/슬픔/긍정/중립)를 어림해서
+// 마무리 표현을 여러 개 중 하나로 골라 매번 똑같이 "인상 깊으셨겠어요" 가
+// 반복되지 않도록 한다. (instant 표시용이라 AI 호출 없이 클라이언트에서 처리)
+const SENTIMENT_CUES: Record<"scary" | "sad" | "good", readonly string[]> = {
+  scary: [
+    "무서", "공포", "쫓", "도망", "괴물", "귀신", "악몽", "피",
+    "죽", "사고", "추락", "떨어", "불안", "소름", "오싹", "납치", "위험",
+  ],
+  sad: ["슬프", "울었", "눈물", "이별", "헤어", "그리", "외로", "보고싶", "잃", "장례", "후회"],
+  good: [
+    "행복", "기쁘", "웃", "신나", "즐거", "설레", "사랑", "예쁘",
+    "아름", "선물", "성공", "합격", "용", "빛나", "포근", "따뜻",
+  ],
+};
+
+// 분위기별 마무리 표현 풀 — 토픽 뒤에 붙여 "○○ 꿈, △△△" 형태로 완성.
+const FALLBACK_CLOSERS: Record<"scary" | "sad" | "good" | "neutral", readonly string[]> = {
+  scary: [
+    "마음이 많이 졸였겠어요 😨",
+    "가슴이 철렁했겠어요 😰",
+    "꽤 오싹한 장면이었겠어요 😨",
+    "놀란 마음이 쉽게 가시질 않았겠어요 😣",
+  ],
+  sad: [
+    "마음이 먹먹했겠어요 🥺",
+    "마음이 시렸겠어요 💧",
+    "여운이 길게 남았겠어요 🥺",
+  ],
+  good: [
+    "기분 좋은 장면이었겠어요 ✨",
+    "좋은 기운이 느껴져요 💫",
+    "괜히 설레는 꿈이네요 🌟",
+    "왠지 마음이 들뜨는 꿈이에요 ✨",
+  ],
+  neutral: [
+    "인상 깊으셨겠어요 🌙",
+    "기억에 오래 남을 장면이네요 💭",
+    "어떤 의미일지 궁금해지는 꿈이에요 🌙",
+    "마음 한켠에 남는 꿈이네요 💫",
+    "묘하게 여운이 남는 꿈이에요 🌙",
+  ],
+};
+
+function detectSentiment(text: string): keyof typeof FALLBACK_CLOSERS {
+  for (const key of ["scary", "sad", "good"] as const) {
+    if (SENTIMENT_CUES[key].some((c) => text.includes(c))) return key;
+  }
+  return "neutral";
+}
+
+function pickRandom<T>(arr: readonly T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+// 어느 키워드에도 안 걸리면, 입력 텍스트의 분위기 + "꿈" 앞 토픽을 뽑아
+// 매번 다른 한 줄을 만든다.
+// 예: "자전거 타는 꿈을 꿨어요" → "자전거 타는 꿈, 좋은 기운이 느껴져요 💫"
+//     "꿈에서 산을 봤어" → 토픽 매칭 안 됨 → 분위기 기반 보편 폴백
 function pickEmpathy(userText: string): string {
   const lower = userText.toLowerCase();
   for (const entry of CONTEXTUAL_EMPATHY) {
@@ -92,14 +147,15 @@ function pickEmpathy(userText: string): string {
       return entry.line;
     }
   }
+  const closer = pickRandom(FALLBACK_CLOSERS[detectSentiment(userText)]);
   // 토픽 추출: "꿈" 앞에 있는 짧은 문구를 뽑아 템플릿에 끼움.
   const m = userText.match(/([가-힣A-Za-z0-9 ]{1,15}?)\s*꿈/);
   const topic = m?.[1]?.trim();
   if (topic && topic.length > 0 && topic.length <= 12) {
-    return `${topic} 꿈이라니, 인상 깊으셨겠어요 🌙`;
+    return `${topic} 꿈, ${closer}`;
   }
-  // 최후 폴백
-  return "그런 꿈을 꾸셨군요, 마음에 남는 장면이었겠어요 🌙";
+  // 토픽을 못 뽑았을 때
+  return `그런 꿈을 꾸셨군요, ${closer}`;
 }
 
 // 서버가 첫 턴 응답에 함께 내려주는 보관함용 메타데이터.

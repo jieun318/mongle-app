@@ -36,7 +36,9 @@ function corsHeaders(req: Request): Record<string, string> {
 // 입력 한도 — 비용 폭증 방지
 const MAX_MESSAGES = 20;
 const MAX_MESSAGE_CHARS = 1000;
-const MAX_OUTPUT_TOKENS = 1000;
+// thinking 을 끈 상태(아래 providerOptions)에서 이 한도는 온전히 본문 해몽에 쓰인다.
+// 마무리 턴의 "오늘의 꿈 요약" 포맷까지 안 잘리도록 여유를 둔다.
+const MAX_OUTPUT_TOKENS = 1500;
 
 // 클라이언트는 user / assistant 만 보낼 수 있다 (system 주입 금지)
 const messageSchema = z.object({
@@ -247,13 +249,14 @@ export default async function handler(req: Request): Promise<Response> {
 규칙:
 - 사용자의 닉네임은 "${userName}" 입니다. 답변 안에 한 번만 자연스럽게 호칭하세요.
 - 한국어로 답변합니다.
-- **답변은 3~4 문장 이내로 해몽 핵심만 전달.** 길게 늘어놓지 마세요.
-- **답변은 공감 멘트 없이 곧장 해석(해몽)으로 시작.** 사용자 앞에는 이미 공감 한 줄이 별도 말풍선으로 표시되므로, AI 답변에는 "그런 꿈을 꾸셨군요", "정말 무서웠겠어요" 같은 도입부 금지. "~꿈을 꾸셨군요" 류 인사도 금지.
-- **답변 전체를 빈 줄("\\n\\n") 이나 줄바꿈("\\n") 없이 한 문단으로 작성.** 위로/조언이 있어도 별도 문단으로 분리하지 말고 한 흐름으로 녹여 쓸 것.
+- **답변은 짧은 문단 2~3개로 나누고, 문단 사이에 반드시 빈 줄("\\n\\n")을 넣어 읽기 쉽게 작성.** 한 문단은 1~2문장. 벽처럼 긴 한 덩어리로 쓰지 말 것.
+- **첫 문단은 공감 멘트 없이 곧장 해몽 핵심으로 시작.** 사용자 앞에는 이미 공감 한 줄이 별도 말풍선으로 표시되므로, "그런 꿈을 꾸셨군요", "정말 무서웠겠어요", "~꿈을 꾸셨군요" 류 도입부·인사 금지.
+- **둘째 문단**에서는 꿈에 등장한 상징·장면 하나를 골라 그 의미를 조금 더 풀어주거나, 부정적 꿈이면 부드러운 위로와 긍정적 시선을 더해줘.
+- **마지막은 대화를 이어갈 수 있게, 그 꿈과 관련된 구체적이고 부드러운 질문 한 줄로 끝내줘.** (예: "혹시 그 꿈에서 가장 또렷하게 남은 장면이 있었나요?") 단, 사용자가 더 할 말이 없다거나 대화를 마무리하려는 분위기면 질문하지 말고 따뜻하게 정리.
 - 같은 말 반복 / 장황한 설명 / 불필요한 비유 금지. 비유는 최대 1개.
 - 단정짓지 말고 "~일 수도 있어요" 같은 부드러운 표현.
 - 부정적인 꿈이어도 짧게 위로 + 긍정적 시선 유지.
-- 이모지는 답변 전체에서 0~1개. 본문 중간이나 마무리에 자연스러울 때만 사용.
+- 이모지는 답변 전체에서 0~2개. 문단 끝이나 마무리에 자연스러울 때만 사용.
 - 사용자가 잡담을 해도 부드럽게 꿈 이야기로 유도.
 - 사용자가 꿈 내용을 충분히 공유했다고 판단되면 (더 기억 못한다고 하거나, 대화가 자연스럽게 마무리될 때) 추가 질문 없이 따뜻한 마무리 멘트로 끝내줘.
 - 사용자가 새로운 꿈 이야기를 꺼내면 이전 꿈 흐름을 끊고 처음부터 다시 자연스럽게 대화를 시작해줘.
@@ -280,6 +283,14 @@ export default async function handler(req: Request): Promise<Response> {
       system: systemPrompt,
       messages: messages as ModelMessage[],
       maxOutputTokens: MAX_OUTPUT_TOKENS,
+      // gemini-2.5-flash 는 기본적으로 "thinking" 토큰을 쓰는데, 그 토큰이
+      // maxOutputTokens 한도를 같이 깎아먹어 본문 해몽이 중간에 잘리는 원인이었다.
+      // 해몽은 추론이 깊게 필요한 작업이 아니므로 thinking 을 꺼서 한도를 본문에 온전히 쓴다.
+      providerOptions: {
+        google: {
+          thinkingConfig: { thinkingBudget: 0, includeThoughts: false },
+        },
+      },
       onError({ error }) {
         capturedError = error;
         console.error("[chat api] streamText onError:", error);

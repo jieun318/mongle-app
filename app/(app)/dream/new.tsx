@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
@@ -20,6 +19,7 @@ import {
   todayISODate,
   updateDream,
 } from "@/features/dream/dreams";
+import { showNotice } from "@/lib/dialog";
 import { useDreamItem } from "@/features/dream/dreamQueries";
 import DreamEmoji from "@/components/dream/DreamEmoji";
 
@@ -62,9 +62,9 @@ export default function NewDreamScreen() {
       const { data, error } = await getDream(editId.toString());
       if (cancelled) return;
       if (error || !data) {
-        Alert.alert("불러오기 실패", error?.message ?? "꿈을 찾을 수 없어요", [
-          { text: "확인", onPress: () => router.back() },
-        ]);
+        showNotice("불러오기 실패", error?.message ?? "꿈을 찾을 수 없어요", () =>
+          router.back(),
+        );
         return;
       }
       setTitle(data.title);
@@ -96,12 +96,10 @@ export default function NewDreamScreen() {
       });
       setSubmitting(false);
       if (error) {
-        Alert.alert("저장 실패", error.message);
+        showNotice("저장 실패", error.message);
         return;
       }
-      Alert.alert("수정 완료", "꿈 기록을 수정했어요", [
-        { text: "확인", onPress: () => router.back() },
-      ]);
+      showNotice("수정 완료", "꿈 기록을 수정했어요", () => router.back());
       return;
     }
 
@@ -120,16 +118,13 @@ export default function NewDreamScreen() {
     setSubmitting(false);
 
     if (error) {
-      Alert.alert("저장 실패", error.message);
+      showNotice("저장 실패", error.message);
       return;
     }
 
-    Alert.alert("저장 완료", "꿈이 보관함에 담겼어요", [
-      {
-        text: "확인",
-        onPress: () => router.replace("/(app)/storage"),
-      },
-    ]);
+    showNotice("저장 완료", "꿈이 보관함에 담겼어요", () =>
+      router.replace("/(app)/storage"),
+    );
   };
 
   return (

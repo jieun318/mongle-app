@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Animated, Easing, Image, StyleSheet, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Svg, {
@@ -10,6 +10,8 @@ import Svg, {
 } from "react-native-svg";
 
 interface Props {
+  // 첫 화면 첫 paint 에 필요한 준비가 끝났는지. 애니메이션 최소 노출과 AND 로 묶인다.
+  isAppReady: boolean;
   onFinish: () => void;
 }
 
@@ -28,10 +30,13 @@ const HUG_POSE = require("@/assets/images/mongi0.png");
 const INTRO_MS = 300; // 구슬 페이드인
 const WAIT_MS = 400; // 구슬만 잠깐 보이는 대기
 const SETTLE_MS = 350; // 반짝 + mongi0 슬라이드업
-const HOLD_MS = 1500; // mongi0 가 보이는 동안 충분히 유지
-const TOTAL_MS = INTRO_MS + WAIT_MS + SETTLE_MS + HOLD_MS;
+// mongi0 등장 후 최소 유지 시간. 앱이 빨리 준비되면 이 직후 종료,
+// 느리면 isAppReady 가 될 때까지 "꿈을 해석하는 중..." 텍스트가 자연스럽게 더 머문다.
+const HOLD_MS = 500;
+// 애니메이션 최소 노출 시간. onFinish 는 (이 시간 경과) AND (isAppReady) 둘 다 만족 시 발화.
+const MIN_TOTAL_MS = INTRO_MS + WAIT_MS + SETTLE_MS + HOLD_MS;
 
-export default function SplashAnimation({ onFinish }: Props) {
+export default function SplashAnimation({ isAppReady, onFinish }: Props) {
   const orbOpacity = useRef(new Animated.Value(0)).current;
   const orbScale = useRef(new Animated.Value(0.92)).current;
   const hugOpacity = useRef(new Animated.Value(0)).current;
@@ -116,11 +121,22 @@ export default function SplashAnimation({ onFinish }: Props) {
     });
   }, [orbOpacity, orbScale, hugOpacity, hugY, textOpacity, glowOpacity, glowScale]);
 
-  // 5. 전체 ~1.75s 후 onFinish
+  // 5. 애니메이션 최소 노출 시간 경과 표시
+  const [minElapsed, setMinElapsed] = useState(false);
   useEffect(() => {
-    const t = setTimeout(onFinish, TOTAL_MS);
+    const t = setTimeout(() => setMinElapsed(true), MIN_TOTAL_MS);
     return () => clearTimeout(t);
-  }, [onFinish]);
+  }, []);
+
+  // 최소 노출 완료 AND 앱 준비 완료 → 둘 중 늦은 쪽 기준으로 1회만 종료.
+  // 빨리 준비되면 애니 끝나자마자, 느리면 준비될 때까지 기다린다.
+  const finished = useRef(false);
+  useEffect(() => {
+    if (minElapsed && isAppReady && !finished.current) {
+      finished.current = true;
+      onFinish();
+    }
+  }, [minElapsed, isAppReady, onFinish]);
 
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">

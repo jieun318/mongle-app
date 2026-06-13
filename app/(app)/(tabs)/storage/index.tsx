@@ -8,7 +8,6 @@ import {
   ActivityIndicator,
   RefreshControl,
   Image,
-  Alert,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -26,6 +25,7 @@ import {
   deleteDream,
   listMyDreams,
 } from "@/features/dream/dreams";
+import { confirmDestructive, showNotice } from "@/lib/dialog";
 
 type FilterTab = "all" | "card" | "ai";
 
@@ -107,24 +107,22 @@ export default function StorageScreen() {
 
   const handleDeleteDream = useCallback(
     (d: DreamRecord) => {
-      Alert.alert("꿈 삭제", "이 꿈 기록을 삭제할까요?", [
-        { text: "취소", style: "cancel" },
-        {
-          text: "삭제",
-          style: "destructive",
-          onPress: async () => {
-            const { error } = await deleteDream(d.id);
-            if (error) {
-              Alert.alert("삭제 실패", error.message);
-              return;
-            }
-            // 즉시 로컬 state 에서 제거 (낙관적 업데이트)
-            setOpenMenuId(null);
-            setSelectedRecord(null);
-            setDreams((prev) => prev.filter((row) => row.id !== d.id));
-          },
+      confirmDestructive(
+        "꿈 삭제",
+        "이 꿈 기록을 삭제할까요?",
+        "삭제",
+        async () => {
+          const { error } = await deleteDream(d.id);
+          if (error) {
+            showNotice("삭제 실패", error.message);
+            return;
+          }
+          // 즉시 로컬 state 에서 제거 (낙관적 업데이트)
+          setOpenMenuId(null);
+          setSelectedRecord(null);
+          setDreams((prev) => prev.filter((row) => row.id !== d.id));
         },
-      ]);
+      );
     },
     [],
   );

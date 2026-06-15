@@ -29,9 +29,7 @@
         "backgroundColor": "#B0A0DD"
       },
       "package": "com.mongle.app",
-      "permissions": [
-        "android.permission.RECORD_AUDIO"
-      ]
+      "permissions": []
     },
     "plugins": [
       "expo-router",

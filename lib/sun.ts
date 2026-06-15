@@ -1,6 +1,4 @@
-import * as Location from "expo-location";
-
-// 위치 권한 거부 시 기본값 (서울)
+// 기본 좌표 (서울)
 const FALLBACK_LAT = 37.5665;
 const FALLBACK_LNG = 126.978;
 
@@ -25,25 +23,12 @@ export async function getCurrentLocation(): Promise<{
   lng: number;
   fallback: boolean;
 }> {
-  // 다국어 작업 전까지 권한 요청 일시 보류 — 서울 기준으로 운영
-  // 권한 다이얼로그를 한국어/영어 양쪽으로 안내할 준비가 되면
-  // requestForegroundPermissionsAsync() 로 복원 가능
-  try {
-    const { status } = await Location.getForegroundPermissionsAsync();
-    if (status !== "granted") {
-      return { lat: FALLBACK_LAT, lng: FALLBACK_LNG, fallback: true };
-    }
-    const pos = await Location.getCurrentPositionAsync({
-      accuracy: Location.Accuracy.Low,
-    });
-    return {
-      lat: pos.coords.latitude,
-      lng: pos.coords.longitude,
-      fallback: false,
-    };
-  } catch {
-    return { lat: FALLBACK_LAT, lng: FALLBACK_LNG, fallback: true };
-  }
+  // 다국어 작업 전까지 위치 권한 보류 — 항상 서울 기준으로 운영.
+  // 실제 위치 기능을 켤 때: `expo-location` 재설치 후
+  //   const { status } = await Location.requestForegroundPermissionsAsync();
+  //   if (status === "granted") { const pos = await Location.getCurrentPositionAsync(...); ... }
+  // 형태로 복원하고 app.json android.permissions 도 함께 추가.
+  return { lat: FALLBACK_LAT, lng: FALLBACK_LNG, fallback: true };
 }
 
 export async function fetchSunTimes(

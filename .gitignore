@@ -3,6 +3,10 @@
 # dependencies
 node_modules/
 
+# 패키지 매니저는 npm 으로 통일 — pnpm/yarn lockfile 은 추적하지 않음
+pnpm-lock.yaml
+yarn.lock
+
 # Expo
 .expo/
 dist/

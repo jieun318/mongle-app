@@ -6,19 +6,20 @@ import {
   FortuneCategoryKey,
   FortuneGrade,
   FortuneLucky,
+  MoodType,
 } from "@/types/fortune";
 import { supabase } from "@/lib/supabase";
 import {
   loadDailyFortuneFromDB,
   saveDailyFortuneToDB,
 } from "./dailyFortuneRepo";
-import { OVERALL_MESSAGES, OVERALL_TIPS } from "./content/overall";
+import { OVERALL_MESSAGES, OVERALL_TIPS_BY_MOOD } from "./content/overall";
 import {
   CATEGORY_POOLS,
   SCORE_WEIGHTS,
 } from "./content/categories";
 import {
-  LUCKY_COLORS,
+  LUCKY_COLORS_BY_MOOD,
   LUCKY_DIRECTIONS,
   LUCKY_ITEMS,
   LUCKY_TIMES,
@@ -44,6 +45,14 @@ const GRADE_META: Record<FortuneGrade, {
 };
 
 const GRADE_KEYS: readonly FortuneGrade[] = ["대길", "소길", "평범", "조심"];
+
+// 등급(4단계) → mood(3단계). 럭키 색·종합 팁 선택에 사용.
+const GRADE_TO_MOOD: Record<FortuneGrade, MoodType> = {
+  "대길": "good",
+  "소길": "good",
+  "평범": "normal",
+  "조심": "caution",
+};
 
 const CATEGORY_KEYS: readonly FortuneCategoryKey[] = [
   "love", "work", "money", "health", "social",
@@ -150,7 +159,7 @@ function generateAllCategories(
   );
 }
 
-function generateLucky(seedId: string, dKey: string): FortuneLucky {
+function generateLucky(seedId: string, dKey: string, mood: MoodType): FortuneLucky {
   const subSeed = hashString(`${seedId}::${dKey}::lucky`);
   const rng = mulberry32(subSeed);
 
@@ -162,7 +171,7 @@ function generateLucky(seedId: string, dKey: string): FortuneLucky {
 
   return {
     number,
-    color: pickOne(rng, LUCKY_COLORS),
+    color: pickOne(rng, LUCKY_COLORS_BY_MOOD[mood]),
     item: pickOne(rng, LUCKY_ITEMS),
     direction: pickOne(rng, LUCKY_DIRECTIONS),
     time: pickOne(rng, LUCKY_TIMES),
@@ -180,10 +189,11 @@ function generateFortune(seedId: string, dKey: string, now: Date): Fortune {
     GRADE_KEYS.map((g) => GRADE_META[g].weight),
   );
   const meta = GRADE_META[grade];
+  const mood = GRADE_TO_MOOD[grade];
   const message = pickOne(overallRng, OVERALL_MESSAGES[grade]);
-  const caution = pickOne(overallRng, OVERALL_TIPS);
+  const caution = pickOne(overallRng, OVERALL_TIPS_BY_MOOD[mood]);
 
-  const lucky = generateLucky(seedId, dKey);
+  const lucky = generateLucky(seedId, dKey, mood);
   const categories = generateAllCategories(seedId, dKey);
 
   return {
@@ -210,7 +220,7 @@ function backfillFortune(stored: Fortune, seedId: string, dKey: string): Fortune
     out = { ...out, categories: generateAllCategories(seedId, dKey) };
   }
   if (!out.lucky) {
-    const lucky = generateLucky(seedId, dKey);
+    const lucky = generateLucky(seedId, dKey, GRADE_TO_MOOD[stored.grade]);
     out = {
       ...out,
       lucky,

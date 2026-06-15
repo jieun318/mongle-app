@@ -16,6 +16,10 @@ export const LUCKY_SMOKE: Record<string, readonly [string, string, string]> = {
   "코랄":   ["#fbcdc0", "#fde0d6", "#f8c0b0"],
   "베이지": ["#f5e8cb", "#fbf2dc", "#efddb8"],
   "금색":   ["#fbe8a4", "#fdf2c8", "#f8de8a"],
+  "남색":   ["#c7cfe6", "#dde3f2", "#b8c2de"],
+  "청록":   ["#c2e4e2", "#d9efed", "#b0dad7"],
+  "쑥색":   ["#dde2c8", "#eaeedb", "#d0d7b6"],
+  "잿빛":   ["#dadde1", "#e9ebee", "#cccfd5"],
 };
 
 const FALLBACK_SMOKE: readonly [string, string, string] = ["#e2d4f5", "#f0e6fa", "#d8c8f0"];

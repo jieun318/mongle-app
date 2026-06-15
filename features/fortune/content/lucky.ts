@@ -1,9 +1,14 @@
-// 행운 아이템 풀 (무료 영역, 추후 광고 hook 자리).
+// 행운 아이템 풀 (무료 영역).
 
-export const LUCKY_COLORS: readonly string[] = [
-  "라벤더", "보라", "파랑", "하늘", "초록", "민트", "연두",
-  "노랑", "주황", "빨강", "분홍", "코랄", "베이지", "금색",
-];
+import type { MoodType } from "@/types/fortune";
+
+// 색은 mood 별로 분리 — 구슬 연기색이 그날 mood 와 어울리게.
+// 모든 색은 index.tsx COLOR_MAP + smokePalette LUCKY_SMOKE 에도 등록돼 있어야 함.
+export const LUCKY_COLORS_BY_MOOD: Record<MoodType, readonly string[]> = {
+  good:    ["노랑", "주황", "코랄", "금색", "분홍", "빨강"],
+  normal:  ["라벤더", "보라", "하늘", "민트", "연두", "베이지"],
+  caution: ["파랑", "남색", "청록", "쑥색", "잿빛"],
+};
 
 export const LUCKY_ITEMS: readonly string[] = [
   "동전", "손수건", "메모지", "거울", "립밤", "이어폰",

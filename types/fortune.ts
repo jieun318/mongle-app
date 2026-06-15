@@ -1,5 +1,8 @@
 export type FortuneGrade = "대길" | "소길" | "평범" | "조심";
 
+// 럭키 색·종합 팁 선택용 mood 그룹핑 (등급 4단계 → mood 3단계).
+export type MoodType = "good" | "normal" | "caution";
+
 // 카테고리 점수 1(매우 나쁨) ~ 5(매우 좋음).
 // 카테고리는 종합 등급과 독립적으로 시드된다 — 종합이 "대길"이어도 특정 카테고리는 1이 나올 수 있다.
 export type CategoryScore = 1 | 2 | 3 | 4 | 5;

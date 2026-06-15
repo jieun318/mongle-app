@@ -54,21 +54,28 @@ import { hasUnreadNotices } from "@/features/notice/notices";
 import FortuneGradeGuide from "@/components/fortune/FortuneGradeGuide";
 import GradeBadgeCard from "@/components/fortune/GradeBadgeCard";
 import CategoryCard from "@/components/fortune/CategoryCard";
-import DetailUnlockCard from "@/components/fortune/DetailUnlockCard";
 import AdSlot from "@/components/ads/AdSlot";
-import { Fortune, FortuneCategoryKey } from "@/types/fortune";
+import { Fortune, FortuneCategory, FortuneCategoryKey } from "@/types/fortune";
 import {
   commitDailyFortuneToDB,
   getDailyFortune,
   getSmokePalette,
 } from "@/features/fortune/dailyFortune";
-import { useEntitlement } from "@/features/entitlement/useEntitlement";
 
-// 카테고리는 가장 일반적 관심사 3개만 노출 (모달이 무겁지 않도록).
-// 시드는 5개 모두 생성되므로, 향후 마이페이지/디테일 화면에서 health/social 도 활용 가능.
+// 5카테고리 전부 노출 (무료 공개). 순서는 types/fortune CATEGORY_KEYS 와 동일.
 const CATEGORY_ORDER: readonly FortuneCategoryKey[] = [
-  "love", "work", "money",
+  "love", "work", "money", "health", "social",
 ];
+
+// 아코디언 기본 펼침 대상 — 점수가 가장 높은 카테고리 (동점 시 앞 순서 우선).
+function pickTopCategory(
+  categories: Record<FortuneCategoryKey, FortuneCategory>,
+): FortuneCategoryKey {
+  return CATEGORY_ORDER.reduce(
+    (best, k) => (categories[k].score > categories[best].score ? k : best),
+    CATEGORY_ORDER[0],
+  );
+}
 
 const COLOR_MAP: Record<string, { bg: string; text: string }> = {
   라벤더: { bg: "#E6E0FA", text: "#3D2B5E" },
@@ -87,6 +94,10 @@ const COLOR_MAP: Record<string, { bg: string; text: string }> = {
   갈색: { bg: "#C4A47C", text: "#fff" },
   베이지: { bg: "#F5F0DC", text: "#4A3728" },
   금색: { bg: "#FFD700", text: "#4A3000" },
+  남색: { bg: "#3B4C7A", text: "#fff" },
+  청록: { bg: "#4A9D9C", text: "#fff" },
+  쑥색: { bg: "#8A9A6B", text: "#fff" },
+  잿빛: { bg: "#9AA0A8", text: "#fff" },
   은색: { bg: "#D1D5DB", text: "#1F2937" },
   흰색: { bg: "#F9FAFB", text: "#374151" },
   검정: { bg: "#374151", text: "#fff" },
@@ -236,7 +247,6 @@ export default function HomeScreen() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [showNotice, setShowNotice] = useState(false);
   const [hasUnread, setHasUnread] = useState(false);
-  const entitlement = useEntitlement();
 
   // 마운트 시 + 포그라운드 복귀 시 안 읽은 공지 여부 확인
   useEffect(() => {
@@ -1213,24 +1223,20 @@ export default function HomeScreen() {
 
                 {fortune.categories && (
                   <View style={styles.categoriesSection}>
-                    {entitlement.canSeeDetail ? (
-                      <>
-                        <Text style={styles.sectionLabel}>
-                          카테고리별 자세히 보기
-                        </Text>
-                        <View style={styles.categoriesList}>
-                          {CATEGORY_ORDER.map((key) => (
-                            <CategoryCard
-                              key={key}
-                              categoryKey={key}
-                              category={fortune.categories![key]}
-                            />
-                          ))}
-                        </View>
-                      </>
-                    ) : (
-                      <DetailUnlockCard />
-                    )}
+                    <Text style={styles.sectionLabel}>
+                      카테고리별 자세히 보기
+                    </Text>
+                    <View style={styles.categoriesList}>
+                      {CATEGORY_ORDER.map((key) => (
+                        <CategoryCard
+                          key={key}
+                          categoryKey={key}
+                          category={fortune.categories![key]}
+                          collapsible
+                          defaultExpanded={key === pickTopCategory(fortune.categories!)}
+                        />
+                      ))}
+                    </View>
                   </View>
                 )}
 

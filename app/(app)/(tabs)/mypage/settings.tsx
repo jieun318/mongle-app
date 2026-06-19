@@ -403,6 +403,18 @@ export default function SettingsScreen() {
           </View>
 
           <View style={styles.section}>
+            <Text style={styles.sectionTitle}>약관 및 정책</Text>
+
+            <TouchableOpacity
+              style={styles.actionRow}
+              onPress={() => router.push("/privacy")}
+            >
+              <Text style={styles.actionLabel}>개인정보처리방침</Text>
+              <Text style={styles.actionChevron}>›</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.section}>
             <Text style={styles.sectionTitle}>계정</Text>
 
             <TouchableOpacity

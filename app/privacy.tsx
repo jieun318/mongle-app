@@ -12,183 +12,150 @@ export default function PrivacyScreen() {
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.h1}>개인정보 처리방침</Text>
+        <Text style={styles.h1}>몽글 개인정보처리방침</Text>
         <Text style={styles.meta}>
-          몽글(이하 "서비스")은 정보주체의 자유와 권리를 보호하기 위해
-          「개인정보 보호법」 및 관계 법령이 정한 바를 준수하여 적법하게
-          개인정보를 처리하고 안전하게 관리하고 있습니다. 본 방침은 다음의
-          내용을 담고 있습니다.
+          몽글(이하 "회사")은 정보주체의 개인정보를 중요시하며, 「개인정보
+          보호법」을 준수합니다. 회사는 본 방침을 통해 수집하는 개인정보의 항목,
+          이용 목적, 보유 기간 등을 안내합니다. 본 방침은 2026년 6월 23일부터
+          시행됩니다.
         </Text>
 
-        <Section n="1" title="수집하는 개인정보 항목 및 수집 방법">
-          <P>서비스 이용 과정에서 다음 정보가 수집될 수 있습니다.</P>
-          <Bullet label="필수 (회원가입·로그인)">
-            이메일 주소, 비밀번호(암호화 저장), 또는 카카오 로그인 시 카카오에서
-            제공하는 식별자·이메일·닉네임·프로필 이미지
-          </Bullet>
-          <Bullet label="선택 (프로필)">
-            닉네임, 프로필 이미지(직접 업로드), 알림 수신 설정
-          </Bullet>
-          <Bullet label="선택 (위치)">
-            정확한 일출·일몰 시각 표시를 위한 대략적 위·경도. 권한 미허용 시
-            서울 기준으로 대체되며 별도 저장되지 않습니다.
-          </Bullet>
-          <Bullet label="자동 수집">
-            서비스 이용 기록, 접속 로그, 기기 식별자(deviceId), IP 주소, 운영체제·앱 버전
-          </Bullet>
-          <Bullet label="이용자 생성 콘텐츠">
-            꿈 기록, 챗봇 대화 내용, 일일 운세 조회 이력
-          </Bullet>
-          <P>
-            수집 방법: 회원가입·서비스 이용 과정에서 이용자가 직접 입력하거나,
-            소셜 로그인 제공자(카카오·Apple)로부터 동의 범위 내 제공받으며, 일부
-            정보는 앱 이용 중 자동으로 생성·수집됩니다.
-          </P>
-        </Section>
-
-        <Section n="2" title="개인정보의 수집·이용 목적">
-          <Bullet label="회원 식별 및 인증">
-            로그인, 본인 확인, 부정 이용 방지
+        <Section n="1" title="개인정보의 처리 목적">
+          <P>회사는 다음의 목적을 위하여 개인정보를 처리합니다.</P>
+          <Bullet label="회원 가입 및 관리">
+            카카오 OAuth 기반 회원 식별, 부정 이용 방지
           </Bullet>
           <Bullet label="서비스 제공">
-            운세 생성·저장, 꿈 기록 관리, 챗봇 응답 생성, 알림 발송
+            꿈 일기 작성·저장, 운세 제공, AI 기반 해몽 및 챗봇 응답
           </Bullet>
           <Bullet label="서비스 개선">
-            오류 분석, 사용 패턴 통계(개인 식별 정보 제외)
-          </Bullet>
-          <Bullet label="고객 문의 응대">
-            문의·신고에 대한 답변 및 처리
+            통계 분석, 신규 기능 개발, 오류 진단
           </Bullet>
         </Section>
 
-        <Section n="3" title="개인정보의 보유 및 이용 기간">
+        <Section n="2" title="수집하는 개인정보 항목 및 수집 방법">
+          <P>서비스 이용 과정에서 다음 정보가 수집됩니다.</P>
+          <Bullet label="회원 가입 시 (필수)">
+            이메일 주소, 닉네임, 프로필 이미지 (카카오 계정 연동)
+          </Bullet>
+          <Bullet label="서비스 이용 시">
+            꿈 일기 본문, 챗봇 대화 내역, 운세 조회 기록
+          </Bullet>
+          <Bullet label="선택 수집">
+            위치 정보 (일출 시간 기반 콘텐츠 제공에만 사용, 외부 전송 없음)
+          </Bullet>
+          <Bullet label="자동 생성 정보">
+            접속 IP, 접속 로그, 기기 정보, 광고 식별자(광고 기능 활성화 시)
+          </Bullet>
           <P>
-            서비스 이용 기간 또는 이용자가 회원 탈퇴를 요청할 때까지 보유하며,
-            탈퇴 즉시 모든 개인정보 및 이용자 생성 콘텐츠를 지체 없이 파기합니다.
+            수집 방법: 카카오 OAuth 로그인 시 카카오로부터 제공받거나, 사용자가
+            앱 내에서 직접 입력하며, 일부 정보는 서비스 이용 중 자동으로
+            수집됩니다.
           </P>
+        </Section>
+
+        <Section n="3" title="개인정보의 처리 및 보유 기간">
           <P>
-            단, 관계 법령에 의해 보존할 필요가 있는 경우 해당 법령이 정한 기간
-            동안 보관합니다. 본 서비스는 현재 결제·통신 기능을 제공하지 않아
-            전자상거래법·통신비밀보호법상 별도 보관 의무는 발생하지 않습니다.
+            원칙적으로 회원 탈퇴 시 지체 없이 파기합니다. 단, 관계 법령에 따라
+            보관이 필요한 경우 해당 기간 동안 보관합니다.
           </P>
+          <Bullet label="계약·청약철회 기록">5년 (전자상거래법)</Bullet>
+          <Bullet label="대금결제·재화공급 기록">5년 (전자상거래법)</Bullet>
+          <Bullet label="소비자 불만·분쟁처리 기록">3년 (전자상거래법)</Bullet>
+          <Bullet label="로그인 기록">3개월 (통신비밀보호법)</Bullet>
         </Section>
 
         <Section n="4" title="개인정보의 제3자 제공">
           <P>
-            서비스는 이용자의 개인정보를 원칙적으로 외부에 제공하지 않습니다.
-            다만 이용자가 사전에 동의했거나 법령에 특별한 규정이 있는 경우에만
-            예외적으로 제공됩니다.
+            회사는 정보주체의 개인정보를 본 방침 제1조에서 명시한 범위 내에서만
+            처리하며, 정보주체의 동의 없이 제3자에게 제공하지 않습니다.
           </P>
         </Section>
 
-        <Section n="5" title="개인정보 처리 위탁">
-          <P>
-            서비스는 안정적인 운영을 위해 다음과 같이 일부 업무를 외부에
-            위탁하고 있습니다.
-          </P>
+        <Section n="5" title="개인정보 처리업무의 위탁">
+          <P>회사는 원활한 서비스 제공을 위하여 다음과 같이 위탁합니다.</P>
           <Table
             rows={[
-              ["Supabase, Inc.", "회원 인증, 데이터베이스 및 파일 저장 (해외 처리)"],
-              ["Vercel, Inc.", "웹·API 호스팅 (해외 처리)"],
-              ["Kakao Corp.", "카카오 소셜 로그인"],
-              ["Apple Inc.", "Apple 소셜 로그인 (활성화 시)"],
-              [
-                "Google LLC (Gemini API)",
-                "AI 챗봇 응답 생성 — 사용자가 입력한 대화 내용이 응답 생성을 위해 처리됨 (해외 처리)",
-              ],
-              [
-                "Open-Meteo",
-                "일출·일몰 시각 조회 — 대략적 위·경도가 전송되며 저장되지 않음 (해외 처리)",
-              ],
+              ["Supabase Inc.", "회원 정보 및 콘텐츠 저장·관리 (미국)"],
+              ["Google LLC", "AI 해몽 및 챗봇 응답 생성 — Gemini API (미국)"],
+              ["Kakao Corp.", "소셜 로그인 인증 (대한민국)"],
             ]}
           />
           <P style={styles.small}>
-            ※ 일부 수탁사는 데이터를 미국·유럽 등 해외에서 처리할 수 있으며,
-            이는 서비스 제공에 필수적인 범위에 한합니다. 이용자는 회원 가입 및
-            서비스 이용을 통해 본 처리에 동의한 것으로 간주됩니다.
+            위탁계약 체결 시 「개인정보 보호법」에 따라 위탁업무 수행 목적 외
+            개인정보 처리 금지, 기술적·관리적 보호조치 등을 명시합니다.
           </P>
         </Section>
 
-        <Section n="6" title="정보주체의 권리 및 행사 방법">
+        <Section n="6" title="정보주체의 권리·의무 및 행사방법">
+          <P>정보주체는 다음 권리를 행사할 수 있습니다.</P>
+          <Bullet label="열람">개인정보 열람 요구</Bullet>
+          <Bullet label="정정">오류 등이 있을 경우 정정 요구</Bullet>
+          <Bullet label="삭제">삭제 요구</Bullet>
+          <Bullet label="처리 정지">처리 정지 요구</Bullet>
+          <Bullet label="회원 탈퇴">
+            앱 내 [마이페이지 &gt; 회원 탈퇴]에서 직접 처리 가능
+          </Bullet>
           <P>
-            이용자는 언제든지 본인의 개인정보에 대해 다음의 권리를 행사할 수
-            있습니다.
+            권리 행사는 앱 내 기능 또는 아래 개인정보 보호책임자에게 이메일로
+            요청하실 수 있습니다.
           </P>
-          <Bullet label="열람 / 정정">
-            앱 내 [마이페이지 → 프로필 편집]에서 직접 확인·수정
-          </Bullet>
-          <Bullet label="처리 정지 / 삭제">
-            앱 내 [설정 → 회원 탈퇴]를 통한 즉시 탈퇴, 또는 아래 연락처로 요청
-          </Bullet>
-          <Bullet label="동의 철회">
-            알림 등 선택 항목은 [설정] 에서 토글로 즉시 철회 가능
-          </Bullet>
         </Section>
 
-        <Section n="7" title="개인정보의 파기 절차 및 방법">
-          <P>
-            이용자가 회원 탈퇴를 요청하면, 데이터베이스 상의 회원 정보 및
-            이용자 생성 콘텐츠(꿈 기록·운세 이력·챗봇 대화 등)는 복구 불가능한
-            방식으로 즉시 삭제됩니다. 업로드된 프로필 이미지 등 파일 형태의
-            정보 또한 함께 영구 삭제됩니다.
-          </P>
+        <Section n="7" title="개인정보의 파기">
+          <P>회원 탈퇴 또는 보유 기간 경과 시 지체 없이 파기합니다.</P>
+          <Bullet label="전자적 파일">복원 불가능한 방법으로 영구 삭제</Bullet>
+          <Bullet label="종이 문서">분쇄 또는 소각</Bullet>
         </Section>
 
         <Section n="8" title="개인정보의 안전성 확보 조치">
-          <Bullet label="기술적 조치">
-            전송 구간 TLS 암호화, 비밀번호 단방향 암호화 저장, Row Level
-            Security 기반 접근 제어
+          <Bullet label="전송 구간 암호화">HTTPS/TLS 적용</Bullet>
+          <Bullet label="접근 권한 관리">
+            Supabase Row Level Security 기반 데이터베이스 접근 제어
           </Bullet>
-          <Bullet label="관리적 조치">
-            접근 권한 최소화, 위탁사 보안 인증(SOC2 등) 확인
-          </Bullet>
-          <Bullet label="물리적 조치">
-            클라우드 제공자(Supabase·Vercel·Google Cloud)의 데이터센터 보안
-            정책 준용
-          </Bullet>
+          <Bullet label="비밀번호 미저장">OAuth 인증 사용</Bullet>
+          <Bullet label="로그 보호">접근 로그 보관 및 위변조 방지</Bullet>
         </Section>
 
-        <Section n="9" title="자동 수집 장치의 설치·운영 및 거부">
+        <Section n="9" title="행태정보의 수집·이용 및 거부">
           <P>
-            서비스는 이용자 경험 개선을 위해 기기 식별자 및 로컬 저장소(예:
-            AsyncStorage)를 사용합니다. 이용자는 기기 설정에서 권한을
-            철회하거나, 앱 삭제를 통해 해당 정보를 제거할 수 있습니다.
+            본 서비스는 향후 광고 기능 활성화 시 광고 식별자(ADID/IDFA)를
+            활용한 맞춤형 광고를 제공할 수 있으며, 정보주체는 기기 설정에서 광고
+            식별자 재설정 또는 광고 추적 제한이 가능합니다.
           </P>
+          <Bullet label="Android">설정 &gt; Google &gt; 광고 &gt; 광고 ID 재설정</Bullet>
+          <Bullet label="iOS">설정 &gt; 개인정보 보호 및 보안 &gt; 추적</Bullet>
         </Section>
 
-        <Section n="10" title="아동의 개인정보">
-          <P>
-            서비스는 만 14세 미만 아동의 회원가입을 받지 않습니다. 만 14세 미만
-            아동의 개인정보가 수집된 사실이 확인되는 경우, 지체 없이 해당
-            정보를 파기합니다.
-          </P>
-        </Section>
-
-        <Section n="11" title="개인정보 보호책임자 및 연락처">
+        <Section n="10" title="개인정보 보호책임자">
           <P>
             개인정보 처리에 관한 문의·불만 처리·피해 구제 등은 아래 연락처로
             요청하실 수 있습니다.
           </P>
-          <Bullet label="개인정보 보호책임자">[성명]</Bullet>
-          <Bullet label="이메일">[contact@example.com]</Bullet>
-          <P style={styles.small}>
-            기타 개인정보 침해에 대한 상담이 필요하신 경우 개인정보침해
-            신고센터(privacy.kisa.or.kr / 국번 없이 118), 개인정보 분쟁조정위원회
-            (kopico.go.kr / 1833-6972), 대검찰청(spo.go.kr / 1301), 경찰청
-            (ecrm.cyber.go.kr / 국번 없이 182) 으로 문의하실 수 있습니다.
-          </P>
+          <Bullet label="개인정보 보호책임자">박지은</Bullet>
+          <Bullet label="이메일">[이메일]</Bullet>
         </Section>
 
-        <Section n="12" title="개인정보 처리방침의 변경">
+        <Section n="11" title="권익침해 구제방법">
+          <P>정보주체는 아래 기관에 문의하실 수 있습니다.</P>
+          <Bullet label="개인정보분쟁조정위원회">
+            1833-6972 (www.kopico.go.kr)
+          </Bullet>
+          <Bullet label="개인정보침해신고센터">118 (privacy.kisa.or.kr)</Bullet>
+          <Bullet label="대검찰청 사이버수사과">1301 (www.spo.go.kr)</Bullet>
+          <Bullet label="경찰청 사이버수사국">182 (ecrm.cyber.go.kr)</Bullet>
+        </Section>
+
+        <Section n="12" title="개인정보처리방침의 변경">
           <P>
-            본 방침은 법령·정책 또는 서비스의 변경 사항을 반영하기 위해 수정될
-            수 있으며, 변경 시 앱 내 공지사항을 통해 사전 안내합니다.
+            본 방침은 시행일로부터 적용되며, 변경 내용이 있을 경우 시행 7일
+            전부터 공지사항을 통하여 공지합니다.
           </P>
         </Section>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>공고일자: [YYYY-MM-DD]</Text>
-          <Text style={styles.footerText}>시행일자: [YYYY-MM-DD]</Text>
+          <Text style={styles.footerText}>공고일자: 2026년 6월 23일</Text>
+          <Text style={styles.footerText}>시행일자: 2026년 6월 23일</Text>
         </View>
       </ScrollView>
     </>

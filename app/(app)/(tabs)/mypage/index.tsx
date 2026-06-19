@@ -194,6 +194,15 @@ export default function MypageScreen() {
               </View>
             ) : null}
           </View>
+
+          {/* 푸터 — 정책 링크 (Play Store 심사·인앱 접근용) */}
+          <TouchableOpacity
+            style={styles.footerLink}
+            onPress={() => router.push("/privacy")}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.footerLinkText}>개인정보처리방침</Text>
+          </TouchableOpacity>
         </ScrollView>
       )}
 
@@ -322,4 +331,11 @@ const styles = StyleSheet.create({
   dayBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
   dayBadgeText: { fontSize: 11, fontWeight: "700" },
   dayMessage: { fontSize: 12, color: "#7868B8", lineHeight: 18 },
+
+  footerLink: { alignItems: "center", paddingVertical: 8, marginTop: 4 },
+  footerLinkText: {
+    fontSize: 12,
+    color: "#A898D0",
+    textDecorationLine: "underline",
+  },
 });

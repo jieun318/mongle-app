@@ -1,6 +1,6 @@
 # 몽글 (Mongle) — 프로젝트 진행 상황
 
-> 2026-05-25 기준. 운세 + 꿈해몽 + AI 챗봇 모바일 앱.
+> 2026-06-23 기준. 운세 + 꿈해몽 + AI 챗봇 모바일 앱.
 >
 > 운세 카테고리 분리 작업의 상세는 [FORTUNE_CATEGORIES.md](./FORTUNE_CATEGORIES.md) 참고.
 
@@ -102,6 +102,24 @@
 0010 dream_items public read
 ```
 
+### 2.8 안드로이드 배포 준비 (2026-06-23)
+- **빌드 설정 점검 완료** — 패키지명(`com.mongle.app`), 버전(`1.0.0` + EAS
+  `appVersionSource: remote` + `autoIncrement`), 적응형 아이콘 / 스플래시,
+  권한 최소화, EAS production env 주입 모두 확인.
+- **약관/정책 페이지** — `app/privacy.tsx`(기존) + `app/terms.tsx`(신규, 14개
+  조항). 마이페이지 푸터 · 설정 "약관 및 정책" 섹션에 두 링크 모두 연결.
+  공개 URL: `/privacy`, `/terms` (Vercel).
+- **개발용 우회 로그인** — `__DEV__` 가드로 프로덕션 빌드 제외 확인.
+- **Supabase Anonymous Sign-ins OFF** — 백엔드 토글까지 막아 익명 세션 생성
+  차단 (보안 이슈 해결).
+- **카카오 로그인 운영 전환 완료**
+  - 개인 개발자 자격 **비즈 앱 전환** 완료 (사업자 정식 등록은 미진행 — 현 단계엔
+    개인 개발자 비즈로 충분)
+  - 동의항목 활성화: 닉네임 · 프로필사진 · 카카오계정(이메일) 전부 필수 동의
+  - Supabase Auth Kakao Provider REST API 키 + Callback URL 정상 연동 확인
+  - **Supabase OAuth 방식** 사용 (네이티브 카카오 SDK 미사용) → 카카오 플랫폼
+    등록 불필요
+
 ---
 
 ## 3. 진행 중 / 유보
@@ -111,7 +129,9 @@
 - **애플 로그인** — `APPLE_LOGIN_ENABLED=false` 로 비활성. 코드는 완성, Apple
   Developer 계정 + Supabase Apple provider 설정 끝나면 플래그만 켜면 됨.
   iOS 출시 시 동반 필요 (Guideline 4.8).
-- **카카오 로그인** — 개발 키로 운영 중 → 운영 키 / 심사 단계 필요.
+- **D-U-N-S 번호 발급 대기** — Google Play **조직 계정** 가입에 필요. D&B
+  Apple 경로로 신청 완료(2026-06-23), 영문 사업자등록증명 첨부, 사업 구조
+  Sole Proprietorship. 발급 예상 2~5영업일 → 발급 후 조직 계정 가입 가능.
 - **수익화 게이트** — `DetailUnlockCard` 가 "곧 만나요" 안내만 노출 (광고/결제
   SDK 도입 전까지 잠금 유지). 사업자 등록 후 AdMob/RevenueCat 붙일 때 복구.
 
@@ -119,13 +139,42 @@
 
 ## 4. 해야 할 작업
 
-### 4.1 출시 전 필수
+### 4.1 안드로이드 출시 — 완료 (2026-06-23)
+- [x] 빌드 설정 점검 (패키지명 / 버전 / 아이콘 / 스플래시 / 권한 / EAS env)
+- [x] 개인정보처리방침 + 이용약관 페이지 (`/privacy`, `/terms`) + 인앱 링크
+- [x] 개발용 우회 로그인 `__DEV__` 가드 (프로덕션 빌드 제외)
+- [x] Supabase Authentication → **Anonymous Sign-ins 토글 off**
+- [x] 카카오 비즈 앱 전환 (개인 개발자 비즈) + 동의항목 + Supabase 연동 확인
+
+### 4.1.1 안드로이드 출시 — 다음 작업 (D-U-N-S 대기 중 병렬 진행)
+
+**🔴 우선순위 1 (이번 주) — 스토어 등록물**
+- [ ] Play Store 스크린샷 (폰 / 7인치 태블릿 / 10인치 태블릿)
+- [ ] 앱 설명 (짧은 설명 80자 / 자세한 설명 4000자)
+- [ ] 앱 아이콘 512×512 최종본
+- [ ] 그래픽 이미지 1024×500
+
+**🟡 우선순위 2 (D-U-N-S 받기 전까지)**
+- [ ] Google Play "데이터 안전" 양식 답변 정리
+  - Supabase 저장 데이터 항목
+  - Kakao OAuth 수집 항목
+  - Gemini API 전송 데이터
+- [ ] 콘텐츠 등급 설문 답변 준비
+- [x] 인앱 정보 페이지 — `/about`(서비스 소개), `/guide`(이용 안내),
+  `/business`(사업자 정보 + 문의) 작성 + 마이페이지 푸터·설정 링크 연결
+  - 사업자 정보(`business.tsx`): 의무 없는 항목(전화번호·통신판매업 신고번호)
+    제거, "통신판매 행위 없어 신고 대상 아님" 면제 안내 추가
+
+**🟢 D-U-N-S 발급 후**
+- [ ] Google Play Console 조직 계정 가입 ($25)
+- [ ] Google 조직 검증 대기 (1~3일)
+- [ ] AAB 빌드 + 업로드
+- [ ] 프로덕션 트랙 신청 (조직 계정 → 12명 테스트 의무 면제)
+- [ ] Google 앱 심사 (1~7일)
+
+### 4.1.2 iOS 출시 전 필수 (안드로이드 이후)
 - [ ] iOS 빌드 / TestFlight / 심사 제출
-- [ ] 카카오 운영 키 발급 + 비즈니스 채널 심사
 - [ ] 애플 로그인 재활성화 (Sign in with Apple 심사 요건)
-- [ ] Supabase Dashboard → Authentication → **Anonymous Sign-ins 토글 off**
-  확인 (개발용 우회 로그인이 백엔드 토글로도 막혀있어야 안전)
-- [ ] 개인정보 처리방침 / 이용약관 페이지 (스토어 등록 시 필수)
 - [ ] 앱 아이콘 / 스플래시 최종본 / 스토어 스크린샷
 
 > 로컬 알림(아침 운세/꿈 리마인더)은 `lib/notifications.ts` 에 구현 완료.
@@ -172,3 +221,16 @@
   mypage 위젯이 본 적 없는 운세를 표시하는 문제가 있었다.
 - **시드 ID 우선순위**: `auth.user.id` > `deviceId`. 같은 계정이면 기기 바뀌어도
   동일 운세.
+- **카카오 = 개인 개발자 비즈로 출시**. 현 단계엔 사업자 정식 등록 없이 충분.
+  사업자 정보 카카오 디벨로퍼스 정식 등록은 출시 후 작업으로 보류.
+
+---
+
+## 6. 배포 레퍼런스 (출시 작업용 메모)
+
+- **카카오 디벨로퍼스 App ID**: `1461546`
+- **Supabase Project URL**: `bpotmmtfheqjrvlwdugz.supabase.co`
+- **사업자등록번호**: `213-07-26662`
+- **영문 상호**: Mongle
+- **사업장 주소**: 301, 5-2 Gaebong-ro 6-gil, Guro-gu, Seoul, 08334
+- **D-U-N-S**: D&B Apple 경로 신청(2026-06-23), 발급 대기 중 (Sole Proprietorship)

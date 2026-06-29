@@ -6,6 +6,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
+  Linking,
 } from "react-native";
 import { SettingsIcon, PencilIcon } from "@/components/ui/icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -195,14 +196,99 @@ export default function MypageScreen() {
             ) : null}
           </View>
 
-          {/* 푸터 — 정책 링크 (Play Store 심사·인앱 접근용) */}
-          <TouchableOpacity
-            style={styles.footerLink}
-            onPress={() => router.push("/privacy")}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.footerLinkText}>개인정보처리방침</Text>
-          </TouchableOpacity>
+          {/* 풋터 — 섹션 분리형 (사업자 정보 / 링크 그리드 / 카피라이트) */}
+          <View style={styles.footer}>
+            {/* 섹션 1: 사업자 정보 (먼저) */}
+            <View style={styles.bizSection}>
+              <Text style={styles.bizHeader}>사업자 정보</Text>
+              <Text style={styles.bizLine}>몽글 (Mongle)</Text>
+              <Text style={styles.bizLine}>
+                <Text style={styles.bizLabel}>대표: </Text>박지은{"   "}
+                <Text style={styles.bizLabel}>사업자등록번호: </Text>
+                213-07-26662{"  "}
+                <Text
+                  style={styles.bizLink}
+                  onPress={() =>
+                    Linking.openURL(
+                      "https://www.ftc.go.kr/bizCommPop.do?wrkr_no=2130726662"
+                    )
+                  }
+                >
+                  사업자정보확인 ›
+                </Text>
+              </Text>
+              <Text style={styles.bizLine}>
+                <Text style={styles.bizLabel}>주소: </Text>서울특별시 구로구
+                개봉로6길 5-2, 301호 (우 08334)
+              </Text>
+              <Text style={styles.bizLine}>
+                <Text style={styles.bizLabel}>문의: </Text>
+                <Text
+                  style={styles.bizLink}
+                  onPress={() =>
+                    Linking.openURL("mailto:jieun031800@naver.com")
+                  }
+                >
+                  jieun031800@naver.com
+                </Text>
+              </Text>
+              <Text style={styles.bizExempt}>
+                통신판매업 신고 면제 (통신판매 행위 없음)
+              </Text>
+            </View>
+
+            {/* 섹션 2: 링크 그리드 (2열) */}
+            <View style={styles.linkGrid}>
+              <View style={styles.linkRow}>
+                <TouchableOpacity
+                  style={styles.linkCell}
+                  onPress={() => router.push("/about")}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.linkText}>서비스 소개</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.linkCell}
+                  onPress={() => router.push("/guide")}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.linkText}>이용 안내</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.linkRow}>
+                <TouchableOpacity
+                  style={styles.linkCell}
+                  onPress={() => router.push("/privacy")}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.linkText}>개인정보처리방침</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.linkCell}
+                  onPress={() => router.push("/terms")}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.linkText}>이용약관</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.linkRow}>
+                <TouchableOpacity
+                  style={styles.linkCell}
+                  onPress={() =>
+                    Linking.openURL("mailto:jieun031800@naver.com")
+                  }
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.linkText}>문의하기</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* 섹션 3: 카피라이트 */}
+            <Text style={styles.copyright}>
+              © 2026 몽글 (Mongle). All rights reserved.
+            </Text>
+          </View>
         </ScrollView>
       )}
 
@@ -332,10 +418,30 @@ const styles = StyleSheet.create({
   dayBadgeText: { fontSize: 11, fontWeight: "700" },
   dayMessage: { fontSize: 12, color: "#7868B8", lineHeight: 18 },
 
-  footerLink: { alignItems: "center", paddingVertical: 8, marginTop: 4 },
-  footerLinkText: {
-    fontSize: 12,
-    color: "#A898D0",
-    textDecorationLine: "underline",
+  footer: { marginTop: 8, paddingHorizontal: 8 },
+  // 링크 그리드
+  linkGrid: { marginTop: 24 },
+  linkRow: { flexDirection: "row" },
+  linkCell: {
+    flex: 1,
+    minHeight: 44,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 10,
   },
+  linkText: { fontSize: 13, color: "#A898D0", lineHeight: 21 },
+  // 사업자 정보
+  bizSection: { marginTop: 24, paddingHorizontal: 4 },
+  bizHeader: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#5848A8",
+    marginBottom: 10,
+  },
+  bizLine: { fontSize: 12, color: "#6B6480", lineHeight: 19, marginBottom: 4 },
+  bizLabel: { color: "#4E4866", fontWeight: "600" },
+  bizLink: { color: "#7868C8", fontWeight: "600" },
+  bizExempt: { fontSize: 12, color: "#8B82A0", lineHeight: 19, marginTop: 2 },
+  // 섹션 3: 카피라이트
+  copyright: { marginTop: 24, fontSize: 11, color: "#B6A9D6", lineHeight: 18 },
 });

@@ -17,6 +17,8 @@ import Constants from "expo-constants";
 import { getMyProfile } from "@/features/auth/profile";
 import { supabase } from "@/lib/supabase";
 import { createDream, todayISODate } from "@/features/dream/dreams";
+import { reportAiMessage } from "@/features/chat/reports";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 interface Props {
   visible: boolean;
@@ -270,6 +272,9 @@ export default function ChatBotModal({ visible, onClose, onSaved }: Props) {
   const [streaming, setStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [nickname, setNickname] = useState<string | null>(null);
+  // AI 응답 신고 — 신고 대상 메시지(확인 다이얼로그) / 결과 알림 문구
+  const [reportTarget, setReportTarget] = useState<ChatMessage | null>(null);
+  const [reportNotice, setReportNotice] = useState<string | null>(null);
   const scrollRef = useRef<ScrollView>(null);
   // 같은 세션을 두 번 저장하지 않도록 가드 (close 가 여러 경로로 호출될 수 있음)
   const savedRef = useRef(false);
@@ -286,6 +291,8 @@ export default function ChatBotModal({ visible, onClose, onSaved }: Props) {
     setError(null);
     setLoading(false);
     setStreaming(false);
+    setReportTarget(null);
+    setReportNotice(null);
     let cancelled = false;
     getMyProfile()
       .then(({ data }) => {
@@ -362,6 +369,30 @@ export default function ChatBotModal({ visible, onClose, onSaved }: Props) {
     }
     onClose();
   }, [messages, onClose, onSaved]);
+
+  // 신고 확인 → ai_message_reports 에 저장. 직전 대화 맥락을 함께 첨부.
+  const submitReport = useCallback(() => {
+    const msg = reportTarget;
+    if (!msg) return;
+    setReportTarget(null);
+    const idx = messages.findIndex((m) => m.id === msg.id);
+    const context = messages
+      .slice(Math.max(0, idx - 2), idx + 1)
+      .map((m) => ({ role: m.role, text: m.content }));
+    reportAiMessage(msg.content, context)
+      .then(({ error: reportErr }) => {
+        if (reportErr) {
+          console.error("[chat] report error:", reportErr);
+          setReportNotice("신고 접수에 실패했어요. 잠시 후 다시 시도해 주세요.");
+        } else {
+          setReportNotice("신고가 접수되었어요. 검토 후 조치하겠습니다.");
+        }
+      })
+      .catch((err) => {
+        console.error("[chat] report error:", err);
+        setReportNotice("신고 접수에 실패했어요. 잠시 후 다시 시도해 주세요.");
+      });
+  }, [reportTarget, messages]);
 
   const handleSend = async () => {
     const trimmed = input.trim();
@@ -603,7 +634,15 @@ export default function ChatBotModal({ visible, onClose, onSaved }: Props) {
               )}
 
               {messages.map((msg) => (
-                <MessageBubble key={msg.id} msg={msg} />
+                <MessageBubble
+                  key={msg.id}
+                  msg={msg}
+                  onReport={
+                    msg.role === "assistant" && !msg.isStub
+                      ? () => setReportTarget(msg)
+                      : undefined
+                  }
+                />
               ))}
 
               {loading && <LoadingDots />}
@@ -649,24 +688,62 @@ export default function ChatBotModal({ visible, onClose, onSaved }: Props) {
             </View>
           </View>
         </View>
+
+        {/* AI 응답 신고 — 확인 + 결과 알림 (생성형 AI 정책 준수) */}
+        <ConfirmDialog
+          visible={reportTarget !== null}
+          title="응답 신고"
+          message="이 AI 응답을 부적절한 콘텐츠로 신고할까요?"
+          confirmLabel="신고"
+          cancelLabel="취소"
+          destructive
+          onConfirm={submitReport}
+          onCancel={() => setReportTarget(null)}
+        />
+        <ConfirmDialog
+          visible={reportNotice !== null}
+          title="알림"
+          message={reportNotice ?? ""}
+          confirmLabel="확인"
+          onConfirm={() => setReportNotice(null)}
+        />
       </KeyboardAvoidingView>
     </Modal>
   );
 }
 
-// 메시지 버블 — 문단 단위로 분리해서 렌더
-function MessageBubble({ msg }: { msg: ChatMessage }) {
+// 메시지 버블 — 문단 단위로 분리해서 렌더. onReport 가 있으면(AI 응답) 신고 버튼 노출.
+function MessageBubble({
+  msg,
+  onReport,
+}: {
+  msg: ChatMessage;
+  onReport?: () => void;
+}) {
   const isUser = msg.role === "user";
   const paragraphs = useMemo(() => splitParagraphs(msg.content), [msg.content]);
   const textStyle = isUser ? styles.userText : styles.aiText;
 
   return (
-    <View style={[styles.bubble, isUser ? styles.userBubble : styles.aiBubble]}>
-      {paragraphs.map((p, i) => (
-        <Text key={i} style={[textStyle, i > 0 && styles.paragraphGap]}>
-          {p}
-        </Text>
-      ))}
+    <View style={{ alignItems: isUser ? "flex-end" : "flex-start" }}>
+      <View
+        style={[styles.bubble, isUser ? styles.userBubble : styles.aiBubble]}
+      >
+        {paragraphs.map((p, i) => (
+          <Text key={i} style={[textStyle, i > 0 && styles.paragraphGap]}>
+            {p}
+          </Text>
+        ))}
+      </View>
+      {onReport ? (
+        <TouchableOpacity
+          onPress={onReport}
+          hitSlop={8}
+          style={styles.reportBtn}
+        >
+          <Text style={styles.reportText}>신고</Text>
+        </TouchableOpacity>
+      ) : null}
     </View>
   );
 }
@@ -741,6 +818,9 @@ const styles = StyleSheet.create({
   userText: { fontSize: 14, color: "#fff", lineHeight: 21 },
   aiText: { fontSize: 14, color: "#3828A0", lineHeight: 21 },
   paragraphGap: { marginTop: 8 },
+
+  reportBtn: { paddingHorizontal: 6, paddingVertical: 3, marginTop: 2 },
+  reportText: { fontSize: 11, color: "#A89CC0", textDecorationLine: "underline" },
 
   dotsBubble: { paddingVertical: 14, paddingHorizontal: 16 },
   dotsRow: { flexDirection: "row", gap: 4, alignItems: "center" },

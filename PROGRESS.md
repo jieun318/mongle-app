@@ -129,9 +129,8 @@
 - **애플 로그인** — `APPLE_LOGIN_ENABLED=false` 로 비활성. 코드는 완성, Apple
   Developer 계정 + Supabase Apple provider 설정 끝나면 플래그만 켜면 됨.
   iOS 출시 시 동반 필요 (Guideline 4.8).
-- **D-U-N-S 번호 발급 대기** — Google Play **조직 계정** 가입에 필요. D&B
-  Apple 경로로 신청 완료(2026-06-23), 영문 사업자등록증명 첨부, 사업 구조
-  Sole Proprietorship. 발급 예상 2~5영업일 → 발급 후 조직 계정 가입 가능.
+- **D-U-N-S 번호 발급 완료** (2026-07-01) — D&B Apple 경로 신청(2026-06-23) →
+  발급됨. 이제 Google Play **조직 계정** 가입 진행 가능 (§4.1.1 🟢 참고).
 - **수익화 게이트** — `DetailUnlockCard` 가 "곧 만나요" 안내만 노출 (광고/결제
   SDK 도입 전까지 잠금 유지). 사업자 등록 후 AdMob/RevenueCat 붙일 때 복구.
 
@@ -155,11 +154,13 @@
 - [ ] 그래픽 이미지 1024×500
 
 **🟡 우선순위 2 (D-U-N-S 받기 전까지)**
-- [ ] Google Play "데이터 안전" 양식 답변 정리
-  - Supabase 저장 데이터 항목
-  - Kakao OAuth 수집 항목
-  - Gemini API 전송 데이터
-- [ ] 콘텐츠 등급 설문 답변 준비
+- [x] Google Play "데이터 안전" 양식 답변 정리 → `STORE_LISTING.md §2`
+  (코드 검증 기반 — 위치·광고·분석 미수집 확인, Gemini=처리위탁이라 공유 아니요)
+- [x] 콘텐츠 등급 설문 답변 준비 → `STORE_LISTING.md §3`
+- [x] **⚠️ 생성형 AI 신고 기능** — AI 응답 버블에 "신고" → 확인 →
+  `ai_message_reports` 저장 (Google Play AI 콘텐츠 정책 대응). 코드 완료.
+  - [ ] **출시 전: Supabase에 `0013_ai_message_reports.sql` 마이그레이션 적용 필요**
+  - 상세: `STORE_LISTING.md §3.3`
 - [x] 인앱 정보 페이지 — `/about`(서비스 소개), `/guide`(이용 안내),
   `/business`(사업자 정보 + 문의) 작성 + 마이페이지 푸터·설정 링크 연결
   - 사업자 정보(`business.tsx`): 의무 없는 항목(전화번호·통신판매업 신고번호)
@@ -233,4 +234,5 @@
 - **사업자등록번호**: `213-07-26662`
 - **영문 상호**: Mongle
 - **사업장 주소**: 301, 5-2 Gaebong-ro 6-gil, Guro-gu, Seoul, 08334
-- **D-U-N-S**: D&B Apple 경로 신청(2026-06-23), 발급 대기 중 (Sole Proprietorship)
+- **D-U-N-S**: D&B Apple 경로 신청(2026-06-23) → **발급 완료(2026-07-01)**
+  (Sole Proprietorship)

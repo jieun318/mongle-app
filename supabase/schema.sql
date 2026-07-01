@@ -145,6 +145,24 @@ create index if not exists daily_fortunes_user_date_idx
 
 
 -- ============================================================
+-- 7. ai_message_reports — AI 챗봇 응답 신고
+--   Google Play 생성형 AI 콘텐츠 정책: AI 생성 콘텐츠를 앱 내에서
+--   신고할 수 있는 수단 제공. 본인 신고만 insert/select.
+-- ============================================================
+create table if not exists public.ai_message_reports (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid not null references auth.users(id) on delete cascade,
+  message    text not null,
+  context    jsonb not null default '[]'::jsonb,
+  reason     text,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists ai_message_reports_user_id_idx
+  on public.ai_message_reports (user_id, created_at desc);
+
+
+-- ============================================================
 -- 권한 부여 (GRANT)
 --   SQL Editor 로 직접 만든 테이블은 자동 grant 가 걸리지 않아
 --   "permission denied for table ..." 에러가 발생합니다.
@@ -160,6 +178,7 @@ grant select, insert, update, delete on public.dreams         to authenticated;
 grant select, insert, update          on public.profiles       to authenticated;
 grant select, insert, delete          on public.bookmarks      to authenticated;
 grant select, insert, update          on public.daily_fortunes to authenticated;
+grant select, insert                   on public.ai_message_reports to authenticated;
 
 
 -- ============================================================
@@ -171,6 +190,7 @@ alter table public.profiles        enable row level security;
 alter table public.dreams          enable row level security;
 alter table public.bookmarks       enable row level security;
 alter table public.daily_fortunes  enable row level security;
+alter table public.ai_message_reports enable row level security;
 
 
 -- ============================================================
@@ -295,6 +315,21 @@ create policy "daily_fortunes_update_own"
   to authenticated
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
+
+-- ───── ai_message_reports: 본인 신고만 ─────
+drop policy if exists "ai_message_reports_insert_own" on public.ai_message_reports;
+create policy "ai_message_reports_insert_own"
+  on public.ai_message_reports
+  for insert
+  to authenticated
+  with check (auth.uid() = user_id);
+
+drop policy if exists "ai_message_reports_select_own" on public.ai_message_reports;
+create policy "ai_message_reports_select_own"
+  on public.ai_message_reports
+  for select
+  to authenticated
+  using (auth.uid() = user_id);
 
 
 -- ============================================================

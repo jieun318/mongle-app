@@ -265,8 +265,6 @@ export default function HomeScreen() {
     };
   }, []);
   const isAnimating = useRef(false);
-  // 수동 토글 시 false 로 — 시간 기반 자동 업데이트 일시 중지
-  const autoModeRef = useRef(true);
   const smokeColors = getSmokePalette(fortune?.luckyColor ?? "라벤더");
 
   const theme = darkMode
@@ -316,11 +314,10 @@ export default function HomeScreen() {
         glareBottom: "rgba(255,255,255,0.4)",
       };
 
-  // 낮(0) ↔ 밤(1) 전환 진행도 — 시간 기반 자동 모드 + 수동 토글 둘 다 이 값을 구동
+  // 낮(0) ↔ 밤(1) 전환 진행도 — 시간 기반 자동 모드가 이 값을 구동
   const transitionProgress = useRef(
     new Animated.Value(getDefaultDarkMode() ? 1 : 0),
   ).current;
-  const isTransitioning = useRef(false);
 
   // 해 위치 — 호(arc) 위에서 (cx, cy) 절대 좌표로 추적 (auto 모드 시 시간 기반 갱신)
   const sunCX = useRef(new Animated.Value(SCREEN_W * 0.5)).current;
@@ -358,76 +355,9 @@ export default function HomeScreen() {
     outputRange: [0, 0, 1],
   });
 
-  const handleToggleTheme = () => {
-    if (isTransitioning.current) return;
-    const target = !darkMode;
-    isTransitioning.current = true;
-    autoModeRef.current = false; // 수동 전환 시 자동 업데이트 일시 중지
-
-    // 진행 중일 수 있는 해 자동 애니메이션 중지 (수동이 우선)
-    sunCX.stopAnimation();
-    sunCY.stopAnimation();
-
-    // 해 동(왼쪽) → 서(오른쪽) 흐름 — 표준 컨벤션
-    const sunrisePos = sunArcPosition(0, SCREEN_W); // arcT=0 → 왼쪽 horizon (동/낮음)
-    const sunsetPos = sunArcPosition(1, SCREEN_W); // arcT=1 → 오른쪽 horizon (서/낮음)
-    const noonPos = sunArcPosition(0.5, SCREEN_W); // 정오 (가운데/높음)
-
-    if (target) {
-      // 낮 → 밤: 현재 위치에서 서쪽(오른쪽 끝)으로 이동하면서 짐
-      Animated.parallel([
-        Animated.timing(sunCX, {
-          toValue: sunsetPos.cx,
-          duration: 3000,
-          easing: Easing.in(Easing.cubic),
-          useNativeDriver: true,
-        }),
-        Animated.timing(sunCY, {
-          toValue: sunsetPos.cy,
-          duration: 3000,
-          easing: Easing.in(Easing.cubic),
-          useNativeDriver: true,
-        }),
-      ]).start();
-    } else {
-      // 밤 → 낮: 동쪽 horizon(왼쪽 끝)으로 스냅 후 정오까지 떠오름
-      sunCX.setValue(sunrisePos.cx);
-      sunCY.setValue(sunrisePos.cy);
-      setSunReady(true); // sunTimes 안 떠도 수동 토글 시 강제 활성화
-      Animated.parallel([
-        Animated.timing(sunCX, {
-          toValue: noonPos.cx,
-          duration: 3000,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }),
-        Animated.timing(sunCY, {
-          toValue: noonPos.cy,
-          duration: 3000,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }),
-      ]).start();
-    }
-
-    // 3초 동안 그라디언트 보간 (낮 → 노을 → 황혼 → 밤)
-    Animated.timing(transitionProgress, {
-      toValue: target ? 1 : 0,
-      duration: 3000,
-      easing: Easing.inOut(Easing.cubic),
-      useNativeDriver: true,
-    }).start(() => {
-      isTransitioning.current = false;
-    });
-
-    // 황혼 시점(중간 1.5s)에 darkMode 토글 — 텍스트/오브 색상 자연스럽게 전환
-    setTimeout(() => setDarkMode(target), 1500);
-  };
-
   // 시간 기반 자동 업데이트 — sunTimes 와 현재 시각 비교해서 darkness/해 위치 갱신
   const isFirstAutoUpdate = useRef(true);
   const updateAutoSunState = useCallback(() => {
-    if (!autoModeRef.current) return;
     if (!sunTimes) return;
     const state = computeSunState(new Date(), sunTimes);
     const first = isFirstAutoUpdate.current;
@@ -811,15 +741,6 @@ export default function HomeScreen() {
       </Animated.View>
 
       <View style={styles.header}>
-        <TouchableOpacity
-          onPress={handleToggleTheme}
-          style={styles.themeToggle}
-          hitSlop={8}
-        >
-          <Text style={[styles.themeToggleIcon, { color: theme.icon }]}>
-            {darkMode ? "☀" : "☾"}
-          </Text>
-        </TouchableOpacity>
         <TouchableOpacity
           onPress={() => setShowNotice(true)}
           hitSlop={8}
@@ -1283,19 +1204,12 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "flex-end",
     paddingHorizontal: 20,
     paddingTop: 60,
     paddingBottom: 12,
   },
   bellIcon: { width: 24, height: 24 },
-  themeToggle: {
-    width: 32,
-    height: 32,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  themeToggleIcon: { fontSize: 20, lineHeight: 24 },
   bellBtn: {
     width: 32,
     height: 32,

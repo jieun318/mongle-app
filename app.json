@@ -5,7 +5,7 @@
     "scheme": "mongle",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/appicon.png",
+    "icon": "./assets/images/icon.png",
     "web": {
       "output": "static",
       "bundler": "metro"
@@ -25,8 +25,8 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#B0A0DD"
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#BCACEC"
       },
       "package": "com.mongle.app",
       "permissions": []

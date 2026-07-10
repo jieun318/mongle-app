@@ -133,7 +133,7 @@ export default function PrivacyScreen() {
             요청하실 수 있습니다.
           </P>
           <Bullet label="개인정보 보호책임자">박지은</Bullet>
-          <Bullet label="이메일">jieun031800@naver.com</Bullet>
+          <Bullet label="이메일">mongle.help@gmail.com</Bullet>
         </Section>
 
         <Section n="11" title="권익침해 구제방법">

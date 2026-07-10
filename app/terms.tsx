@@ -170,7 +170,7 @@ export default function TermsScreen() {
             있습니다.
           </P>
           <Bullet label="운영자">박지은</Bullet>
-          <Bullet label="이메일">jieun031800@naver.com</Bullet>
+          <Bullet label="이메일">mongle.help@gmail.com</Bullet>
         </Section>
 
         <View style={styles.footer}>

@@ -12,6 +12,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import BottomNav from "@/components/ui/BottomNav";
 import { SearchIcon } from "@/components/ui/icons";
+import ChatBotModal from "@/components/chat/ChatBotModal";
 import DreamDetailModal from "@/components/dream/DreamDetailModal";
 import DreamListItem from "@/components/dream/DreamListItem";
 import {
@@ -27,6 +28,7 @@ export default function SearchResultsScreen() {
   const initial = (q ?? "").toString();
   const [query, setQuery] = useState(initial);
   const [selectedDream, setSelectedDream] = useState<DreamItem | null>(null);
+  const [showChat, setShowChat] = useState(false);
 
   const { data: dreams = [], isFetching } = useSearchDreamItems(query);
 
@@ -70,6 +72,21 @@ export default function SearchResultsScreen() {
                 ? "찾는 중..."
                 : "일치하는 꿈 조각이 없어요"}
             </Text>
+
+            {query.trim() && !isFetching && (
+              <TouchableOpacity
+                style={styles.askBtn}
+                activeOpacity={0.85}
+                onPress={() => setShowChat(true)}
+              >
+                <Image
+                  source={require("@/assets/images/chatboticon.png")}
+                  style={styles.askMascot}
+                  resizeMode="contain"
+                />
+                <Text style={styles.askText}>몽이에게 물어보기</Text>
+              </TouchableOpacity>
+            )}
           </View>
         )}
 
@@ -83,6 +100,12 @@ export default function SearchResultsScreen() {
       </ScrollView>
 
       <BottomNav active="search" />
+
+      <ChatBotModal
+        visible={showChat}
+        onClose={() => setShowChat(false)}
+        initialText={query}
+      />
 
       <DreamDetailModal
         dream={selectedDream}
@@ -140,4 +163,25 @@ const styles = StyleSheet.create({
   empty: { alignItems: "center", paddingTop: 60, gap: 8 },
   emptyEmoji: { fontSize: 48, opacity: 0.6 },
   emptyText: { fontFamily: "OnglyphPDH", fontSize: 14, color: "#9888CC" },
+
+  askBtn: {
+    marginTop: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "#FEF9F0",
+    borderRadius: 20,
+    paddingLeft: 10,
+    paddingRight: 18,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: "rgba(230,210,180,0.4)",
+  },
+  askMascot: { width: 32, height: 32 },
+  askText: {
+    fontFamily: "OnglyphPDH",
+    fontSize: 14,
+    color: "#B09060",
+    letterSpacing: 0.3,
+  },
 });

@@ -1,9 +1,21 @@
-import { ScrollView, View, Text, StyleSheet, Linking, TouchableOpacity } from "react-native";
+import { ScrollView, View, Text, StyleSheet, Linking, TouchableOpacity, Alert } from "react-native";
 import { Stack } from "expo-router";
 
 // 사업자 정보 — 「전자상거래법」 제10조 사업자 정보 표시 + 문의처.
 // 무료 서비스(통신판매 행위 없음)라 통신판매업 신고·전화번호 표시 의무 없음.
-const CONTACT_EMAIL = "jieun031800@naver.com";
+const CONTACT_EMAIL = "mongle.help@gmail.com";
+
+async function openContactEmail(): Promise<void> {
+  try {
+    await Linking.openURL(`mailto:${CONTACT_EMAIL}`);
+  } catch {
+    Alert.alert(
+      "메일 앱을 열 수 없어요",
+      `아래 주소로 문의해 주세요.\n\n${CONTACT_EMAIL}`,
+      [{ text: "확인" }],
+    );
+  }
+}
 
 export default function BusinessScreen() {
   return (
@@ -26,7 +38,7 @@ export default function BusinessScreen() {
           <Row label="사업자등록번호" value="213-07-26662" />
           <Row
             label="사업장 소재지"
-            value="서울특별시 구로구 개봉로6길 5-2, 301호 (우 08334)"
+            value="서울특별시 구로구 개봉로6길 5-2"
             last
           />
         </View>
@@ -40,7 +52,7 @@ export default function BusinessScreen() {
             평일 기준 순차적으로 답변드립니다.
           </P>
           <TouchableOpacity
-            onPress={() => Linking.openURL(`mailto:${CONTACT_EMAIL}`)}
+            onPress={openContactEmail}
             activeOpacity={0.7}
           >
             <Text style={styles.link}>{CONTACT_EMAIL}</Text>

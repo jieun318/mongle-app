@@ -25,6 +25,8 @@ interface Props {
   onClose: () => void;
   // 보관함 저장 결과를 부모(홈 화면) 토스트로 알리는 콜백
   onSaved?: (message: string) => void;
+  // 모달을 열 때 입력창에 미리 채워둘 텍스트 (예: 검색어). 자동 전송은 하지 않는다.
+  initialText?: string;
 }
 
 interface ChatMessage {
@@ -263,7 +265,12 @@ function splitParagraphs(text: string): string[] {
     .filter(Boolean);
 }
 
-export default function ChatBotModal({ visible, onClose, onSaved }: Props) {
+export default function ChatBotModal({
+  visible,
+  onClose,
+  onSaved,
+  initialText,
+}: Props) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -287,7 +294,7 @@ export default function ChatBotModal({ visible, onClose, onSaved }: Props) {
     savedRef.current = false;
     metaRef.current = null;
     setMessages([]);
-    setInput("");
+    setInput(initialText ?? "");
     setError(null);
     setLoading(false);
     setStreaming(false);

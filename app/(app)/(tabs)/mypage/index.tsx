@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Linking,
+  Alert,
 } from "react-native";
 import { SettingsIcon, PencilIcon } from "@/components/ui/icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -23,6 +24,22 @@ import {
   getMyProfile,
   type ProfileRecord,
 } from "@/features/auth/profile";
+
+const CONTACT_EMAIL = "mongle.help@gmail.com";
+
+async function openContactEmail(): Promise<void> {
+  const url = `mailto:${CONTACT_EMAIL}`;
+  try {
+    await Linking.openURL(url);
+  } catch {
+    // 메일 앱이 없거나 mailto를 처리할 수 없는 기기 → 주소를 안내
+    Alert.alert(
+      "메일 앱을 열 수 없어요",
+      `아래 주소로 문의해 주세요.\n\n${CONTACT_EMAIL}`,
+      [{ text: "확인" }],
+    );
+  }
+}
 
 function formatJoinDate(iso: string | undefined): string {
   if (!iso) return "—";
@@ -205,31 +222,19 @@ export default function MypageScreen() {
               <Text style={styles.bizLine}>
                 <Text style={styles.bizLabel}>대표: </Text>박지은{"   "}
                 <Text style={styles.bizLabel}>사업자등록번호: </Text>
-                213-07-26662{"  "}
-                <Text
-                  style={styles.bizLink}
-                  onPress={() =>
-                    Linking.openURL(
-                      "https://www.ftc.go.kr/bizCommPop.do?wrkr_no=2130726662"
-                    )
-                  }
-                >
-                  사업자정보확인 ›
-                </Text>
+                213-07-26662
               </Text>
               <Text style={styles.bizLine}>
                 <Text style={styles.bizLabel}>주소: </Text>서울특별시 구로구
-                개봉로6길 5-2, 301호 (우 08334)
+                개봉로6길 5-2
               </Text>
               <Text style={styles.bizLine}>
                 <Text style={styles.bizLabel}>문의: </Text>
                 <Text
                   style={styles.bizLink}
-                  onPress={() =>
-                    Linking.openURL("mailto:jieun031800@naver.com")
-                  }
+                  onPress={openContactEmail}
                 >
-                  jieun031800@naver.com
+                  {CONTACT_EMAIL}
                 </Text>
               </Text>
               <Text style={styles.bizExempt}>
@@ -274,9 +279,7 @@ export default function MypageScreen() {
               <View style={styles.linkRow}>
                 <TouchableOpacity
                   style={styles.linkCell}
-                  onPress={() =>
-                    Linking.openURL("mailto:jieun031800@naver.com")
-                  }
+                  onPress={openContactEmail}
                   activeOpacity={0.7}
                 >
                   <Text style={styles.linkText}>문의하기</Text>

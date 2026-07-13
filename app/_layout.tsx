@@ -45,7 +45,10 @@ export default function RootLayout() {
   const [fontsLoaded] = useFonts({
     OnglyphPDH: require("../assets/fonts/OnglyphPDH.ttf"),
   });
-  const [splashDone, setSplashDone] = useState(false);
+  // 웹에선 커스텀 스플래시를 띄우지 않는다. 정적 익스포트라 스플래시가 HTML 에
+  // 그대로 박혀, 루트를 여는 사람(과 크롤러)이 랜딩 대신 "꿈을 해석하는 중..."
+  // 만 보게 된다. 네이티브 콜드스타트를 가리려는 장치이므로 웹엔 불필요.
+  const [splashDone, setSplashDone] = useState(Platform.OS === "web");
 
   // 첫 paint(홈 진입)에 필요한 준비 완료 신호 = 폰트 로드.
   // 폰트를 더 이상 첫 렌더의 하드 블로커(`return null`)로 두지 않는다 → 스플래시가 즉시 뜸.

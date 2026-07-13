@@ -198,8 +198,8 @@ Google Play **AI 생성 콘텐츠 정책**상, AI가 콘텐츠를 생성하는 �
 - [x] **챗봇 응답 신고 기능 구현** — AI 응답 버블 하단 "신고" → 확인 →
   `ai_message_reports` 저장 (`components/chat/ChatBotModal.tsx`,
   `features/chat/reports.ts`)
-- [ ] **Supabase에 마이그레이션 적용** — `supabase/migrations/0013_ai_message_reports.sql`
-  (SQL Editor에서 실행). 미적용 시 신고 insert가 실패함
+- [x] **Supabase에 마이그레이션 적용** — `supabase/migrations/0013_ai_message_reports.sql`
+  프로덕션 적용 확인됨(테이블·컬럼 존재, RLS 동작: 익명 insert 차단 42501)
 - [ ] 심사 설문에서 "생성형 AI 기능 포함" 류 질문에 **예**로 답하고 신고 수단 설명
 
 ---

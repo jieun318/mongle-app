@@ -15,6 +15,22 @@ export default function Root({ children }: PropsWithChildren) {
           content="width=device-width, initial-scale=1, shrink-to-fit=no"
         />
 
+        <title>몽글 (Mongle) — 매일의 운세와 꿈 해몽, AI 챗봇</title>
+        <meta
+          name="description"
+          content="오늘의 운세부터 간밤의 꿈 해몽, AI와 나누는 다정한 대화까지. 감성 무드 앱 몽글에서 매일의 마음을 다독입니다."
+        />
+        <meta property="og:site_name" content="몽글 (Mongle)" />
+        <meta property="og:type" content="website" />
+        <meta
+          property="og:title"
+          content="몽글 (Mongle) — 매일의 운세와 꿈 해몽, AI 챗봇"
+        />
+        <meta
+          property="og:description"
+          content="오늘의 운세부터 간밤의 꿈 해몽, AI와 나누는 다정한 대화까지. 감성 무드 앱 몽글에서 매일의 마음을 다독입니다."
+        />
+
         {/* Google Search Console 사이트 소유권 확인 */}
         <meta
           name="google-site-verification"

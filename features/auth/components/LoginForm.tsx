@@ -8,7 +8,6 @@ import {
   Platform,
   ActivityIndicator,
 } from "react-native";
-import { useRouter } from "expo-router";
 import { useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { signInWithKakao, signInWithApple } from "@/features/auth/auth";
@@ -31,7 +30,6 @@ const DEV_USER = {
 };
 
 export default function LoginForm() {
-  const router = useRouter();
   const [social, setSocial] = useState<null | "kakao" | "apple">(null);
 
   const handleSocial = async (provider: "kakao" | "apple") => {
@@ -50,7 +48,7 @@ export default function LoginForm() {
       );
       return;
     }
-    router.replace("/(app)");
+    // 성공 시 이동은 (auth)/_layout 의 세션 리다이렉트가 담당한다.
   };
 
   const showApple = APPLE_LOGIN_ENABLED && Platform.OS === "ios";
@@ -65,7 +63,6 @@ export default function LoginForm() {
       });
       if (error) throw error;
       await AsyncStorage.setItem(DEV_USER_KEY, JSON.stringify(DEV_USER));
-      router.replace("/(app)");
     } catch (e) {
       Alert.alert(
         "개발 로그인 실패",

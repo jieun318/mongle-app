@@ -62,7 +62,11 @@ async function signInWithKakaoWeb(): Promise<SocialResult> {
   }
 }
 
+// 딥링크가 WebBrowser 결과보다 먼저 도착할 때를 대비한 여유 시간.
+const DEEP_LINK_GRACE_MS = 1500;
+
 async function signInWithKakaoNative(): Promise<SocialResult> {
+  let sub: { remove: () => void } | undefined;
   try {
     const redirectTo = makeRedirectUri({ scheme: "mongle", path: "auth-callback" });
 
@@ -77,15 +81,42 @@ async function signInWithKakaoNative(): Promise<SocialResult> {
     if (error) return { error };
     if (!data?.url) return { error: new Error("카카오 인증 URL 을 만들지 못했어요") };
 
+    // MainActivity 가 singleTask 라 mongle:// 리다이렉트가 커스텀탭 결과 대신
+    // 딥링크 인텐트로 들어오는 경우가 있다. 그때 openAuthSessionAsync 는
+    // dismiss 를 돌려주므로, 딥링크 URL 도 같이 받아서 어느 쪽이든 코드를 잡는다.
+    let deepLinkUrl: string | undefined;
+    const deepLink = new Promise<string>((resolve) => {
+      sub = Linking.addEventListener("url", (e) => {
+        deepLinkUrl = e.url;
+        resolve(e.url);
+      });
+    });
+
     const res = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
-    if (res.type === "cancel" || res.type === "dismiss") {
-      return { error: null, canceled: true };
+
+    let callbackUrl: string | undefined;
+    if (res.type === "success" && res.url) {
+      callbackUrl = res.url;
+    } else {
+      callbackUrl =
+        deepLinkUrl ??
+        (await Promise.race([
+          deepLink,
+          new Promise<undefined>((r) =>
+            setTimeout(() => r(undefined), DEEP_LINK_GRACE_MS),
+          ),
+        ]));
     }
-    if (res.type !== "success" || !res.url) {
+
+    if (!callbackUrl) {
+      // 딥링크도 안 왔으면 사용자가 브라우저를 닫은 것으로 본다.
+      if (res.type === "cancel" || res.type === "dismiss") {
+        return { error: null, canceled: true };
+      }
       return { error: new Error("카카오 로그인에 실패했어요") };
     }
 
-    const { queryParams } = Linking.parse(res.url);
+    const { queryParams } = Linking.parse(callbackUrl);
     const code = queryParams?.code as string | undefined;
     if (!code) return { error: new Error("인증 코드를 받지 못했어요") };
 
@@ -94,6 +125,8 @@ async function signInWithKakaoNative(): Promise<SocialResult> {
     return { error: exchangeError ?? null };
   } catch (e) {
     return { error: e instanceof Error ? e : new Error(String(e)) };
+  } finally {
+    sub?.remove();
   }
 }
 

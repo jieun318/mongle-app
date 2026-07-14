@@ -14,11 +14,13 @@ export default function Index() {
   const isWeb = Platform.OS === "web";
 
   useEffect(() => {
-    if (isWeb || loading) return;
+    if (loading) return;
+    // 웹도 세션이 있으면 곧장 앱으로 보낸다. 랜딩은 비로그인 방문자(= Play 심사자)용.
+    if (isWeb && !session) return;
     router.replace(session ? "/(app)" : "/(auth)/login");
   }, [session, loading, isWeb, router]);
 
-  if (isWeb) return <WebLanding hasSession={!!session} />;
+  if (isWeb && !session) return <WebLanding />;
 
   return (
     <LinearGradient

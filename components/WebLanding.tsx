@@ -39,7 +39,9 @@ const BUSINESS_ROWS: [string, string][] = [
   ["문의", CONTACT_EMAIL],
 ];
 
-export default function WebLanding({ hasSession }: { hasSession: boolean }) {
+// 로그인된 사용자는 app/index.tsx 에서 곧장 앱으로 보내므로, 이 페이지는 항상
+// 비로그인 방문자만 본다.
+export default function WebLanding() {
   return (
     <ScrollView style={styles.root} contentContainerStyle={styles.container}>
       <View style={styles.hero}>
@@ -58,8 +60,8 @@ export default function WebLanding({ hasSession }: { hasSession: boolean }) {
           담았습니다.
         </Text>
 
-        <Link href={hasSession ? "/(app)" : "/(auth)/login"} style={styles.cta}>
-          {hasSession ? "몽글 열기" : "몽글 시작하기"}
+        <Link href="/(auth)/login" style={styles.cta}>
+          몽글 시작하기
         </Link>
       </View>
 

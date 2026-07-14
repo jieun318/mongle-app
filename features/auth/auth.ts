@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { Platform } from "react-native";
 import type { Session } from "@supabase/supabase-js";
 import * as WebBrowser from "expo-web-browser";
@@ -9,26 +9,49 @@ import { supabase } from "@/lib/supabase";
 // 소셜 로그인 결과 — error 가 null 이면 성공, 사용자가 취소하면 canceled=true
 export type SocialResult = { error: Error | null; canceled?: boolean };
 
-export function useSession() {
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+// ── 세션 스토어 ────────────────────────────────────────────────
+// useSession 을 쓰는 화면마다 getSession() 을 따로 호출하면, 액세스 토큰이 만료된
+// 콜드스타트에서 여러 갱신이 동시에 나간다. refresh token 은 1회용이라 뒤늦은
+// 갱신이 refresh_token_already_used 로 실패하고, GoTrue 는 그때 세션을 삭제한다.
+// (= 앱 재시작마다 다시 로그인) 구독을 하나로 모아 getSession 을 1회만 부른다.
+type SessionSnapshot = { session: Session | null; loading: boolean };
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setLoading(false);
-    });
+let snapshot: SessionSnapshot = { session: null, loading: true };
+const listeners = new Set<() => void>();
+let started = false;
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, s) => {
-      setSession(s);
-    });
+function setSnapshot(next: SessionSnapshot): void {
+  snapshot = next;
+  listeners.forEach((l) => l());
+}
 
-    return () => {
-      listener.subscription.unsubscribe();
-    };
-  }, []);
+function start(): void {
+  if (started) return;
+  started = true;
 
-  return { session, loading };
+  supabase.auth.onAuthStateChange((_event, s) => {
+    setSnapshot({ session: s, loading: false });
+  });
+
+  void supabase.auth.getSession().then(({ data }) => {
+    setSnapshot({ session: data.session, loading: false });
+  });
+}
+
+function subscribe(listener: () => void): () => void {
+  start();
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
+export function useSession(): SessionSnapshot {
+  return useSyncExternalStore(
+    subscribe,
+    () => snapshot,
+    () => snapshot,
+  );
 }
 
 export async function signOut() {

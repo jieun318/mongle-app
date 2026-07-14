@@ -12,6 +12,10 @@ import { useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { signInWithKakao, signInWithApple } from "@/features/auth/auth";
 import { supabase } from "@/lib/supabase";
+import AuthDebugPanel from "@/components/AuthDebugPanel";
+
+// ⚠️ 임시 — 세션 미유지 원인 확인용. 확정되면 false 로 두지 말고 패널째 제거할 것.
+const SHOW_AUTH_DEBUG = true;
 
 // 애플 로그인 임시 비활성화 플래그.
 // Apple Developer 가입 + Supabase Apple provider 설정이 끝나면 true 로만 바꾸면
@@ -135,6 +139,8 @@ export default function LoginForm() {
           </TouchableOpacity>
         )}
       </View>
+
+      {SHOW_AUTH_DEBUG && <AuthDebugPanel />}
 
       <Text style={styles.terms}>
         로그인하면 서비스 이용약관과 개인정보처리방침에{"\n"}동의하는 것으로

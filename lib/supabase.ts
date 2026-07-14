@@ -1,7 +1,7 @@
 import "react-native-url-polyfill/auto";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Platform } from "react-native";
-import { createClient } from "@supabase/supabase-js";
+import { AppState, Platform } from "react-native";
+import { createClient, processLock } from "@supabase/supabase-js";
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
@@ -36,5 +36,22 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     // PKCE 플로우여야 exchangeCodeForSession / detectSessionInUrl 양쪽에서
     // 세션 발급이 된다.
     flowType: "pkce",
+    // 네이티브에는 navigator.locks 가 없어 GoTrueClient 가 lockNoOp(잠금 없음)으로
+    // 떨어진다(GoTrueClient 의 lock 선택 로직). 그러면 토큰 갱신이 동시에 두 번
+    // 실행될 수 있는데 refresh token 은 1회용이라 두 번째가 실패하면서 세션이
+    // 통째로 삭제된다 → 앱을 껐다 켜면 다시 로그인. processLock 으로 직렬화한다.
+    lock: processLock,
   },
 });
+
+// 포그라운드에서만 자동 갱신 타이머를 돌린다. 백그라운드에서 타이머가 살아 있으면
+// 복귀 시점의 갱신과 겹칠 수 있다. (Supabase React Native 권장 구성)
+if (Platform.OS !== "web") {
+  AppState.addEventListener("change", (state) => {
+    if (state === "active") {
+      supabase.auth.startAutoRefresh();
+    } else {
+      supabase.auth.stopAutoRefresh();
+    }
+  });
+}

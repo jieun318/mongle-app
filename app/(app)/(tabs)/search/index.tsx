@@ -9,6 +9,7 @@ import {
   Image,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import BottomNav from "@/components/ui/BottomNav";
@@ -23,10 +24,13 @@ import {
 const SCREEN_W = Dimensions.get("window").width;
 const GRID_PADDING = 20;
 const GRID_GAP = 10;
-const CARD_W = (SCREEN_W - GRID_PADDING * 2 - GRID_GAP * 2) / 3;
+// floor 하지 않으면 3*CARD_W + 2*GAP 가 컨테이너보다 1px 넘쳐 3번째 카드가
+// 다음 줄로 밀린다(특정 화면 밀도에서 2열로 깨짐). 내림해서 한 줄 3열을 보장.
+const CARD_W = Math.floor((SCREEN_W - GRID_PADDING * 2 - GRID_GAP * 2) / 3);
 
 export default function SearchScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [query, setQuery] = useState("");
   const [showChat, setShowChat] = useState(false);
 
@@ -49,7 +53,10 @@ export default function SearchScreen() {
   return (
     <LinearGradient colors={["#F5F3FA", "#F5F3FA"]} style={{ flex: 1 }}>
       <ScrollView
-        contentContainerStyle={styles.scroll}
+        contentContainerStyle={[
+          styles.scroll,
+          { paddingBottom: 120 + insets.bottom },
+        ]}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
@@ -127,7 +134,7 @@ export default function SearchScreen() {
 const styles = StyleSheet.create({
   scroll: {
     paddingTop: 60,
-    paddingBottom: 120,
+    // paddingBottom 은 인셋 반영해 인라인으로 지정 (120 + insets.bottom).
     paddingHorizontal: GRID_PADDING,
     gap: 20,
   },

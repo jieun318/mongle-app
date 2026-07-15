@@ -1,5 +1,6 @@
 import { View, TouchableOpacity, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { ComponentType } from "react";
 import {
   HomeIcon,
@@ -20,6 +21,7 @@ const INACTIVE_COLOR = "#C4B8DC";
 
 export default function BottomNav({ active }: BottomNavProps) {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   const items: {
     key: NavItem;
@@ -33,7 +35,9 @@ export default function BottomNav({ active }: BottomNavProps) {
   ];
 
   return (
-    <View style={styles.wrapper}>
+    // 안드로이드 시스템 네비게이션 바(edge-to-edge) 위로 띄운다. insets.bottom 이
+    // 0 인 기기(제스처/구형)에서는 기존과 동일한 24 위치.
+    <View style={[styles.wrapper, { bottom: 24 + insets.bottom }]}>
       <View style={styles.container}>
         {items.map(({ key, href, Icon }) => {
           const isActive = active === key;
@@ -56,7 +60,7 @@ export default function BottomNav({ active }: BottomNavProps) {
 const styles = StyleSheet.create({
   wrapper: {
     position: "absolute",
-    bottom: 24,
+    // bottom 은 인셋에 따라 인라인으로 지정 (24 + insets.bottom).
     left: 16,
     right: 16,
     alignItems: "center",

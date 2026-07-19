@@ -31,8 +31,9 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/adaptive-icon.png",
-          "imageWidth": 220,
+          "//": "네이티브 콜드스타트 스플래시는 배경색만 보이게 한다(투명 아이콘). Android 12+ 는 아이콘을 완전히 뺄 수 없어 투명 PNG 로 대체 → 배경색 #F8F3FF 만 잠깐 보이다가 커스텀 스플래시(구슬)로 이어짐.",
+          "image": "./assets/images/splash-transparent.png",
+          "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#F8F3FF"
         }

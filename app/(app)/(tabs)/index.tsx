@@ -63,6 +63,7 @@ import {
   getSmokePalette,
 } from "@/features/fortune/dailyFortune";
 import { prefetchMyDreams } from "@/features/dream/dreams";
+import { prefetchDreamBrowse } from "@/features/dream/dreamQueries";
 
 // 5카테고리 전부 노출 (무료 공개). 순서는 types/fortune CATEGORY_KEYS 와 동일.
 const CATEGORY_ORDER: readonly FortuneCategoryKey[] = [
@@ -452,11 +453,14 @@ export default function HomeScreen() {
   const bgStarAnims = useRef(BG_STARS.map(() => new Animated.Value(0))).current;
   const cloudAnims = useRef(CLOUDS.map(() => new Animated.Value(0))).current;
 
-  // 홈이 그려지고 상호작용이 끝난 뒤(= 홈 우선) 보관함 목록을 백그라운드로 예열.
-  // 보관함 탭 첫 진입에서 스피너 없이 즉시 뜨게 한다. 검색 탭은 로컬 데이터라 예열 불필요.
+  // 홈이 그려지고 상호작용이 끝난 뒤(= 홈 우선) 백그라운드 예열.
+  //  - 보관함 목록: 탭 첫 진입 스피너 제거
+  //  - 꿈 사전(카테고리): 검색 화면에서 카테고리 카드 첫 진입 스피너 제거
+  // (키워드 검색은 입력마다 달라 예열 불가 — 네트워크 유지)
   useEffect(() => {
     const task = InteractionManager.runAfterInteractions(() => {
       prefetchMyDreams();
+      prefetchDreamBrowse();
     });
     return () => task.cancel();
   }, []);

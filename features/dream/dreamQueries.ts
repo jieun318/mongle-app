@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { queryClient } from "@/lib/queryClient";
 import {
   CATEGORIES,
   type DreamItem,
@@ -109,11 +110,49 @@ export function useDreamItem(id: string | undefined | null) {
   });
 }
 
+// 카테고리 캐시 키 — 프리페치와 훅이 동일 키를 써야 캐시가 맞물린다.
+function categoryQueryKey(categoryId: string) {
+  return ["dreamItems", "category", categoryId];
+}
+
+// 한 카테고리의 항목만 골라낸다 — 서버 queryFn 필터와 동일 규칙.
+function filterByCategory(items: DreamItem[], categoryId: string): DreamItem[] {
+  if (categoryId === "lucky") return items.filter((i) => i.tags.includes("길몽"));
+  if (categoryId === "unlucky") return items.filter((i) => i.tags.includes("흉몽"));
+  return items.filter((i) => i.categoryId === categoryId);
+}
+
+// ── 브라우즈 프리페치 ────────────────────────────────────
+// dream_items 전체는 수백 행 규모라, 홈이 준비된 뒤 한 번에 당겨와 카테고리별
+// 캐시(useDreamItemsByCategory 와 동일 키)를 미리 채운다. 이후 카테고리 카드 첫
+// 진입이 네트워크 없이 즉시 뜬다. staleTime 1h 라 채워두면 그동안 재조회 안 함.
+let browsePrefetched = false;
+export async function prefetchDreamBrowse(): Promise<void> {
+  if (browsePrefetched) return;
+  browsePrefetched = true;
+  try {
+    const { data, error } = await supabase
+      .from("dream_items")
+      .select("*")
+      .order("id");
+    if (error || !data) {
+      browsePrefetched = false; // 실패 시 다음 기회에 재시도 허용
+      return;
+    }
+    const items = data.map((r) => mapDreamItemRow(r as DreamItemRow));
+    for (const c of CATEGORIES) {
+      queryClient.setQueryData(categoryQueryKey(c.id), filterByCategory(items, c.id));
+    }
+  } catch {
+    browsePrefetched = false;
+  }
+}
+
 // ── 카테고리별 목록 ──────────────────────────────────────
 //   lucky/unlucky 는 가상 카테고리: tags 에 길몽/흉몽이 포함된 모든 항목.
 export function useDreamItemsByCategory(categoryId: string | undefined | null) {
   return useQuery({
-    queryKey: ["dreamItems", "category", categoryId ?? null],
+    queryKey: categoryQueryKey(categoryId ?? "null"),
     queryFn: async (): Promise<DreamItem[]> => {
       if (!categoryId) return [];
       let q = supabase.from("dream_items").select("*");

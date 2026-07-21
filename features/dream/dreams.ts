@@ -149,6 +149,33 @@ export async function listMyDreams() {
     .returns<DreamRecord[]>();
 }
 
+// ── 보관함 프리페치 캐시 ────────────────────────────────────────
+// 홈이 준비된 뒤 보관함 목록을 백그라운드로 미리 당겨둔다. 보관함 탭 첫 진입에서
+// 스피너 없이 즉시 뜨게 하는 용도. 보관함은 포커스마다 재조회하므로, 캐시가 조금
+// 오래돼도 화면 진입 시 자동 갱신되어 안전하다(첫 마운트의 스피너만 제거).
+let dreamsCache: { data: DreamRecord[]; at: number } | null = null;
+let dreamsInflight: Promise<void> | null = null;
+
+// 캐시가 maxAgeMs 이내면 반환, 아니면 null. 보관함 첫 마운트 초기 상태 seed 용.
+export function getCachedMyDreams(maxAgeMs = 15000): DreamRecord[] | null {
+  if (dreamsCache && Date.now() - dreamsCache.at < maxAgeMs) return dreamsCache.data;
+  return null;
+}
+
+// 백그라운드 프리페치. 동시 호출은 진행 중인 하나로 합친다(fire-and-forget).
+export function prefetchMyDreams(): Promise<void> {
+  if (dreamsInflight) return dreamsInflight;
+  dreamsInflight = listMyDreams()
+    .then(({ data, error }) => {
+      if (!error && data) dreamsCache = { data, at: Date.now() };
+    })
+    .catch(() => {})
+    .finally(() => {
+      dreamsInflight = null;
+    });
+  return dreamsInflight;
+}
+
 // 단건 조회 — 편집 화면에서 사용. RLS 가 본인 row 만 통과시킨다.
 export async function getDream(id: string) {
   return supabase

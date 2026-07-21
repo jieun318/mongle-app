@@ -23,6 +23,7 @@ import {
   DreamSource,
   computeStats,
   deleteDream,
+  getCachedMyDreams,
   listMyDreams,
 } from "@/features/dream/dreams";
 import { confirmDestructive, showNotice } from "@/lib/dialog";
@@ -44,11 +45,14 @@ const SOURCE_BY_TAB: Record<FilterTab, DreamSource | null> = {
 export default function StorageScreen() {
   const router = useRouter();
 
-  const [dreams, setDreams] = useState<DreamRecord[]>([]);
-  const [loading, setLoading] = useState(true);
+  // 홈에서 미리 예열해둔 목록이 있으면 그걸로 시작 → 첫 진입 스피너 생략.
+  // 캐시가 있어도 useFocusEffect 가 백그라운드로 재조회하므로 항상 최신으로 갱신된다.
+  const seeded = getCachedMyDreams();
+  const [dreams, setDreams] = useState<DreamRecord[]>(seeded ?? []);
+  const [loading, setLoading] = useState(seeded === null);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const hasLoadedRef = useRef(false); // 첫 로드 후엔 스피너 X, 백그라운드 갱신만
+  const hasLoadedRef = useRef(seeded !== null); // 첫 로드 후엔 스피너 X, 백그라운드 갱신만
 
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState<FilterTab>("all");

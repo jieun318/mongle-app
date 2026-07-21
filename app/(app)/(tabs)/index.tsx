@@ -10,6 +10,7 @@ import {
   ScrollView,
   Dimensions,
   AppState,
+  InteractionManager,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -61,6 +62,7 @@ import {
   getDailyFortune,
   getSmokePalette,
 } from "@/features/fortune/dailyFortune";
+import { prefetchMyDreams } from "@/features/dream/dreams";
 
 // 5카테고리 전부 노출 (무료 공개). 순서는 types/fortune CATEGORY_KEYS 와 동일.
 const CATEGORY_ORDER: readonly FortuneCategoryKey[] = [
@@ -449,6 +451,15 @@ export default function HomeScreen() {
   const smokeOp = useRef(new Animated.Value(0)).current; // 탭 전: 투명 유리구슬
   const bgStarAnims = useRef(BG_STARS.map(() => new Animated.Value(0))).current;
   const cloudAnims = useRef(CLOUDS.map(() => new Animated.Value(0))).current;
+
+  // 홈이 그려지고 상호작용이 끝난 뒤(= 홈 우선) 보관함 목록을 백그라운드로 예열.
+  // 보관함 탭 첫 진입에서 스피너 없이 즉시 뜨게 한다. 검색 탭은 로컬 데이터라 예열 불필요.
+  useEffect(() => {
+    const task = InteractionManager.runAfterInteractions(() => {
+      prefetchMyDreams();
+    });
+    return () => task.cancel();
+  }, []);
 
   useEffect(() => {
     // 떠다니는 애니메이션

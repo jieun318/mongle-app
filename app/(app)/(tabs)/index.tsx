@@ -64,6 +64,8 @@ import {
 } from "@/features/fortune/dailyFortune";
 import { prefetchMyDreams } from "@/features/dream/dreams";
 import { prefetchDreamBrowse } from "@/features/dream/dreamQueries";
+import { useWeatherCondition } from "@/features/weather/weather";
+import WeatherOverlay from "@/components/weather/WeatherOverlay";
 
 // 5카테고리 전부 노출 (무료 공개). 순서는 types/fortune CATEGORY_KEYS 와 동일.
 const CATEGORY_ORDER: readonly FortuneCategoryKey[] = [
@@ -453,6 +455,9 @@ export default function HomeScreen() {
   const bgStarAnims = useRef(BG_STARS.map(() => new Animated.Value(0))).current;
   const cloudAnims = useRef(CLOUDS.map(() => new Animated.Value(0))).current;
 
+  // 위치 기반 날씨 (IP → 기상청). 실패/키미설정 시 clear → 오버레이 없음.
+  const { data: weather } = useWeatherCondition();
+
   // 홈이 그려지고 상호작용이 끝난 뒤(= 홈 우선) 백그라운드 예열.
   //  - 보관함 목록: 탭 첫 진입 스피너 제거
   //  - 꿈 사전(카테고리): 검색 화면에서 카테고리 카드 첫 진입 스피너 제거
@@ -754,6 +759,9 @@ export default function HomeScreen() {
           />
         ))}
       </Animated.View>
+
+      {/* 위치 기반 비/눈 — 배경 위, 콘텐츠 뒤로 은은하게 */}
+      <WeatherOverlay condition={weather ?? "clear"} />
 
       <View style={styles.header}>
         <TouchableOpacity

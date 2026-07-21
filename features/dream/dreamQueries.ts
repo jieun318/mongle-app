@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { queryClient } from "@/lib/queryClient";
 import {
@@ -110,104 +110,98 @@ export function useDreamItem(id: string | undefined | null) {
   });
 }
 
-// 카테고리 캐시 키 — 프리페치와 훅이 동일 키를 써야 캐시가 맞물린다.
-function categoryQueryKey(categoryId: string) {
-  return ["dreamItems", "category", categoryId];
+// ── 전체 목록(단일 소스) ─────────────────────────────────
+// dream_items 는 수백 행 규모의 정적 사전 데이터라, 카테고리·검색을 매번 서버에
+// 조회하지 않고 전체를 한 번만 받아 메모리에서 필터링한다. 카테고리/검색 훅이
+// 모두 이 캐시에서 파생 → 첫 요청 후엔 네트워크 없이 즉시 동작.
+const ALL_DREAM_ITEMS_KEY = ["dreamItems", "all"] as const;
+
+async function fetchAllDreamItems(): Promise<DreamItem[]> {
+  const { data, error } = await supabase
+    .from("dream_items")
+    .select("*")
+    .order("id");
+  if (error) throw error;
+  return (data ?? []).map((r) => mapDreamItemRow(r as DreamItemRow));
 }
 
-// 한 카테고리의 항목만 골라낸다 — 서버 queryFn 필터와 동일 규칙.
+export function useAllDreamItems() {
+  return useQuery({
+    queryKey: ALL_DREAM_ITEMS_KEY,
+    queryFn: fetchAllDreamItems,
+    staleTime: 60 * 60 * 1000, // 1h
+  });
+}
+
+// 홈이 준비된 뒤 전체 목록을 백그라운드로 예열. 이후 검색/카테고리 첫 진입이
+// 네트워크 없이 즉시 뜬다. prefetchQuery 는 이미 신선하면 재요청하지 않는다.
+export function prefetchDreamBrowse(): Promise<void> {
+  return queryClient
+    .prefetchQuery({
+      queryKey: ALL_DREAM_ITEMS_KEY,
+      queryFn: fetchAllDreamItems,
+      staleTime: 60 * 60 * 1000,
+    })
+    .catch(() => {});
+}
+
+// 한 카테고리의 항목만 골라낸다 — 기존 서버 queryFn 필터와 동일 규칙.
+// (lucky/unlucky 는 tags 에 길몽/흉몽 포함하는 가상 카테고리)
 function filterByCategory(items: DreamItem[], categoryId: string): DreamItem[] {
   if (categoryId === "lucky") return items.filter((i) => i.tags.includes("길몽"));
   if (categoryId === "unlucky") return items.filter((i) => i.tags.includes("흉몽"));
   return items.filter((i) => i.categoryId === categoryId);
 }
 
-// ── 브라우즈 프리페치 ────────────────────────────────────
-// dream_items 전체는 수백 행 규모라, 홈이 준비된 뒤 한 번에 당겨와 카테고리별
-// 캐시(useDreamItemsByCategory 와 동일 키)를 미리 채운다. 이후 카테고리 카드 첫
-// 진입이 네트워크 없이 즉시 뜬다. staleTime 1h 라 채워두면 그동안 재조회 안 함.
-let browsePrefetched = false;
-export async function prefetchDreamBrowse(): Promise<void> {
-  if (browsePrefetched) return;
-  browsePrefetched = true;
-  try {
-    const { data, error } = await supabase
-      .from("dream_items")
-      .select("*")
-      .order("id");
-    if (error || !data) {
-      browsePrefetched = false; // 실패 시 다음 기회에 재시도 허용
-      return;
-    }
-    const items = data.map((r) => mapDreamItemRow(r as DreamItemRow));
-    for (const c of CATEGORIES) {
-      queryClient.setQueryData(categoryQueryKey(c.id), filterByCategory(items, c.id));
-    }
-  } catch {
-    browsePrefetched = false;
-  }
-}
-
-// ── 카테고리별 목록 ──────────────────────────────────────
-//   lucky/unlucky 는 가상 카테고리: tags 에 길몽/흉몽이 포함된 모든 항목.
+// ── 카테고리별 목록 (메모리 필터링) ──────────────────────
 export function useDreamItemsByCategory(categoryId: string | undefined | null) {
-  return useQuery({
-    queryKey: categoryQueryKey(categoryId ?? "null"),
-    queryFn: async (): Promise<DreamItem[]> => {
-      if (!categoryId) return [];
-      let q = supabase.from("dream_items").select("*");
-      if (categoryId === "lucky") q = q.contains("tags", ["길몽"]);
-      else if (categoryId === "unlucky") q = q.contains("tags", ["흉몽"]);
-      else q = q.eq("category_id", categoryId);
-      const { data, error } = await q.order("id");
-      if (error) throw error;
-      return (data ?? []).map((r) => mapDreamItemRow(r as DreamItemRow));
-    },
-    enabled: !!categoryId,
-    staleTime: 60 * 60 * 1000, // 1h
-  });
+  const q = useAllDreamItems();
+  const data = useMemo(
+    () => (q.data && categoryId ? filterByCategory(q.data, categoryId) : []),
+    [q.data, categoryId],
+  );
+  return { ...q, data };
 }
 
-// ── 검색 (debounce 300ms) ─────────────────────────────────
-//   매칭: title / preview ilike, keywords / tags contains, 카테고리 라벨/ID.
-//   PostgREST `.or()` 파서 안전을 위해 위험 문자 제거.
+// PostgREST 대신 클라이언트에서 매칭. 기존 서버 `.or()` 규칙과 동일하게:
+//   title/preview 부분일치(대소문자 무시), keywords/tags 정확 원소 포함,
+//   카테고리 라벨/ID 부분일치. sanitize 는 기존과 동일 문자 제거를 유지해
+//   서버 결과와 일치시킨다.
 function sanitize(q: string): string {
   return q.replace(/[(),"\\%_]/g, " ").trim();
 }
 
+function searchItems(items: DreamItem[], rawQuery: string): DreamItem[] {
+  const safe = sanitize(rawQuery);
+  if (!safe) return [];
+  const lower = safe.toLowerCase();
+  const catIds = new Set(
+    CATEGORIES.filter(
+      (c) =>
+        c.label.toLowerCase().includes(lower) ||
+        c.id.toLowerCase().includes(lower),
+    ).map((c) => c.id),
+  );
+  // 메모리 필터라 네트워크 비용이 없어 상한을 두지 않는다(기존 서버 .limit(100) 은
+  // payload 절감용이었음). 매칭 전체를 id 순으로 반환 — 카테고리 페이지도 동일
+  // 규모(길몽 278개)를 이미 스크롤로 렌더한다.
+  return items.filter(
+    (i) =>
+      i.title.toLowerCase().includes(lower) ||
+      i.preview.toLowerCase().includes(lower) ||
+      i.keywords.includes(safe) ||
+      i.tags.includes(safe) ||
+      catIds.has(i.categoryId),
+  );
+}
+
+// ── 검색 (메모리 필터링) ─────────────────────────────────
 export function useSearchDreamItems(query: string) {
-  const debounced = useDebouncedValue(query.trim(), 300);
-  return useQuery({
-    queryKey: ["dreamItems", "search", debounced],
-    queryFn: async (): Promise<DreamItem[]> => {
-      const safe = sanitize(debounced);
-      if (!safe) return [];
-      const lower = safe.toLowerCase();
-      const catIds = CATEGORIES.filter(
-        (c) =>
-          c.label.toLowerCase().includes(lower) ||
-          c.id.toLowerCase().includes(lower),
-      ).map((c) => c.id);
-
-      const orParts = [
-        `title.ilike.%${safe}%`,
-        `preview.ilike.%${safe}%`,
-        `keywords.cs.{${safe}}`,
-        `tags.cs.{${safe}}`,
-      ];
-      if (catIds.length > 0) {
-        orParts.push(`category_id.in.(${catIds.join(",")})`);
-      }
-
-      const { data, error } = await supabase
-        .from("dream_items")
-        .select("*")
-        .or(orParts.join(","))
-        .limit(100);
-      if (error) throw error;
-      return (data ?? []).map((r) => mapDreamItemRow(r as DreamItemRow));
-    },
-    enabled: debounced.length > 0,
-    staleTime: 5 * 60 * 1000, // 5min
-  });
+  const debounced = useDebouncedValue(query.trim(), 150);
+  const q = useAllDreamItems();
+  const data = useMemo(
+    () => (q.data && debounced ? searchItems(q.data, debounced) : []),
+    [q.data, debounced],
+  );
+  return { ...q, data };
 }

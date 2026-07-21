@@ -10,8 +10,8 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useState } from "react";
 import BottomNav from "@/components/ui/BottomNav";
 import { SearchIcon } from "@/components/ui/icons";
 import ChatBotModal from "@/components/chat/ChatBotModal";
@@ -20,6 +20,7 @@ import {
   TRENDING_KEYWORDS,
   DreamCategory,
 } from "@/features/dream/dreamData";
+import { getRecentSearches, addRecentSearch } from "@/features/dream/recentSearches";
 
 const SCREEN_W = Dimensions.get("window").width;
 const GRID_PADDING = 20;
@@ -28,11 +29,43 @@ const GRID_GAP = 10;
 // 다음 줄로 밀린다(특정 화면 밀도에서 2열로 깨짐). 내림해서 한 줄 3열을 보장.
 const CARD_W = Math.floor((SCREEN_W - GRID_PADDING * 2 - GRID_GAP * 2) / 3);
 
+const MAX_CHIPS = 8;
+const normalizeKw = (s: string) => s.replace(/^#/, "").trim();
+
+// 표시할 키워드 칩: 사용자의 최근 검색어를 앞에 두고(개인화), 부족하면 기본
+// 인기 키워드로 채운다. 중복(‘#돼지’ vs ‘돼지’)은 정규화해서 제거.
+function buildKeywordChips(recents: string[]): string[] {
+  const seen = new Set(recents.map(normalizeKw));
+  const chips = [...recents];
+  for (const k of TRENDING_KEYWORDS) {
+    if (chips.length >= MAX_CHIPS) break;
+    if (!seen.has(normalizeKw(k))) {
+      chips.push(k);
+      seen.add(normalizeKw(k));
+    }
+  }
+  return chips;
+}
+
 export default function SearchScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [query, setQuery] = useState("");
   const [showChat, setShowChat] = useState(false);
+  const [recent, setRecent] = useState<string[]>([]);
+
+  // 화면 포커스마다 최근 검색어를 다시 읽는다 → 검색 후 돌아오면 칩이 갱신됨.
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      getRecentSearches().then((r) => {
+        if (active) setRecent(r);
+      });
+      return () => {
+        active = false;
+      };
+    }, []),
+  );
 
   const goCategory = (cat: DreamCategory) => {
     router.push(`/(app)/search/${cat.id}`);
@@ -41,14 +74,18 @@ export default function SearchScreen() {
   const goResults = (q: string) => {
     const trimmed = q.trim();
     if (!trimmed) return;
+    addRecentSearch(trimmed); // 개인화용 기록 (fire-and-forget, 복귀 시 갱신됨)
     router.push(`/(app)/search/results?q=${encodeURIComponent(trimmed)}`);
   };
 
   const handleTrendingTap = (kw: string) => {
-    const cleaned = kw.replace(/^#/, "");
+    const cleaned = normalizeKw(kw);
     setQuery(cleaned);
     goResults(cleaned);
   };
+
+  const chips = buildKeywordChips(recent);
+  const hasRecent = recent.length > 0;
 
   return (
     <LinearGradient colors={["#F5F3FA", "#F5F3FA"]} style={{ flex: 1 }}>
@@ -79,15 +116,19 @@ export default function SearchScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>🔥 지금 뜨는 꿈 키워드</Text>
+          <Text style={styles.sectionLabel}>
+            {hasRecent ? "🕘 최근 검색어" : "🔥 지금 뜨는 꿈 키워드"}
+          </Text>
           <View style={styles.tagRow}>
-            {TRENDING_KEYWORDS.map((kw) => (
+            {chips.map((kw) => (
               <TouchableOpacity
                 key={kw}
                 style={styles.trendTag}
                 onPress={() => handleTrendingTap(kw)}
               >
-                <Text style={styles.trendTagText}>{kw}</Text>
+                <Text style={styles.trendTagText}>
+                  {kw.startsWith("#") ? kw : `#${kw}`}
+                </Text>
               </TouchableOpacity>
             ))}
           </View>

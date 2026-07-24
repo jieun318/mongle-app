@@ -482,7 +482,7 @@ export default function HomeScreen() {
   const dimOp = useRef(new Animated.Value(0)).current; // 비/눈 시 하늘 어둡게
 
   // 위치 기반 날씨 (IP → 기상청). 실패/키미설정 시 clear → 오버레이 없음.
-  const { data: weather } = useWeatherCondition();
+  const { data: weather, refetch: refetchWeather } = useWeatherCondition();
 
   // 실제로 적용되는 날씨 + 강수(비/눈/진눈깨비) 여부.
   const effectiveWeather = forceWeather ?? weather ?? "clear";
@@ -500,6 +500,15 @@ export default function HomeScreen() {
       useNativeDriver: true,
     }).start();
   }, [isPrecip, dimOp]);
+
+  // 포그라운드 복귀 시 날씨 재조회 — 비가 그쳤는데 연출이 남아있는 상황을 줄인다.
+  // (staleTime 30분을 무시하고 즉시 재조회. 위치는 캐시돼 권한 재요청 없음.)
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (s) => {
+      if (s === "active") refetchWeather();
+    });
+    return () => sub.remove();
+  }, [refetchWeather]);
 
   // 홈이 그려지고 상호작용이 끝난 뒤(= 홈 우선) 백그라운드 예열.
   //  - 보관함 목록: 탭 첫 진입 스피너 제거

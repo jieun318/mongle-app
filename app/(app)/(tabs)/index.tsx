@@ -64,8 +64,30 @@ import {
 } from "@/features/fortune/dailyFortune";
 import { prefetchMyDreams } from "@/features/dream/dreams";
 import { prefetchDreamBrowse } from "@/features/dream/dreamQueries";
-import { useWeatherCondition } from "@/features/weather/weather";
+import {
+  useWeatherCondition,
+  type WeatherCondition,
+} from "@/features/weather/weather";
 import WeatherOverlay from "@/components/weather/WeatherOverlay";
+
+// ⚠️ 개발용 강제 날씨 스위치 — 실제 비/눈이 올 때만 보여 테스트가 어려우므로,
+// 화면 좌상단 테스트 버튼으로 연출을 순환시킨다(null = 실제 날씨 사용).
+// 배포 전 DEV_WEATHER_BUTTON 을 false 로 바꿔 버튼을 숨길 것.
+const DEV_WEATHER_BUTTON = true;
+
+// 테스트 버튼이 순환하는 순서 (null = 실제 날씨)
+const WEATHER_CYCLE: (WeatherCondition | null)[] = [
+  null,
+  "rain",
+  "snow",
+  "sleet",
+];
+const WEATHER_LABEL: Record<string, string> = {
+  rain: "🌧 비",
+  snow: "❄️ 눈",
+  sleet: "🌨 진눈깨비",
+  clear: "☀️ 실제",
+};
 
 // 5카테고리 전부 노출 (무료 공개). 순서는 types/fortune CATEGORY_KEYS 와 동일.
 const CATEGORY_ORDER: readonly FortuneCategoryKey[] = [
@@ -252,6 +274,9 @@ export default function HomeScreen() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [showNotice, setShowNotice] = useState(false);
   const [hasUnread, setHasUnread] = useState(false);
+  // 개발용 강제 날씨 (null = 실제 날씨). 좌상단 테스트 버튼이 WEATHER_CYCLE 순환.
+  const [forceWeatherIdx, setForceWeatherIdx] = useState(0);
+  const forceWeather = WEATHER_CYCLE[forceWeatherIdx];
 
   // 마운트 시 + 포그라운드 복귀 시 안 읽은 공지 여부 확인
   useEffect(() => {
@@ -454,9 +479,27 @@ export default function HomeScreen() {
   const smokeOp = useRef(new Animated.Value(0)).current; // 탭 전: 투명 유리구슬
   const bgStarAnims = useRef(BG_STARS.map(() => new Animated.Value(0))).current;
   const cloudAnims = useRef(CLOUDS.map(() => new Animated.Value(0))).current;
+  const dimOp = useRef(new Animated.Value(0)).current; // 비/눈 시 하늘 어둡게
 
   // 위치 기반 날씨 (IP → 기상청). 실패/키미설정 시 clear → 오버레이 없음.
   const { data: weather } = useWeatherCondition();
+
+  // 실제로 적용되는 날씨 + 강수(비/눈/진눈깨비) 여부.
+  const effectiveWeather = forceWeather ?? weather ?? "clear";
+  const isPrecip =
+    effectiveWeather === "rain" ||
+    effectiveWeather === "snow" ||
+    effectiveWeather === "sleet";
+
+  // 비/눈 올 때: 해를 숨기고 하늘을 살짝 어둡게 (부드럽게 페이드).
+  useEffect(() => {
+    Animated.timing(dimOp, {
+      toValue: isPrecip ? 1 : 0,
+      duration: 600,
+      easing: Easing.inOut(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [isPrecip, dimOp]);
 
   // 홈이 그려지고 상호작용이 끝난 뒤(= 홈 우선) 백그라운드 예열.
   //  - 보관함 목록: 탭 첫 진입 스피너 제거
@@ -672,7 +715,11 @@ export default function HomeScreen() {
             left: 0,
             width: 280,
             height: 280,
-            opacity: sunOpacity,
+            // 밤엔 sunOpacity 로, 비/눈엔 dimOp 로 이중 페이드아웃.
+            opacity: Animated.multiply(
+              sunOpacity,
+              dimOp.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }),
+            ),
             transform: [
               { translateX: Animated.subtract(sunCX, 140) },
               { translateY: Animated.subtract(sunCY, 140) },
@@ -760,8 +807,41 @@ export default function HomeScreen() {
         ))}
       </Animated.View>
 
-      {/* 위치 기반 비/눈 — 배경 위, 콘텐츠 뒤로 은은하게 */}
-      <WeatherOverlay condition={weather ?? "clear"} />
+      {/* 비/눈 시 하늘을 살짝 어둡게 — 배경/구름/해 위, 구슬·텍스트(body) 뒤.
+          body 는 아래에서 일반 흐름으로 렌더되므로 딤을 덮지 않아 가독성 유지. */}
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          StyleSheet.absoluteFillObject,
+          {
+            backgroundColor: "#20233A",
+            opacity: dimOp.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0, 0.28],
+            }),
+          },
+        ]}
+      />
+
+      {/* 위치 기반 비/눈 — 배경 위, 콘텐츠 뒤로 은은하게.
+          forceWeather 가 설정되면(개발용 버튼) 실제 날씨 대신 그걸 띄운다. */}
+      <WeatherOverlay condition={effectiveWeather} />
+
+      {/* 개발용 날씨 테스트 버튼 — 탭할 때마다 실제→비→눈→진눈깨비 순환.
+          배포 전 DEV_WEATHER_BUTTON 을 false 로. */}
+      {DEV_WEATHER_BUTTON && (
+        <TouchableOpacity
+          style={styles.weatherDebugBtn}
+          onPress={() =>
+            setForceWeatherIdx((i) => (i + 1) % WEATHER_CYCLE.length)
+          }
+          activeOpacity={0.8}
+        >
+          <Text style={styles.weatherDebugText}>
+            {WEATHER_LABEL[forceWeather ?? "clear"]}
+          </Text>
+        </TouchableOpacity>
+      )}
 
       <View style={styles.header}>
         <TouchableOpacity
@@ -1315,6 +1395,22 @@ const styles = StyleSheet.create({
     opacity: 0.55,
   },
 
+  // 개발용 날씨 테스트 버튼 — 좌상단, 실제 UI 와 겹치지 않게
+  weatherDebugBtn: {
+    position: "absolute",
+    top: 60,
+    left: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 14,
+    backgroundColor: "rgba(0,0,0,0.55)",
+    zIndex: 999,
+  },
+  weatherDebugText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#fff",
+  },
   floatingBtn: {
     position: "absolute",
     bottom: 110,

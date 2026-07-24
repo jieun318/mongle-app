@@ -28,10 +28,10 @@ function makeParticles(count: number, kind: "rain" | "snow"): Particle[] {
       return {
         x: r1 * W,
         delay: r2 * 1200,
-        duration: 700 + r3 * 500, // 빠르게
-        size: 12 + r3 * 10,
+        duration: 650 + r3 * 450, // 빠르게
+        size: 18 + r3 * 16, // 더 긴 빗줄기 (18~34)
         drift: 6,
-        opacity: 0.18 + r2 * 0.14,
+        opacity: 0.4 + r2 * 0.35, // 0.4~0.75 로 진하게
       };
     }
     return {
@@ -80,10 +80,10 @@ function Drop({ p, kind }: { p: Particle; kind: "rain" | "snow" }) {
           position: "absolute",
           left: p.x,
           top: 0,
-          width: 1.5,
+          width: 2.5,
           height: p.size,
-          borderRadius: 1,
-          backgroundColor: "#AFC4E8",
+          borderRadius: 1.5,
+          backgroundColor: "#D6E4FB", // 더 밝은 물빛 — 어두운 하늘에서 잘 보이게
           opacity: p.opacity,
           transform: [{ translateY }, { translateX }],
         }}
@@ -121,7 +121,7 @@ export default function WeatherOverlay({
         : null;
 
   const particles = useMemo(
-    () => (kind ? makeParticles(kind === "rain" ? 26 : 18, kind) : []),
+    () => (kind ? makeParticles(kind === "rain" ? 45 : 18, kind) : []),
     [kind],
   );
 

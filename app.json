@@ -24,7 +24,7 @@
         "backgroundColor": "#BCACEC"
       },
       "package": "com.mongle.app",
-      "permissions": []
+      "permissions": ["android.permission.ACCESS_COARSE_LOCATION"]
     },
     "plugins": [
       "expo-router",
@@ -53,7 +53,15 @@
         {
           "color": "#7868C8"
         }
-      ]
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "현재 위치의 날씨(비/눈)와 해 위치를 홈 화면에 반영하기 위해 위치 정보를 사용해요.",
+          "isAndroidBackgroundLocationEnabled": false
+        }
+      ],
+      "./plugins/withCoarseLocationOnly.js"
     ],
     "extra": {
       "router": {},

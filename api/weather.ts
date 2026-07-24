@@ -97,12 +97,21 @@ export default async function handler(req: Request): Promise<Response> {
     return new Response(null, { status: 204, headers: corsHeaders(req) });
   }
 
-  // Vercel 이 요청 IP 로 채워주는 대략 위치. 없으면 서울로 폴백.
+  // 우선순위: 앱이 보낸 GPS 좌표(lat/lon 쿼리) > Vercel IP 대략 위치 > 서울 폴백.
+  const { searchParams } = new URL(req.url);
+  const qLat = parseFloat(searchParams.get("lat") ?? "");
+  const qLon = parseFloat(searchParams.get("lon") ?? "");
+  const hasGps =
+    Number.isFinite(qLat) &&
+    Number.isFinite(qLon) &&
+    qLat >= 33 && qLat <= 43 && qLon >= 124 && qLon <= 132; // 한반도 범위 검증
   const latH = req.headers.get("x-vercel-ip-latitude");
   const lonH = req.headers.get("x-vercel-ip-longitude");
-  const lat = latH ? parseFloat(latH) : FALLBACK.lat;
-  const lon = lonH ? parseFloat(lonH) : FALLBACK.lon;
-  const city = req.headers.get("x-vercel-ip-city") ?? null;
+  const lat = hasGps ? qLat : latH ? parseFloat(latH) : FALLBACK.lat;
+  const lon = hasGps ? qLon : lonH ? parseFloat(lonH) : FALLBACK.lon;
+  const city = hasGps
+    ? "gps"
+    : req.headers.get("x-vercel-ip-city") ?? null;
   const { nx, ny } = toGrid(lat, lon);
 
   // 키 미설정 시엔 조용히 clear (홈이 깨지지 않게). 배포 후 키만 넣으면 동작.

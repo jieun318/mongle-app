@@ -1,4 +1,6 @@
-// 기본 좌표 (서울)
+import * as Location from "expo-location";
+
+// 기본 좌표 (서울) — 권한 거부/실패 시 폴백
 const FALLBACK_LAT = 37.5665;
 const FALLBACK_LNG = 126.978;
 
@@ -18,17 +20,50 @@ export interface SunState {
   stage: "predawn" | "sunrise" | "day" | "sunset" | "night";
 }
 
-export async function getCurrentLocation(): Promise<{
-  lat: number;
-  lng: number;
-  fallback: boolean;
-}> {
-  // 다국어 작업 전까지 위치 권한 보류 — 항상 서울 기준으로 운영.
-  // 실제 위치 기능을 켤 때: `expo-location` 재설치 후
-  //   const { status } = await Location.requestForegroundPermissionsAsync();
-  //   if (status === "granted") { const pos = await Location.getCurrentPositionAsync(...); ... }
-  // 형태로 복원하고 app.json android.permissions 도 함께 추가.
-  return { lat: FALLBACK_LAT, lng: FALLBACK_LNG, fallback: true };
+type LocationResult = { lat: number; lng: number; fallback: boolean };
+
+// 콜드스타트에 해(sun)·날씨 훅이 각각 getCurrentLocation 을 부른다. 위치/권한
+// 조회를 한 번만 하도록 세션 동안 캐시한다.
+//  - 진행 중(inflight) 프라미스를 공유 → 동시 호출이 권한·GPS 를 1회만 태움.
+//  - 성공(fallback:false) 한 좌표만 영구 캐시. 폴백은 캐시 안 해 다음 호출이 재시도.
+let locInflight: Promise<LocationResult> | null = null;
+let locResolved: LocationResult | null = null;
+
+export function getCurrentLocation(): Promise<LocationResult> {
+  if (locResolved) return Promise.resolve(locResolved);
+  if (locInflight) return locInflight;
+  locInflight = resolveCurrentLocation().then((r) => {
+    locInflight = null;
+    if (!r.fallback) locResolved = r;
+    return r;
+  });
+  return locInflight;
+}
+
+async function resolveCurrentLocation(): Promise<LocationResult> {
+  // 실제 GPS 위치. 권한 거부/실패/타임아웃이면 서울 폴백(홈이 깨지지 않게).
+  // 정확도는 Low — 날씨/해 위치는 도시 단위면 충분하고(기상청 격자 5km),
+  // 배터리·응답속도에 유리. 백그라운드 위치는 쓰지 않는다.
+  try {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== "granted") {
+      return { lat: FALLBACK_LAT, lng: FALLBACK_LNG, fallback: true };
+    }
+    // 최근 캐시 위치가 있으면 즉시 사용(빠름), 없으면 새로 측정.
+    const last = await Location.getLastKnownPositionAsync();
+    const pos =
+      last ??
+      (await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Low,
+      }));
+    return {
+      lat: pos.coords.latitude,
+      lng: pos.coords.longitude,
+      fallback: false,
+    };
+  } catch {
+    return { lat: FALLBACK_LAT, lng: FALLBACK_LNG, fallback: true };
+  }
 }
 
 export async function fetchSunTimes(

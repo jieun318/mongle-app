@@ -1,8 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import Constants from "expo-constants";
+import { getCurrentLocation } from "@/lib/sun";
 
-// 홈 비/눈 연출용 날씨 상태. 서버(api/weather)가 IP 로 대략 위치를 잡아
-// 기상청 초단기실황을 조회하고, 앱엔 상태만 내려준다.
+// 홈 비/눈 연출용 날씨 상태. 앱이 GPS 좌표를 서버(api/weather)에 넘기면
+// 서버가 기상청 초단기실황을 조회하고(키는 서버에만), 앱엔 상태만 내려준다.
+// 좌표를 못 넘기면 서버가 IP 로 대략 위치를 잡는다(폴백).
 export type WeatherCondition = "clear" | "rain" | "snow" | "sleet";
 
 function getWeatherUrl(): string {
@@ -18,7 +20,13 @@ const VALID: WeatherCondition[] = ["clear", "rain", "snow", "sleet"];
 
 async function fetchWeatherCondition(): Promise<WeatherCondition> {
   try {
-    const res = await fetch(getWeatherUrl());
+    // GPS 좌표를 쿼리로 전달(서버는 좌표 우선). 권한 거부로 폴백된 경우엔
+    // 좌표를 빼서 서버가 IP 로 대략 위치를 잡게 한다.
+    const loc = await getCurrentLocation();
+    const url = loc.fallback
+      ? getWeatherUrl()
+      : `${getWeatherUrl()}?lat=${loc.lat.toFixed(4)}&lon=${loc.lng.toFixed(4)}`;
+    const res = await fetch(url);
     if (!res.ok) return "clear";
     const data = (await res.json()) as { condition?: string };
     const c = data?.condition;

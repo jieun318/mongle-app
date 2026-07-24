@@ -290,11 +290,3 @@ export async function commitDailyFortuneToDB(fortune: Fortune): Promise<void> {
   const dKey = dateKey(new Date());
   await saveDailyFortuneToDB(dKey, fortune).catch(() => {});
 }
-
-// DEV: 캐시 비우고 새로 뽑기
-export async function resetDailyFortune(): Promise<Fortune> {
-  try {
-    await AsyncStorage.removeItem(FORTUNE_CACHE_KEY);
-  } catch {}
-  return getDailyFortune();
-}

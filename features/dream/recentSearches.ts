@@ -29,11 +29,3 @@ export async function addRecentSearch(term: string): Promise<string[]> {
     return getRecentSearches();
   }
 }
-
-export async function clearRecentSearches(): Promise<void> {
-  try {
-    await AsyncStorage.removeItem(KEY);
-  } catch {
-    // ignore
-  }
-}

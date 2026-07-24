@@ -23,14 +23,6 @@ export const CATEGORY_META: Record<
   social: { label: "동료/친구", icon: "🤝", color: "#6A4BA8", bgColor: "#E8E0F5" },
 };
 
-export const SCORE_LABEL: Record<CategoryScore, string> = {
-  5: "매우 좋음",
-  4: "좋음",
-  3: "보통",
-  2: "주의",
-  1: "나쁨",
-};
-
 // 점수 가중치 — 카테고리별 점수 픽에 사용. 종합 등급과 살짝 다르게:
 // 평균은 3~4 쪽으로 살짝 기울고, 1/5 같은 극단은 드물게.
 export const SCORE_WEIGHTS: Record<CategoryScore, number> = {

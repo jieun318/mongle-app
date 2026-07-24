@@ -19,8 +19,6 @@ export const AVATAR_OPTIONS = [
   "⭐",
 ] as const;
 
-export type AvatarEmoji = (typeof AVATAR_OPTIONS)[number];
-
 export interface ProfileRecord {
   uid: string;
   nickname: string | null;

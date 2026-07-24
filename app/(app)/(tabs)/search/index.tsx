@@ -7,14 +7,18 @@ import {
   StyleSheet,
   Dimensions,
   Image,
+  InteractionManager,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import BottomNav from "@/components/ui/BottomNav";
 import { SearchIcon } from "@/components/ui/icons";
-import ChatBotModal from "@/components/chat/ChatBotModal";
+// 챗봇은 실제로 열 때만 로드 — 검색 탭 진입 시 무거운 챗 모듈을 지연시킨다.
+// 진입 후 idle 에 백그라운드 예열해 첫 열기는 즉시 되게 한다(아래 useEffect).
+const importChatModal = () => import("@/components/chat/ChatBotModal");
+const ChatBotModal = lazy(importChatModal);
 import {
   CATEGORIES,
   TRENDING_KEYWORDS,
@@ -52,7 +56,17 @@ export default function SearchScreen() {
   const insets = useSafeAreaInsets();
   const [query, setQuery] = useState("");
   const [showChat, setShowChat] = useState(false);
+  // 챗봇을 한 번이라도 열었는지 — 열린 뒤엔 계속 마운트 유지(닫힘 애니 보존).
+  const [chatMounted, setChatMounted] = useState(false);
   const [recent, setRecent] = useState<string[]>([]);
+
+  // 진입 후 idle 에 챗 모듈 예열 — 첫 열기 지연 제거 (import 캐시되어 1회만).
+  useEffect(() => {
+    const task = InteractionManager.runAfterInteractions(() => {
+      importChatModal();
+    });
+    return () => task.cancel();
+  }, []);
 
   // 화면 포커스마다 최근 검색어를 다시 읽는다 → 검색 후 돌아오면 칩이 갱신됨.
   useFocusEffect(
@@ -151,7 +165,10 @@ export default function SearchScreen() {
         <TouchableOpacity
           style={styles.cta}
           activeOpacity={0.85}
-          onPress={() => setShowChat(true)}
+          onPress={() => {
+            setChatMounted(true);
+            setShowChat(true);
+          }}
         >
           <Text style={styles.ctaText}>
             원하는 꿈 조각이 없나요?{"\n"}
@@ -167,7 +184,11 @@ export default function SearchScreen() {
 
       <BottomNav active="search" />
 
-      <ChatBotModal visible={showChat} onClose={() => setShowChat(false)} />
+      {chatMounted && (
+        <Suspense fallback={null}>
+          <ChatBotModal visible={showChat} onClose={() => setShowChat(false)} />
+        </Suspense>
+      )}
     </LinearGradient>
   );
 }

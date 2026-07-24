@@ -13,8 +13,9 @@ import {
   InteractionManager,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, lazy, Suspense } from "react";
 import Svg, {
   Defs,
   RadialGradient,
@@ -49,7 +50,10 @@ const VIEWED_DATE_KEY = "fortune.viewedDate";
 import BottomNav from "@/components/ui/BottomNav";
 import { BellIcon } from "@/components/ui/icons";
 import Toast from "@/components/ui/Toast";
-import ChatBotModal from "@/components/chat/ChatBotModal";
+// 챗봇은 실제로 열 때만 로드 — 홈 시작/탭 진입 시 무거운 챗 모듈을 지연시킨다.
+// 단, 화면이 뜬 뒤 idle 에 백그라운드로 미리 로드해 첫 열기는 즉시 되게 한다(아래 예열).
+const importChatModal = () => import("@/components/chat/ChatBotModal");
+const ChatBotModal = lazy(importChatModal);
 import NoticeModal from "@/components/notice/NoticeModal";
 import { hasUnreadNotices } from "@/features/notice/notices";
 import FortuneGradeGuide from "@/components/fortune/FortuneGradeGuide";
@@ -263,6 +267,7 @@ function LuckyCell({
 
 export default function HomeScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [fortune, setFortune] = useState<Fortune | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
@@ -271,6 +276,8 @@ export default function HomeScreen() {
   const [sunTimes, setSunTimes] = useState<SunTimes | null>(null);
   const [sunReady, setSunReady] = useState(false); // 첫 자동 업데이트 후 true
   const [showChat, setShowChat] = useState(false);
+  // 챗봇을 한 번이라도 열었는지 — 열린 뒤엔 계속 마운트 유지(닫힘 애니 보존).
+  const [chatMounted, setChatMounted] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [showNotice, setShowNotice] = useState(false);
   const [hasUnread, setHasUnread] = useState(false);
@@ -518,6 +525,7 @@ export default function HomeScreen() {
     const task = InteractionManager.runAfterInteractions(() => {
       prefetchMyDreams();
       prefetchDreamBrowse();
+      importChatModal(); // 챗 모듈 예열 — 첫 열기 지연 제거 (import 캐시되어 1회만)
     });
     return () => task.cancel();
   }, []);
@@ -1158,8 +1166,11 @@ export default function HomeScreen() {
       </View>
 
       <TouchableOpacity
-        style={styles.floatingBtn}
-        onPress={() => setShowChat(true)}
+        style={[styles.floatingBtn, { bottom: 110 + insets.bottom }]}
+        onPress={() => {
+          setChatMounted(true);
+          setShowChat(true);
+        }}
         activeOpacity={0.85}
       >
         <Image
@@ -1169,11 +1180,15 @@ export default function HomeScreen() {
         />
       </TouchableOpacity>
 
-      <ChatBotModal
-        visible={showChat}
-        onClose={() => setShowChat(false)}
-        onSaved={(msg) => setToastMessage(msg)}
-      />
+      {chatMounted && (
+        <Suspense fallback={null}>
+          <ChatBotModal
+            visible={showChat}
+            onClose={() => setShowChat(false)}
+            onSaved={(msg) => setToastMessage(msg)}
+          />
+        </Suspense>
+      )}
 
       <Toast
         message={toastMessage}

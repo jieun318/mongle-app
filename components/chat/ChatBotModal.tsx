@@ -9,8 +9,10 @@ import {
   Platform,
   Animated,
   Easing,
+  Keyboard,
 } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Svg, { Path } from "react-native-svg";
 import Constants from "expo-constants";
@@ -197,30 +199,38 @@ function getApiUrl(): string {
 const API_URL = getApiUrl();
 
 // AI 응답 대기 중 ●●● 점 3개 로딩
+// 점 3개가 물결치듯 위아래로 튀는 타이핑 인디케이터 — "답변 오는 중"을 명확히.
+const DOT_COUNT = 3;
+const DOT_RISE_MS = 320; // 한 점이 올라갔다 내려오는 시간
+const DOT_STAGGER_MS = 140; // 점 사이 시차(웨이브)
+
 function LoadingDots() {
   const dots = [
-    useRef(new Animated.Value(0.3)).current,
-    useRef(new Animated.Value(0.3)).current,
-    useRef(new Animated.Value(0.3)).current,
+    useRef(new Animated.Value(0)).current,
+    useRef(new Animated.Value(0)).current,
+    useRef(new Animated.Value(0)).current,
   ];
 
   useEffect(() => {
     const animations = dots.map((anim, i) =>
       Animated.loop(
+        // 각 점의 1사이클 길이를 동일하게 맞춘다(앞 delay + 튀기 + 뒤 delay)
+        // → 루프가 위상 어긋나지 않고 안정적인 웨이브 유지.
         Animated.sequence([
-          Animated.delay(i * 180),
+          Animated.delay(i * DOT_STAGGER_MS),
           Animated.timing(anim, {
             toValue: 1,
-            duration: 400,
-            easing: Easing.inOut(Easing.quad),
+            duration: DOT_RISE_MS / 2,
+            easing: Easing.out(Easing.quad),
             useNativeDriver: true,
           }),
           Animated.timing(anim, {
-            toValue: 0.3,
-            duration: 400,
-            easing: Easing.inOut(Easing.quad),
+            toValue: 0,
+            duration: DOT_RISE_MS / 2,
+            easing: Easing.in(Easing.quad),
             useNativeDriver: true,
           }),
+          Animated.delay((DOT_COUNT - 1 - i) * DOT_STAGGER_MS),
         ]),
       ),
     );
@@ -232,7 +242,26 @@ function LoadingDots() {
     <View style={[styles.bubble, styles.aiBubble, styles.dotsBubble]}>
       <View style={styles.dotsRow}>
         {dots.map((anim, i) => (
-          <Animated.View key={i} style={[styles.dot, { opacity: anim }]} />
+          <Animated.View
+            key={i}
+            style={[
+              styles.dot,
+              {
+                opacity: anim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.35, 1],
+                }),
+                transform: [
+                  {
+                    translateY: anim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, -7],
+                    }),
+                  },
+                ],
+              },
+            ]}
+          />
         ))}
       </View>
     </View>
@@ -283,6 +312,18 @@ export default function ChatBotModal({
   const [reportTarget, setReportTarget] = useState<ChatMessage | null>(null);
   const [reportNotice, setReportNotice] = useState<string | null>(null);
   const scrollRef = useRef<ScrollView>(null);
+  const insets = useSafeAreaInsets();
+  // 키보드 표시 여부 — 입력바 하단 여백을 시스템 네비바(insets.bottom)에 맞추되,
+  // 키보드가 올라오면 KeyboardAvoidingView 가 이미 밀어 올리므로 여분 여백을 뺀다.
+  const [kbShown, setKbShown] = useState(false);
+  useEffect(() => {
+    const s = Keyboard.addListener("keyboardDidShow", () => setKbShown(true));
+    const h = Keyboard.addListener("keyboardDidHide", () => setKbShown(false));
+    return () => {
+      s.remove();
+      h.remove();
+    };
+  }, []);
   // 같은 세션을 두 번 저장하지 않도록 가드 (close 가 여러 경로로 호출될 수 있음)
   const savedRef = useRef(false);
   // 서버가 첫 턴 응답에 같이 내려주는 보관함용 메타. 저장 시 사용.
@@ -665,8 +706,13 @@ export default function ChatBotModal({
                 </View>
               )}
             </ScrollView>
-            {/* 입력 바 */}
-            <View style={styles.inputBar}>
+            {/* 입력 바 — 안드로이드/iOS 시스템 하단 영역만큼 띄운다(키보드 열림 시 제외) */}
+            <View
+              style={[
+                styles.inputBar,
+                { paddingBottom: kbShown ? 12 : 12 + insets.bottom },
+              ]}
+            >
               <TextInput
                 style={styles.input}
                 placeholder="기억하고 계신 꿈 내용을 입력해주세요"
@@ -847,8 +893,7 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
     gap: 8,
     paddingHorizontal: 14,
-    paddingVertical: 12,
-    paddingBottom: Platform.OS === "ios" ? 28 : 14,
+    paddingTop: 12,
     backgroundColor: "#fff",
     borderTopWidth: 1,
     borderTopColor: "rgba(180,160,230,0.18)",

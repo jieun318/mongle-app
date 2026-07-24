@@ -28,11 +28,11 @@ const HUG_POSE = require("@/assets/images/mongi0.png");
 
 // 시퀀스 — 공전(orbit) 단계 제거. 구슬만 잠깐 떴다가 반짝하면서 mongi0 등장.
 const INTRO_MS = 300; // 구슬 페이드인
-const WAIT_MS = 400; // 구슬만 잠깐 보이는 대기
+const WAIT_MS = 250; // 구슬만 잠깐 보이는 대기
 const SETTLE_MS = 350; // 반짝 + mongi0 슬라이드업
 // mongi0 등장 후 최소 유지 시간. 앱이 빨리 준비되면 이 직후 종료,
 // 느리면 isAppReady 가 될 때까지 "꿈을 해석하는 중..." 텍스트가 자연스럽게 더 머문다.
-const HOLD_MS = 500;
+const HOLD_MS = 200;
 // 애니메이션 최소 노출 시간. onFinish 는 (이 시간 경과) AND (isAppReady) 둘 다 만족 시 발화.
 const MIN_TOTAL_MS = INTRO_MS + WAIT_MS + SETTLE_MS + HOLD_MS;
 

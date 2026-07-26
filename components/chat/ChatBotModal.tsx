@@ -286,6 +286,10 @@ function makeId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+// AI 해몽 응답은 "요약 <<MORE>> 전체해석" 형태로 온다. 이 마커로 나눠
+// 요약은 항상, 전체 해석은 "내용 더 보기"로 펼친다.
+const MORE_MARKER = "<<MORE>>";
+
 // 문단 단위로 분리 — 빈 줄(\n\n) 또는 단일 줄바꿈(\n) 모두 처리
 function splitParagraphs(text: string): string[] {
   return text
@@ -372,7 +376,8 @@ export default function ChatBotModal({
       const content = userMsgs.map((m) => m.content).join("\n\n");
       const chatPreview = messages.map((m) => ({
         role: m.role,
-        text: m.content,
+        // 저장 미리보기엔 요약+전체를 한 흐름으로 (마커는 문단 구분으로 치환)
+        text: m.content.split(MORE_MARKER).join("\n\n"),
       }));
 
       const meta = metaRef.current;
@@ -774,7 +779,19 @@ function MessageBubble({
   onReport?: () => void;
 }) {
   const isUser = msg.role === "user";
-  const paragraphs = useMemo(() => splitParagraphs(msg.content), [msg.content]);
+  const [expanded, setExpanded] = useState(false);
+
+  // 요약(마커 앞) / 전체 해석(마커 뒤)로 분리. 마커 없으면 전부 요약 취급.
+  const { summaryParas, fullParas } = useMemo(() => {
+    const idx = msg.content.indexOf(MORE_MARKER);
+    const summaryRaw = idx < 0 ? msg.content : msg.content.slice(0, idx);
+    const fullRaw = idx < 0 ? "" : msg.content.slice(idx + MORE_MARKER.length);
+    return {
+      summaryParas: splitParagraphs(summaryRaw),
+      fullParas: splitParagraphs(fullRaw),
+    };
+  }, [msg.content]);
+  const hasFull = fullParas.length > 0;
   const textStyle = isUser ? styles.userText : styles.aiText;
 
   return (
@@ -782,11 +799,31 @@ function MessageBubble({
       <View
         style={[styles.bubble, isUser ? styles.userBubble : styles.aiBubble]}
       >
-        {paragraphs.map((p, i) => (
-          <Text key={i} style={[textStyle, i > 0 && styles.paragraphGap]}>
+        {summaryParas.map((p, i) => (
+          <Text key={`s${i}`} style={[textStyle, i > 0 && styles.paragraphGap]}>
             {p}
           </Text>
         ))}
+
+        {hasFull &&
+          expanded &&
+          fullParas.map((p, i) => (
+            <Text key={`f${i}`} style={[textStyle, styles.paragraphGap]}>
+              {p}
+            </Text>
+          ))}
+
+        {hasFull && (
+          <TouchableOpacity
+            onPress={() => setExpanded((v) => !v)}
+            hitSlop={6}
+            style={styles.moreBtn}
+          >
+            <Text style={styles.moreText}>
+              {expanded ? "접기 ▲" : "🔎 전체 해석 보기"}
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
       {onReport ? (
         <TouchableOpacity
@@ -874,6 +911,19 @@ const styles = StyleSheet.create({
 
   reportBtn: { paddingHorizontal: 6, paddingVertical: 3, marginTop: 2 },
   reportText: { fontSize: 11, color: "#A89CC0", textDecorationLine: "underline" },
+
+  // "전체 해석 보기 / 접기" 유도 버튼 — 요약 아래, 눈에 띄는 칩 형태
+  moreBtn: {
+    marginTop: 12,
+    alignSelf: "flex-start",
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 16,
+    backgroundColor: "#EEE8FB",
+    borderWidth: 1,
+    borderColor: "rgba(120,104,200,0.35)",
+  },
+  moreText: { fontSize: 13, fontWeight: "700", color: PURPLE_BRAND },
 
   dotsBubble: { paddingVertical: 14, paddingHorizontal: 16 },
   dotsRow: { flexDirection: "row", gap: 4, alignItems: "center" },

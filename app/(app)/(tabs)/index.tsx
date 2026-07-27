@@ -76,8 +76,13 @@ import WeatherOverlay from "@/components/weather/WeatherOverlay";
 
 // ⚠️ 개발용 강제 날씨 스위치 — 실제 비/눈이 올 때만 보여 테스트가 어려우므로,
 // 화면 좌상단 테스트 버튼으로 연출을 순환시킨다(null = 실제 날씨 사용).
-// 배포 전 DEV_WEATHER_BUTTON 을 false 로 바꿔 버튼을 숨길 것.
-const DEV_WEATHER_BUTTON = true;
+//
+// __DEV__ 로 가드해 프로덕션 빌드엔 절대 새어나가지 않게 한다.
+// (이전엔 그냥 `= true` 라 "배포 전 false 로" 주석에만 의존했고, 실제로
+//  스토어 스크린샷에 디버그 배지가 찍혀서야 발견됐다.)
+// 개발 빌드에서도 숨겨야 할 때(스토어 스크린샷 촬영 등)는 아래를 false 로.
+const ENABLE_DEV_WEATHER_BUTTON = false;
+const DEV_WEATHER_BUTTON = __DEV__ && ENABLE_DEV_WEATHER_BUTTON;
 
 // 테스트 버튼이 순환하는 순서 (null = 실제 날씨)
 const WEATHER_CYCLE: (WeatherCondition | null)[] = [

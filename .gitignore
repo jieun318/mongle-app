@@ -52,6 +52,10 @@ assets/_preview/*.png
 assets/store/feature-graphic.html
 assets/store/raw.png
 
+# 폰에서 찍은 원본 스크린샷 — 후처리된 최종본만 추적
+assets/store/screenshots/raw/*
+!assets/store/screenshots/raw/.gitkeep
+
 # 개인 문서 (사업자등록증명 등) — 앱 자산 아님, repo 밖 보관
 *.brl
 /_private/

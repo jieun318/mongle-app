@@ -230,10 +230,16 @@ Google Play **AI 생성 콘텐츠 정책**상, AI가 콘텐츠를 생성하는 �
 |---|---|---|---|---|
 | 앱 아이콘 | 512×512 PNG | 필수 | ✅ `assets/store/play-icon-512.png` | 32bit, 171KB |
 | 피처 그래픽 | 1024×500 PNG/JPG | 필수 | ✅ `assets/store/play-feature-1024x500.png` | 24bit RGB, 476KB |
-| 폰 스크린샷 | 16:9 또는 9:16, 최소 2장 | 필수 | ❌ | 권장 4~8장 |
+| 폰 스크린샷 | 최대 2:1, 최소 2장 | 필수 | ✅ `assets/store/screenshots/` 6장 | 1080×2021 (1.87:1) |
 | 7인치 태블릿 스크린샷 | — | 선택 | — | 세로 전용(`supportsTablet: false`)이라 미제작 |
 | 10인치 태블릿 스크린샷 | — | 선택 | — | 〃 |
 
+> 폰 스크린샷은 폰에서 직접 캡처한 원본(1080×2220)을
+> `assets/store/gen_screenshots.js` 로 후처리한다. 원본 비율 2.06:1 은 Play
+> 상한(2:1)을 넘어 그대로는 거부되므로, 상단 상태바와 하단 안드로이드
+> 네비게이션 바를 잘라 1080×2021(1.87:1)로 맞춘다. 기기가 바뀌면 스크립트
+> 상단의 `STATUS_BAR_H` / `NAV_BAR_TOP` 을 다시 재야 한다.
+>
 > 피처 그래픽은 `assets/store/gen_feature_graphic.js` 로 재생성한다.
 > 한글 텍스트 합성이 필요해 jimp 로는 안 되고, 브랜드 폰트(OnglyphPDH)와
 > 마스코트를 data URI 로 인라인한 HTML 을 헤드리스 브라우저로 캡처한다.

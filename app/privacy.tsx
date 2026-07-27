@@ -42,7 +42,9 @@ export default function PrivacyScreen() {
             꿈 일기 본문, 챗봇 대화 내역, 운세 조회 기록
           </Bullet>
           <Bullet label="선택 수집">
-            위치 정보 (일출 시간 기반 콘텐츠 제공에만 사용, 외부 전송 없음)
+            위치 정보 (대략적 위치) — 홈 화면의 날씨·일출 연출에만 사용합니다.
+            좌표는 날씨·일출 조회를 위해 제5조의 수탁사로 전송되며 별도로
+            저장하지 않습니다. 권한을 거부해도 서비스 이용에 제한이 없습니다.
           </Bullet>
           <Bullet label="자동 생성 정보">
             접속 IP, 접속 로그, 기기 정보, 광고 식별자(광고 기능 활성화 시)
@@ -79,6 +81,11 @@ export default function PrivacyScreen() {
               ["Supabase Inc.", "회원 정보 및 콘텐츠 저장·관리 (미국)"],
               ["Google LLC", "AI 해몽 및 챗봇 응답 생성 — Gemini API (미국)"],
               ["Kakao Corp.", "소셜 로그인 인증 (대한민국)"],
+              ["Open-Meteo", "일출·일몰 시각 조회 — 대략적 좌표 전송 (독일)"],
+              [
+                "기상청 (공공데이터포털)",
+                "실시간 강수 조회 — 5km 격자 변환값 전송 (대한민국)",
+              ],
             ]}
           />
           <P style={styles.small}>

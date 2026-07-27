@@ -48,6 +48,10 @@ yarn-error.*
 # 아이콘/스플래시 생성 미리보기 PNG (스크립트는 보관)
 assets/_preview/*.png
 
+# 피처 그래픽 생성 중간산출물 (폰트 인라인이라 ~3MB) — 최종 PNG 만 추적
+assets/store/feature-graphic.html
+assets/store/raw.png
+
 # 개인 문서 (사업자등록증명 등) — 앱 자산 아님, repo 밖 보관
 *.brl
 /_private/

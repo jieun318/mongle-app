@@ -13,6 +13,9 @@ dist/
 web-build/
 expo-env.d.ts
 
+# Vercel CLI 링크 정보
+.vercel/
+
 # Native
 .kotlin/
 *.orig.*
@@ -59,3 +62,6 @@ assets/store/screenshots/raw/*
 # 개인 문서 (사업자등록증명 등) — 앱 자산 아님, repo 밖 보관
 *.brl
 /_private/
+
+# 배포용 비밀키 (Play 서비스 계정 JSON 등) — eas.json submit 참고
+/secrets/

@@ -31,6 +31,16 @@
     }
   },
   "submit": {
-    "production": {}
+    // TODO(2차 릴리스): 첫 릴리스(versionCode 7)는 Play Console 수동 업로드.
+    // 서비스 계정 키는 앱이 Play 에 정식 등록된 뒤에야 발급되므로 자리만 비워둔다.
+    // 키를 secrets/ 에 두고 아래 주석을 풀면 eas submit 이 동작한다.
+    // 발급 절차: PROGRESS.md §6 참고. 키는 커밋 금지(.gitignore 처리됨).
+    "production": {
+      // "android": {
+      //   "serviceAccountKeyPath": "./secrets/play-service-account.json",
+      //   "track": "production",
+      //   "releaseStatus": "draft"
+      // }
+    }
   }
 }

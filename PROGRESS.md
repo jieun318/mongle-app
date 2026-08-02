@@ -1,6 +1,6 @@
 # 몽글 (Mongle) — 프로젝트 진행 상황
 
-> 2026-06-23 기준. 운세 + 꿈해몽 + AI 챗봇 모바일 앱.
+> 2026-07-29 기준. 운세 + 꿈해몽 + AI 챗봇 모바일 앱.
 >
 > 운세 카테고리 분리 작업의 상세는 [FORTUNE_CATEGORIES.md](./FORTUNE_CATEGORIES.md) 참고.
 
@@ -130,7 +130,7 @@
   Developer 계정 + Supabase Apple provider 설정 끝나면 플래그만 켜면 됨.
   iOS 출시 시 동반 필요 (Guideline 4.8).
 - **D-U-N-S 번호 발급 완료** (2026-07-01) — D&B Apple 경로 신청(2026-06-23) →
-  발급됨. 이제 Google Play **조직 계정** 가입 진행 가능 (§4.1.1 🟢 참고).
+  발급됨. 이 번호로 Google Play 조직 계정 가입·검증까지 완료 (§4.1.1 🟢 참고).
 - **수익화 게이트** — `DetailUnlockCard` 가 "곧 만나요" 안내만 노출 (광고/결제
   SDK 도입 전까지 잠금 유지). 사업자 등록 후 AdMob/RevenueCat 붙일 때 복구.
 
@@ -145,32 +145,39 @@
 - [x] Supabase Authentication → **Anonymous Sign-ins 토글 off**
 - [x] 카카오 비즈 앱 전환 (개인 개발자 비즈) + 동의항목 + Supabase 연동 확인
 
-### 4.1.1 안드로이드 출시 — 다음 작업 (D-U-N-S 대기 중 병렬 진행)
+### 4.1.1 안드로이드 출시 — 다음 작업
 
-**🔴 우선순위 1 (이번 주) — 스토어 등록물**
-- [ ] Play Store 스크린샷 (폰 / 7인치 태블릿 / 10인치 태블릿)
-- [ ] 앱 설명 (짧은 설명 80자 / 자세한 설명 4000자)
-- [ ] 앱 아이콘 512×512 최종본
-- [ ] 그래픽 이미지 1024×500
+**🔴 우선순위 1 — 스토어 등록물 (자산 제작 완료, 콘솔 입력만 남음)**
+- [x] Play Store 폰 스크린샷 6장 → `assets/store/screenshots/` (1080×2021)
+  - 태블릿 스크린샷은 세로 전용(`supportsTablet: false`)이라 미제작 — 선택 항목
+- [x] 앱 설명 (짧은 80자 / 자세한 4000자) → `STORE_LISTING.md §1`
+- [x] 앱 아이콘 512×512 → `assets/store/play-icon-512.png`
+- [x] 그래픽 이미지 1024×500 → `assets/store/play-feature-1024x500.png`
 
-**🟡 우선순위 2 (D-U-N-S 받기 전까지)**
+**🟡 우선순위 2 — 정책 양식 (콘솔 입력용 답변 준비 완료)**
 - [x] Google Play "데이터 안전" 양식 답변 정리 → `STORE_LISTING.md §2`
   (코드 검증 기반 — 위치·광고·분석 미수집 확인, Gemini=처리위탁이라 공유 아니요)
 - [x] 콘텐츠 등급 설문 답변 준비 → `STORE_LISTING.md §3`
 - [x] **⚠️ 생성형 AI 신고 기능** — AI 응답 버블에 "신고" → 확인 →
   `ai_message_reports` 저장 (Google Play AI 콘텐츠 정책 대응). 코드 완료.
-  - [ ] **출시 전: Supabase에 `0013_ai_message_reports.sql` 마이그레이션 적용 필요**
+  - [x] Supabase에 `0013_ai_message_reports.sql` 적용 완료 — 테이블·컬럼 존재,
+    RLS 동작 확인(익명 insert 차단 42501)
+  - [ ] 콘솔 심사 설문에서 "생성형 AI 기능 포함"에 **예** + 신고 수단 설명
   - 상세: `STORE_LISTING.md §3.3`
 - [x] 인앱 정보 페이지 — `/about`(서비스 소개), `/guide`(이용 안내),
   `/business`(사업자 정보 + 문의) 작성 + 마이페이지 푸터·설정 링크 연결
   - 사업자 정보(`business.tsx`): 의무 없는 항목(전화번호·통신판매업 신고번호)
     제거, "통신판매 행위 없어 신고 대상 아님" 면제 안내 추가
 
-**🟢 D-U-N-S 발급 후**
-- [ ] Google Play Console 조직 계정 가입 ($25)
-- [ ] Google 조직 검증 대기 (1~3일)
-- [ ] AAB 빌드 + 업로드
-- [ ] 프로덕션 트랙 신청 (조직 계정 → 12명 테스트 의무 면제)
+**🟢 출시 절차**
+- [x] Google Play Console 조직 계정 가입 ($25) — 계정 활성화 확인
+- [x] Google 조직 검증 완료
+- [x] 앱 콘솔 등록 (`com.mongle.app`) — 현재 **임시(초안)** 상태
+- [x] 프로덕션 AAB 빌드 (2026-07-29, versionCode 7 / `f2c99c4`) — §6.1 참고
+- [ ] AAB 를 Play Console 에 **수동 업로드** (1차 릴리스는 `eas submit` 미사용)
+- [ ] 콘솔 폼 입력 — 스토어 등록정보 / 데이터 안전 / 콘텐츠 등급 / 생성형 AI 설문
+      (답변은 `STORE_LISTING.md` §1~§3 에 준비됨)
+- [ ] 프로덕션 트랙 신청 (조직 계정 → 12명 20일 비공개 테스트 의무 면제)
 - [ ] Google 앱 심사 (1~7일)
 
 ### 4.1.2 iOS 출시 전 필수 (안드로이드 이후)
@@ -236,3 +243,31 @@
 - **사업장 주소**: 301, 5-2 Gaebong-ro 6-gil, Guro-gu, Seoul, 08334
 - **D-U-N-S**: D&B Apple 경로 신청(2026-06-23) → **발급 완료(2026-07-01)**
   (Sole Proprietorship)
+- **EAS 프로젝트**: `jieun0/mongle` (`76bbf748-44bf-4f6f-81d3-3c59602f1320`)
+
+### 6.1 릴리스 빌드 이력
+
+버전 관리는 EAS 원격 소스(`appVersionSource: "remote"` + production
+`autoIncrement: true`). `app.json` 에 `android.versionCode` 를 두면 충돌하므로
+**넣지 않는다**. 빌드가 취소돼도 번호는 소비된다(6번이 그렇게 날아감).
+
+| versionCode | 커밋 | 날짜 | 상태 |
+|---|---|---|---|
+| 5 | `e116d50` | 2026-07-14 | FINISHED — Play 업로드 안 함 |
+| 6 | `4758059` | 2026-07-15 | CANCELED (번호만 소비) |
+| **7** | **`f2c99c4`** | **2026-07-29** | **1차 릴리스 후보** — `e116d50` 이후 19개 커밋 반영 |
+
+versionCode 7 에 새로 들어간 것: 위치 기반 날씨 연출(비/눈), 검색·보관함 프리페치
+성능 개선, 챗봇 문단 요약 + 전체 해석 펼치기, 스플래시 단축(1550→1100ms),
+검색 카테고리 3열 복구, 개인정보 고지 정정, Play 스토어 자산.
+
+### 6.2 Play 서비스 계정 키 발급 (2차 릴리스부터)
+
+1차 릴리스를 수동 업로드해 앱이 정식 등록된 뒤에 진행한다.
+
+1. Play Console > 설정 > **API 액세스** — Google Cloud 프로젝트 연결
+2. 서비스 계정 생성 → Play Console 에서 **릴리스 관리자** 권한 부여
+3. Google Cloud Console 에서 해당 계정의 JSON 키 다운로드
+4. `secrets/play-service-account.json` 에 저장 (`.gitignore` 처리됨 — 커밋 금지)
+5. `eas.json` 의 `submit.production.android` 주석 해제
+6. 이후 `eas submit --platform android --profile production` 으로 자동 제출

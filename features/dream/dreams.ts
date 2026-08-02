@@ -20,7 +20,9 @@ export interface DreamItemRow {
   bookmark_count: number;
   luck_index: number;
   is_warning: boolean;
-  mood_tags: DreamMoodTag[];
+  // jsonb — string[] | DreamMoodTag[] 가 섞여 있다. 렌더 전에 반드시
+  // displayMoodTags()/normalizeMoodTags() 를 통과시킬 것.
+  mood_tags: unknown;
   created_at: string;
 }
 
@@ -37,7 +39,8 @@ export interface DreamRecord {
   luck_index: number;
   is_warning: boolean;
   emoji: string;
-  mood_tags: DreamMoodTag[];
+  // jsonb — 위 DreamItemRow.mood_tags 와 같은 이유로 unknown.
+  mood_tags: unknown;
   chat_preview: ChatTurn[];
   // AI 가 추출한 해몽 본문 요약 (공감 멘트/질문 제외). 카드 서브텍스트와 상세 "해몽 요약" 카드에 사용.
   interpretation_summary: string;

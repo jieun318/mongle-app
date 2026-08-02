@@ -18,6 +18,7 @@ import RecordedDreamCard from "@/components/dream/RecordedDreamCard";
 import RecordedDreamModal from "@/components/dream/RecordedDreamModal";
 import AiDreamCard from "@/components/dream/AiDreamCard";
 import AiDreamModal from "@/components/dream/AiDreamModal";
+import { normalizeMoodTags } from "@/features/dream/dreamData";
 import {
   DreamRecord,
   DreamSource,
@@ -142,7 +143,9 @@ export default function StorageScreen() {
       return (
         d.title.toLowerCase().includes(q) ||
         d.content.toLowerCase().includes(q) ||
-        d.mood_tags.some((t) => t.label.toLowerCase().includes(q))
+        normalizeMoodTags(d.mood_tags).some((t) =>
+          t.label.toLowerCase().includes(q),
+        )
       );
     });
   }, [dreams, query, tab]);

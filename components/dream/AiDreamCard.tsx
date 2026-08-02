@@ -1,6 +1,7 @@
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import type { DreamRecord } from "@/features/dream/dreams";
+import { displayMoodTags } from "@/features/dream/dreamData";
 
 interface Props {
   dream: DreamRecord;
@@ -32,9 +33,7 @@ export default function AiDreamCard({
   // 챗봇 첫 답변(aiTurn) 은 의도적으로 폴백에서 제외 — 카드에 챗 본문이 그대로 노출되는 걸 방지.
   const previewText = dream.interpretation_summary?.trim() || dream.content;
 
-  const moodTags = (dream.mood_tags ?? []).filter(
-    (t) => t.label !== "길몽" && t.label !== "흉몽",
-  );
+  const moodTags = displayMoodTags(dream.mood_tags);
 
   const luckIndex = dream.luck_index ?? 0;
 

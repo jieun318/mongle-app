@@ -30,6 +30,52 @@ export interface DreamItem {
   moodTags?: DreamMoodTag[];
 }
 
+// ── mood_tags 정규화 ──────────────────────────────────────
+//   jsonb 라 DB 에 두 가지 형태가 섞여 있음:
+//   1) [{label, emoji, bg, color}]   — 기존 수동 시드
+//   2) ['길몽', '흉몽', ...]           — 크롤링 시드 (tags 복사)
+//   2번을 1번 모양으로 표준화해서 컴포넌트가 안전하게 렌더하도록.
+//   문자열 배열을 그대로 렌더하면 t.label 이 undefined 라 key 가 비고
+//   (React key 경고) 필터·스타일도 전부 무력화된다.
+const TAG_FALLBACK_STYLE: Record<string, { bg: string; color: string; emoji: string }> = {
+  길몽: { bg: "#E8F5E8", color: "#4A9050", emoji: "🍀" },
+  흉몽: { bg: "#FFE0D0", color: "#C86040", emoji: "⚠️" },
+  태몽: { bg: "#FBE3EC", color: "#C868A0", emoji: "🌸" },
+  보통: { bg: "#F0E8FF", color: "#7868C8", emoji: "🌙" },
+  조건부: { bg: "#EDE8F5", color: "#7868B8", emoji: "🔀" },
+};
+
+export function normalizeMoodTags(raw: unknown): DreamMoodTag[] {
+  if (!Array.isArray(raw)) return [];
+  const out: DreamMoodTag[] = [];
+  for (const t of raw) {
+    if (typeof t === "string") {
+      const style = TAG_FALLBACK_STYLE[t] ?? {
+        bg: "#F0E8FF",
+        color: "#7868C8",
+        emoji: "",
+      };
+      out.push({ label: t, emoji: style.emoji, bg: style.bg, color: style.color });
+    } else if (t && typeof t === "object" && "label" in t) {
+      const o = t as Record<string, unknown>;
+      out.push({
+        label: String(o.label ?? ""),
+        emoji: String(o.emoji ?? ""),
+        bg: String(o.bg ?? "#F0E8FF"),
+        color: String(o.color ?? "#7868C8"),
+      });
+    }
+  }
+  return out;
+}
+
+// 카드/모달 공용 — 정규화 + 길몽/흉몽 제외(별도 뱃지로 이미 표시됨).
+export function displayMoodTags(raw: unknown): DreamMoodTag[] {
+  return normalizeMoodTags(raw).filter(
+    (t) => t.label !== "길몽" && t.label !== "흉몽",
+  );
+}
+
 export const TRENDING_KEYWORDS = ["#돼지", "#불", "#좀비"] as const;
 
 export const CATEGORIES: DreamCategory[] = [

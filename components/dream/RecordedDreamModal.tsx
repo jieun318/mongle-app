@@ -8,7 +8,10 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import type { DreamRecord } from "@/features/dream/dreams";
-import { getCategoryById } from "@/features/dream/dreamData";
+import {
+  getCategoryById,
+  normalizeMoodTags,
+} from "@/features/dream/dreamData";
 import DreamEmoji from "@/components/dream/DreamEmoji";
 
 interface Props {
@@ -29,6 +32,8 @@ export default function RecordedDreamModal({
   const category =
     dream?.category_id ? getCategoryById(dream.category_id)?.label : undefined;
   const isAi = dream?.source === "ai";
+  // 여기선 길몽/흉몽을 따로 거르지 않는다(기존 동작 유지) — 정규화만 한다.
+  const moodTags = normalizeMoodTags(dream?.mood_tags);
 
   return (
     <Modal
@@ -143,9 +148,9 @@ export default function RecordedDreamModal({
                 </>
               ) : null}
 
-              {dream.mood_tags.length > 0 ? (
+              {moodTags.length > 0 ? (
                 <View style={styles.tagRow}>
-                  {dream.mood_tags.map((t) => (
+                  {moodTags.map((t) => (
                     <View
                       key={t.label}
                       style={[styles.tag, { backgroundColor: t.bg }]}

@@ -9,6 +9,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
 import type { DreamRecord } from "@/features/dream/dreams";
+import { displayMoodTags } from "@/features/dream/dreamData";
 
 interface Props {
   dream: DreamRecord | null;
@@ -44,9 +45,7 @@ export default function AiDreamModal({ dream, onClose }: Props) {
   // 챗봇 첫 답변은 의도적으로 폴백에서 제외 — "해몽 요약" 카드에 챗 본문이 들어가는 걸 방지.
   const summary = dream?.interpretation_summary?.trim() || dream?.content || "";
 
-  const moodTags = (dream?.mood_tags ?? []).filter(
-    (t) => t.label !== "길몽" && t.label !== "흉몽",
-  );
+  const moodTags = displayMoodTags(dream?.mood_tags);
 
   const luckIndex = dream?.luck_index ?? 0;
 

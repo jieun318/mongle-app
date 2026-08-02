@@ -1,6 +1,10 @@
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import type { DreamRecord } from "@/features/dream/dreams";
+import {
+  displayMoodTags,
+  normalizeMoodTags,
+} from "@/features/dream/dreamData";
 import DreamEmoji from "@/components/dream/DreamEmoji";
 
 interface Props {
@@ -36,11 +40,10 @@ export default function RecordedDreamCard({
   // 스냅샷 컬럼이 비어있으면 join 된 dream_items 마스터에서 채움
   const item = dream.dream_item;
   const emoji = dream.emoji || item?.emoji || "";
-  const moodTags = (
-    dream.mood_tags && dream.mood_tags.length > 0
-      ? dream.mood_tags
-      : (item?.mood_tags ?? [])
-  ).filter((t) => t.label !== "길몽" && t.label !== "흉몽");
+  const snapshot = normalizeMoodTags(dream.mood_tags);
+  const moodTags = snapshot.length > 0
+    ? snapshot.filter((t) => t.label !== "길몽" && t.label !== "흉몽")
+    : displayMoodTags(item?.mood_tags);
   const luckIndex = dream.luck_index || item?.luck_index || 0;
   const isWarning = dream.is_warning || item?.is_warning || false;
 

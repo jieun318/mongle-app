@@ -1,6 +1,7 @@
 # 몽글 (Mongle) — 프로젝트 진행 상황
 
-> 2026-07-29 기준. 운세 + 꿈해몽 + AI 챗봇 모바일 앱.
+> 2026-08-05 기준. 꿈해몽 + 운세 + AI 챗봇 모바일 앱.
+> (스토어 포지셔닝은 꿈해몽 우선 — `STORE_LISTING.md §1` 참고.)
 >
 > 운세 카테고리 분리 작업의 상세는 [FORTUNE_CATEGORIES.md](./FORTUNE_CATEGORIES.md) 참고.
 
@@ -88,7 +89,7 @@
 - iPhone XR 헤더 위치 보정 (`57831f9`, `644b5f4`)
 - 공지 시스템 (`0008_notices.sql`)
 
-### 2.7 DB 마이그레이션 (10개)
+### 2.7 DB 마이그레이션 (15개)
 ```
 0001 dream_items 크롤링 컬럼
 0002 dream_items is_lucky
@@ -100,6 +101,11 @@
 0008 notices
 0009 dreams interpretation_summary
 0010 dream_items public read
+0011 dream_items 해·달 시드
+0012 dream_items 인물 시드
+0013 ai_message_reports (Play 생성형 AI 정책)
+0014 dream_items 시드 270건
+0015 delete_my_account — 아바타 Storage 정리   ← 프로덕션 미적용
 ```
 
 ### 2.8 안드로이드 배포 준비 (2026-06-23)
@@ -169,14 +175,33 @@
   - 사업자 정보(`business.tsx`): 의무 없는 항목(전화번호·통신판매업 신고번호)
     제거, "통신판매 행위 없어 신고 대상 아님" 면제 안내 추가
 
+**🟠 우선순위 3 — 스토어 포지셔닝 재정비 (2026-08-05)**
+- [x] 꿈해몽 중심으로 재포지셔닝 — 앱 이름 `몽글 - 꿈해몽`, 짧은/자세한 설명
+      전면 교체, 스크린샷 업로드 순서를 꿈 우선으로 재배치 (`STORE_LISTING.md §1`)
+  - 초안에 있던 **포춘쿠키(미구현 기능) 제거**, 누락됐던 꿈해몽 검색·보관함 추가
+- [x] 앱 콘텐츠 페이지 항목별 답변 정리 (`STORE_LISTING.md §5`)
+- [x] 개인정보처리방침 URL 접속 검증 — `/privacy` 로그인 없이 12개 조항 노출
+- [x] **계정 삭제 안내 페이지** `app/account-deletion.tsx` — Play 필수 요건
+      (계정 생성 기능이 있는 앱은 웹 삭제 요청 경로 제공 의무)
+- [x] `delete_my_account()` 가 Storage 아바타를 안 지우던 문제 수정 (0015)
+- [ ] **런처 이름 결정** — 스토어는 `몽글 - 꿈해몽` 인데 `app.json` 의
+      `expo.name` 은 `mongle`(영문). 맞추려면 재빌드(versionCode 8) 필요.
+      `STORE_LISTING.md §1.0` 참고
+- [ ] 피처 그래픽 카피가 구 포지셔닝(`매일의 운세와 꿈 해몽`) — 교체 보류 중
+
 **🟢 출시 절차**
 - [x] Google Play Console 조직 계정 가입 ($25) — 계정 활성화 확인
 - [x] Google 조직 검증 완료
 - [x] 앱 콘솔 등록 (`com.mongle.app`) — 현재 **임시(초안)** 상태
 - [x] 프로덕션 AAB 빌드 (2026-07-29, versionCode 7 / `f2c99c4`) — §6.1 참고
+- [ ] **0015 마이그레이션 프로덕션 적용** — 미적용 시 계정 삭제 안내와 실제
+      동작이 불일치 (Supabase 대시보드 SQL Editor 에 파일 내용 붙여넣기)
+- [ ] **심사용 카카오 테스트 계정** 발급 → 콘솔 앱 액세스 권한에 입력.
+      카카오 디벨로퍼스에서 팀원 외 계정 로그인 가능 상태인지 먼저 확인
+      (`STORE_LISTING.md §5.1`)
 - [ ] AAB 를 Play Console 에 **수동 업로드** (1차 릴리스는 `eas submit` 미사용)
 - [ ] 콘솔 폼 입력 — 스토어 등록정보 / 데이터 안전 / 콘텐츠 등급 / 생성형 AI 설문
-      (답변은 `STORE_LISTING.md` §1~§3 에 준비됨)
+      (답변은 `STORE_LISTING.md` §1~§3, §5 에 준비됨)
 - [ ] 프로덕션 트랙 신청 (조직 계정 → 12명 20일 비공개 테스트 의무 면제)
 - [ ] Google 앱 심사 (1~7일)
 

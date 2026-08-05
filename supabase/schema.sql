@@ -363,14 +363,16 @@ create trigger on_auth_user_created
 -- ============================================================
 -- RPC: delete_my_account — 회원 탈퇴
 --   현재 로그인한 사용자(auth.uid())를 auth.users 에서 삭제한다.
---   profiles / dreams / bookmarks 는 ON DELETE CASCADE 로 자동 정리.
+--   profiles / dreams / bookmarks / daily_fortunes / ai_message_reports 는
+--   ON DELETE CASCADE 로 자동 정리.
+--   Storage 의 avatars 객체는 FK 가 없어 명시적으로 지운다(0015).
 --   security definer 이므로 반드시 auth.uid() 본인 행만 삭제하도록 제한.
 -- ============================================================
 create or replace function public.delete_my_account()
 returns void
 language plpgsql
 security definer
-set search_path = public, auth
+set search_path = public, auth, storage
 as $$
 declare
   v_uid uuid := auth.uid();
@@ -378,6 +380,11 @@ begin
   if v_uid is null then
     raise exception 'not authenticated' using errcode = '28000';
   end if;
+
+  -- 프로필 사진 — 경로 규칙 {uid}/avatar.jpg
+  delete from storage.objects
+  where bucket_id = 'avatars'
+    and (storage.foldername(name))[1] = v_uid::text;
 
   delete from auth.users where id = v_uid;
 end;

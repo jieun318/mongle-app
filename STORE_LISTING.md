@@ -23,7 +23,7 @@
 > - `slug` 는 `mongle` 그대로 둔다 — EAS 프로젝트 식별자라 바꾸면 링크가 깨진다.
 > - ⚠️ **재빌드 필요.** versionCode 7 AAB 는 아직 `mongle` 라벨이다.
 >   `android/` 는 gitignore 대상이라 `strings.xml` 직접 수정은 EAS 빌드에
->   반영되지 않는다. **versionCode 8 을 새로 빌드해 업로드해야 한다.**
+>   반영되지 않는다. → **versionCode 9 로 재빌드** (2026-08-05, `1a7dd3f`).
 
 ### 1.1 짧은 설명 (Short description, 최대 80자)
 

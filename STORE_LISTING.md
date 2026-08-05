@@ -151,8 +151,8 @@
 
 #### 위치 › 대략적인 위치 — 답변 근거
 
-- **권한**: `ACCESS_COARSE_LOCATION` 만 선언 (`plugins/withCoarseLocationOnly.js`
-  로 FINE 제거). 백그라운드 위치 미사용
+- **권한**: `ACCESS_COARSE_LOCATION` 만 선언 (`plugins/withTrimmedPermissions.js`
+  로 FINE 제거 — §4.1 참고). 백그라운드 위치 미사용
   (`isAndroidBackgroundLocationEnabled: false`).
 - **정확도**: `Location.Accuracy.Low` — 도시 단위. 기상청 격자가 5km라 충분.
 - **수집=예**: 좌표가 기기를 떠나 외부로 전송되므로 "수집"에 해당
@@ -268,6 +268,32 @@ Google Play **AI 생성 콘텐츠 정책**상, AI가 콘텐츠를 생성하는 �
 | 10인치 태블릿 스크린샷 | — | 선택 | — | 〃 |
 | Chromebook 스크린샷 | — | 선택 | — | 〃 |
 | Android XR 스크린샷 | — | 선택 | — | 〃 |
+
+### 4.1 권한 선언 정리 (2026-08-05)
+
+versionCode 9 AAB 를 뜯어보니 라이브러리 매니페스트가 자동 병합한, 앱이 쓰지
+않는 권한이 들어 있었다. `plugins/withTrimmedPermissions.js` 로 제거한다
+(구 `withCoarseLocationOnly.js` 를 확장·대체).
+
+| 제거한 권한 | 출처 | 제거 이유 |
+|---|---|---|
+| `ACCESS_FINE_LOCATION` | expo-location | 대략 위치로 충분. Play 정확위치 선언서 회피 |
+| `CAMERA` | expo-image-picker | 갤러리 선택만 사용, `launchCameraAsync` 호출 없음 |
+| `RECORD_AUDIO` | AAR 의존성 | 녹음 기능 자체가 없음 |
+| `SYSTEM_ALERT_WINDOW` | react-native debug 매니페스트 | 릴리스에 병합될 이유 없음 |
+| `WRITE_EXTERNAL_STORAGE` | expo-image-picker | 크롭 결과는 앱 캐시에 저장. API 29+ 무시됨 |
+
+**남기는 것**: `INTERNET`, `ACCESS_COARSE_LOCATION`, `READ_EXTERNAL_STORAGE`
+(Android 12 이하 사진 선택), `POST_NOTIFICATIONS` / `RECEIVE_BOOT_COMPLETED` /
+`WAKE_LOCK` / `VIBRATE` (로컬 알림).
+
+iOS Info.plist 도 함께 정리했다 — `NSCameraUsageDescription` 과
+`NSLocationAlwaysAndWhenInUse/AlwaysUsageDescription` 제거. 애플은 사용하지
+않는 권한 설명을 반려 사유로 본다(5.1.1). expo-location 플러그인은 옵션을
+지정하지 않으면 **기본 영문 문구를 넣으므로** `false` 로 명시해야 빠진다.
+
+> 검증 방법: `npx expo config --type introspect --json` 으로 병합 결과를
+> 확인한다. 제거 대상은 `tools:node="remove"` 로 표시된다.
 
 #### 폼팩터별 자산 — 휴대전화만 올린다
 

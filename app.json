@@ -42,7 +42,8 @@
         "expo-image-picker",
         {
           "photosPermission": "프로필 사진을 등록하기 위해 사진 라이브러리 접근이 필요해요.",
-          "cameraPermission": "프로필 사진을 촬영하기 위해 카메라 접근이 필요해요."
+          "//": "촬영 기능은 쓰지 않는다. false 로 두면 iOS 의 NSCameraUsageDescription 이 빠진다 — 애플은 사용하지 않는 권한 설명을 반려 사유로 본다(5.1.1). Android 의 CAMERA 권한은 withTrimmedPermissions 가 뺀다.",
+          "cameraPermission": false
         }
       ],
       "@react-native-community/datetimepicker",
@@ -57,11 +58,14 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "현재 위치의 날씨(비/눈)와 해 위치를 홈 화면에 반영하기 위해 위치 정보를 사용해요.",
+          "//": "포그라운드에서 한 번 읽어 날씨·일출 연출에만 쓴다. Always 계열은 false 로 명시해야 기본 영문 문구가 Info.plist 에 안 박힌다(플러그인이 지정 안 하면 기본값을 넣는다).",
+          "locationWhenInUsePermission": "현재 위치의 날씨(비/눈)와 해 위치를 홈 화면에 반영하기 위해 위치 정보를 사용해요.",
+          "locationAlwaysAndWhenInUsePermission": false,
+          "locationAlwaysPermission": false,
           "isAndroidBackgroundLocationEnabled": false
         }
       ],
-      "./plugins/withCoarseLocationOnly.js"
+      "./plugins/withTrimmedPermissions.js"
     ],
     "extra": {
       "router": {},

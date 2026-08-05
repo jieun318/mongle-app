@@ -284,6 +284,13 @@ export default function MypageScreen() {
                 >
                   <Text style={styles.linkText}>문의하기</Text>
                 </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.linkCell}
+                  onPress={() => router.push("/account-deletion")}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.linkText}>계정 삭제 안내</Text>
+                </TouchableOpacity>
               </View>
             </View>
 

@@ -184,9 +184,9 @@
 - [x] **계정 삭제 안내 페이지** `app/account-deletion.tsx` — Play 필수 요건
       (계정 생성 기능이 있는 앱은 웹 삭제 요청 경로 제공 의무)
 - [x] `delete_my_account()` 가 Storage 아바타를 안 지우던 문제 수정 (0015)
-- [ ] **런처 이름 결정** — 스토어는 `몽글 - 꿈해몽` 인데 `app.json` 의
-      `expo.name` 은 `mongle`(영문). 맞추려면 재빌드(versionCode 8) 필요.
-      `STORE_LISTING.md §1.0` 참고
+- [x] **런처 이름** `app.json` `expo.name`: `mongle` → `몽글` (2026-08-05).
+      `slug` 는 EAS 프로젝트 식별자라 `mongle` 유지.
+      → **versionCode 8 재빌드 필요** (7번 AAB 는 아직 `mongle` 라벨)
 - [ ] 피처 그래픽 카피가 구 포지셔닝(`매일의 운세와 꿈 해몽`) — 교체 보류 중
 
 **🟢 출시 절차**

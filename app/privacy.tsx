@@ -101,7 +101,9 @@ export default function PrivacyScreen() {
           <Bullet label="삭제">삭제 요구</Bullet>
           <Bullet label="처리 정지">처리 정지 요구</Bullet>
           <Bullet label="회원 탈퇴">
-            앱 내 [마이페이지 &gt; 회원 탈퇴]에서 직접 처리 가능
+            앱 내 [마이페이지 &gt; 설정 &gt; 회원 탈퇴]에서 직접 처리 가능.
+            삭제 범위와 이메일 요청 방법은 [계정 및 데이터 삭제 안내]
+            페이지에서 확인할 수 있습니다.
           </Bullet>
           <P>
             권리 행사는 앱 내 기능 또는 아래 개인정보 보호책임자에게 이메일로

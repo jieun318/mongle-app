@@ -277,7 +277,7 @@ versionCode 9 AAB 를 뜯어보니 라이브러리 매니페스트가 자동 병
 
 | 제거한 권한 | 출처 | 제거 이유 |
 |---|---|---|
-| `ACCESS_FINE_LOCATION` | expo-location | 대략 위치로 충분. Play 정확위치 선언서 회피 |
+| `ACCESS_FINE_LOCATION` | expo-location | 대략 위치로 충분. 데이터 안전 폼의 "대략적 위치" 답변과 일치시킴 |
 | `CAMERA` | expo-image-picker | 갤러리 선택만 사용, `launchCameraAsync` 호출 없음 |
 | `RECORD_AUDIO` | AAR 의존성 | 녹음 기능 자체가 없음 |
 | `SYSTEM_ALERT_WINDOW` | react-native debug 매니페스트 | 릴리스에 병합될 이유 없음 |
@@ -292,8 +292,33 @@ iOS Info.plist 도 함께 정리했다 — `NSCameraUsageDescription` 과
 않는 권한 설명을 반려 사유로 본다(5.1.1). expo-location 플러그인은 옵션을
 지정하지 않으면 **기본 영문 문구를 넣으므로** `false` 로 명시해야 빠진다.
 
-> 검증 방법: `npx expo config --type introspect --json` 으로 병합 결과를
-> 확인한다. 제거 대상은 `tools:node="remove"` 로 표시된다.
+**보강 (2026-08-09)**: `NSMicrophoneUsageDescription` 이 기본 영문 문구
+(`Allow $(PRODUCT_NAME) to access your microphone`)로 남아 있었다.
+expo-image-picker 의 `microphonePermission` 은 `cameraPermission` 과 **별개
+옵션**이라 각각 `false` 로 꺼야 한다. 몽글은 마이크를 쓸 계획이 없으므로 제거.
+iOS 전용 이슈 — Android `RECORD_AUDIO` 는 `withTrimmedPermissions` 가 처리한다.
+현재 iOS 권한 설명 키는 `NSLocationWhenInUseUsageDescription` /
+`NSPhotoLibraryUsageDescription` 둘뿐.
+
+> **검증 1 (설정 단계)**: `npx expo config --type introspect --json` — iOS
+> Info.plist 확정값을 볼 수 있다. 단 **Android 매니페스트는 여기 안 나온다**
+> (prebuild 이후 단계의 mod 라 `android.permissions` 원본만 보인다).
+>
+> **검증 2 (AAB 실물)** — Android 는 이쪽만 믿을 수 있다:
+> ```
+> unzip -o v11.aab base/manifest/AndroidManifest.xml -d v11
+> grep -ao 'android\.permission\.[A-Z_]*' \
+>   v11/base/manifest/AndroidManifest.xml | sort -u
+> ```
+> AAB 매니페스트는 protobuf 인코딩이라 권한 문자열이 평문으로 들어있다.
+>
+> **versionCode 11 결과 — 위 5개 전부 제거 확인.** 남은 목록:
+> `INTERNET` `ACCESS_NETWORK_STATE` `ACCESS_COARSE_LOCATION`
+> `READ_EXTERNAL_STORAGE` `POST_NOTIFICATIONS` `RECEIVE_BOOT_COMPLETED`
+> `WAKE_LOCK` `VIBRATE`.
+> (`BIND_JOB_SERVICE` `DUMP` `READ_APP_BADGE` 도 문자열로는 잡히지만
+> `<uses-permission>` 이 아니라 서비스·리시버의 `android:permission` 속성
+> 참조라 스토어 권한 목록에 노출되지 않는다.)
 
 #### 폼팩터별 자산 — 휴대전화만 올린다
 

@@ -43,7 +43,9 @@
         {
           "photosPermission": "프로필 사진을 등록하기 위해 사진 라이브러리 접근이 필요해요.",
           "//": "촬영 기능은 쓰지 않는다. false 로 두면 iOS 의 NSCameraUsageDescription 이 빠진다 — 애플은 사용하지 않는 권한 설명을 반려 사유로 본다(5.1.1). Android 의 CAMERA 권한은 withTrimmedPermissions 가 뺀다.",
-          "cameraPermission": false
+          "cameraPermission": false,
+          "//microphonePermission": "동영상 촬영을 안 쓰는데도 플러그인이 기본 영문 문구를 넣는다. cameraPermission 과 별개 옵션이라 false 로 따로 명시해야 NSMicrophoneUsageDescription 이 빠진다. Android 의 RECORD_AUDIO 는 withTrimmedPermissions 담당.",
+          "microphonePermission": false
         }
       ],
       "@react-native-community/datetimepicker",

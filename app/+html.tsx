@@ -15,20 +15,24 @@ export default function Root({ children }: PropsWithChildren) {
           content="width=device-width, initial-scale=1, shrink-to-fit=no"
         />
 
-        <title>몽글 (Mongle) — 매일의 운세와 꿈 해몽, AI 챗봇</title>
+        {/*
+          제목·설명은 STORE_LISTING.md §1 의 꿈해몽 우선 포지셔닝과 맞춘다.
+          검색 노출과 링크 미리보기가 스토어 등록정보와 어긋나지 않게 유지할 것.
+        */}
+        <title>몽글 (Mongle) — AI 꿈해몽, 꿈 일기와 오늘의 운세</title>
         <meta
           name="description"
-          content="오늘의 운세부터 간밤의 꿈 해몽, AI와 나누는 다정한 대화까지. 감성 무드 앱 몽글에서 매일의 마음을 다독입니다."
+          content="간밤에 꾼 꿈, 무슨 의미일까요? 몽글은 꿈을 기록하면 AI가 상징과 의미를 풀이해 주는 꿈해몽 앱입니다. 꿈 사전 검색과 나만의 꿈 일기, 오늘의 운세까지 한 번에."
         />
         <meta property="og:site_name" content="몽글 (Mongle)" />
         <meta property="og:type" content="website" />
         <meta
           property="og:title"
-          content="몽글 (Mongle) — 매일의 운세와 꿈 해몽, AI 챗봇"
+          content="몽글 (Mongle) — AI 꿈해몽, 꿈 일기와 오늘의 운세"
         />
         <meta
           property="og:description"
-          content="오늘의 운세부터 간밤의 꿈 해몽, AI와 나누는 다정한 대화까지. 감성 무드 앱 몽글에서 매일의 마음을 다독입니다."
+          content="간밤에 꾼 꿈, 무슨 의미일까요? 몽글은 꿈을 기록하면 AI가 상징과 의미를 풀이해 주는 꿈해몽 앱입니다. 꿈 사전 검색과 나만의 꿈 일기, 오늘의 운세까지 한 번에."
         />
 
         {/* Google Search Console 사이트 소유권 확인 */}

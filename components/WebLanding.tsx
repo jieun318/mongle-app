@@ -8,26 +8,34 @@ import { Link } from "expo-router";
 
 const CONTACT_EMAIL = "mongle.help@gmail.com";
 
+// 순서·문구는 STORE_LISTING.md §1.2 의 기능 목록과 맞춘다 (꿈해몽 우선 포지셔닝).
+// 실제로 없는 기능은 쓰지 않는다 — 챗봇은 꿈 해몽 전용이고, 일반 고민 상담이
+// 아니다 (api/chat.ts 의 시스템 프롬프트가 잡담을 꿈 이야기로 되돌린다).
 const FEATURES = [
   {
-    emoji: "🔮",
-    title: "오늘의 운세",
-    body: "매일 구슬을 탭하면 종합운과 함께 연애·직장·금전·건강·대인 5가지 카테고리 운세를 확인할 수 있습니다.",
+    emoji: "💬",
+    title: "AI 꿈해몽 챗봇",
+    body: "꿈 내용을 입력하면 AI가 상징과 의미를 풀이해 줍니다.",
+  },
+  {
+    emoji: "🔍",
+    title: "꿈 해몽 검색",
+    body: "뱀, 물, 돈… 궁금한 키워드로 꿈 사전을 찾아볼 수 있습니다.",
   },
   {
     emoji: "🌙",
-    title: "꿈 해몽",
-    body: "간밤의 꿈을 키워드로 검색하거나 직접 기록하고, 꿈 속 상징과 의미를 찾아볼 수 있습니다.",
+    title: "나만의 꿈 일기",
+    body: "매일의 꿈을 기록하고 언제든 다시 꺼내볼 수 있습니다.",
   },
   {
-    emoji: "💬",
-    title: "AI 챗봇",
-    body: "꿈이나 마음속 고민을 AI와 편하게 이야기하며 풀어볼 수 있습니다.",
+    emoji: "🔮",
+    title: "오늘의 운세",
+    body: "하루에 한 번 구슬을 탭하면 종합운과 함께 연애·직장·금전·건강·대인 5가지 운세를, 행운의 색·방향·아이템까지 확인할 수 있습니다.",
   },
   {
     emoji: "📒",
     title: "보관함",
-    body: "나의 꿈 해몽과 대화 기록을 한곳에 모아두고 언제든 다시 꺼내 볼 수 있습니다.",
+    body: "해몽 기록과 AI 대화를 한곳에 모아두고 언제든 다시 볼 수 있습니다.",
   },
 ];
 
@@ -39,9 +47,13 @@ const BUSINESS_ROWS: [string, string][] = [
   ["문의", CONTACT_EMAIL],
 ];
 
-// 로그인된 사용자는 app/index.tsx 에서 곧장 앱으로 보내므로, 이 페이지는 항상
-// 비로그인 방문자만 본다.
-export default function WebLanding() {
+// 로그인 여부와 무관하게 누구나 보는 페이지다. 세션이 있으면 CTA 만 "몽글 열기"
+// 로 바뀌어 앱 셸로 들어간다 (자동 리다이렉트 없음 — app/index.tsx 주석 참고).
+// hasSession 은 정적 프리렌더 시점엔 항상 false 라, HTML 에는 비로그인 문구가
+// 박힌다. 하이드레이션 후 세션이 확인되면 그때 문구가 바뀐다.
+type Props = { hasSession?: boolean };
+
+export default function WebLanding({ hasSession = false }: Props) {
   return (
     <ScrollView style={styles.root} contentContainerStyle={styles.container}>
       <View style={styles.hero}>
@@ -52,16 +64,19 @@ export default function WebLanding() {
         />
         <Text style={styles.brand}>몽글 (Mongle)</Text>
         <Text style={styles.tagline}>
-          매일의 운세와 꿈, 그리고 마음 한 조각
+          간밤의 꿈, AI가 해몽해 드려요
         </Text>
         <Text style={styles.lede}>
-          하루를 여는 작은 위로가 필요할 때, 몽글이 함께합니다. 오늘의 운세부터
-          간밤의 꿈 해몽, AI와 나누는 다정한 대화까지 감성적인 무드로 잔잔하게
-          담았습니다.
+          간밤에 꾼 꿈, 무슨 의미일까요? 몽글은 당신의 꿈을 기록하고 AI가 그
+          의미를 해석해 주는 꿈해몽 앱입니다. 꿈 사전 검색과 나만의 꿈 일기,
+          하루를 여는 오늘의 운세까지 감성적인 무드로 잔잔하게 담았습니다.
         </Text>
 
-        <Link href="/(auth)/login" style={styles.cta}>
-          몽글 시작하기
+        <Link
+          href={hasSession ? "/(app)" : "/(auth)/login"}
+          style={styles.cta}
+        >
+          {hasSession ? "몽글 열기" : "몽글 시작하기"}
         </Link>
       </View>
 
@@ -97,8 +112,8 @@ export default function WebLanding() {
       </View>
 
       <Text style={styles.notice}>
-        몽글의 운세·꿈 해몽·AI 응답은 오락 및 정보 제공을 목적으로 하며,
-        의학적·법률적·재정적 조언을 대체하지 않습니다.
+        몽글의 꿈 해몽·운세 콘텐츠는 재미와 참고용으로 제공되며, AI가 생성한
+        내용이 포함될 수 있습니다. 의학적·법률적·재정적 조언을 대체하지 않습니다.
       </Text>
 
       <View style={styles.footer}>

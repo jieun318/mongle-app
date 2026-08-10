@@ -15,12 +15,19 @@ export default function Index() {
 
   useEffect(() => {
     if (loading) return;
-    // 웹도 세션이 있으면 곧장 앱으로 보낸다. 랜딩은 비로그인 방문자(= Play 심사자)용.
-    if (isWeb && !session) return;
+    // 웹 루트는 세션이 있어도 리다이렉트하지 않는다. 앱으로 튕기면
+    //  (1) 세션 해소(localStorage 읽기 + 토큰 갱신) 전까지 랜딩이 잠깐 그려졌다
+    //      사라져 깜빡이고,
+    //  (2) 로그인된 사람은 이 페이지를 영영 못 읽는다 — 공개 소개·사업자 정보
+    //      페이지인데 개발자 본인조차 확인할 수 없게 된다.
+    // 진입은 세션 여부에 따라 문구가 바뀌는 CTA 하나로 통일한다.
+    if (isWeb) return;
     router.replace(session ? "/(app)" : "/(auth)/login");
   }, [session, loading, isWeb, router]);
 
-  if (isWeb && !session) return <WebLanding />;
+  // loading 중에도 랜딩을 그린다 — 정적 익스포트 HTML 에 소개 문구가 그대로
+  // 담겨야 JS 를 실행하지 않는 크롤러·심사자도 내용을 볼 수 있다.
+  if (isWeb) return <WebLanding hasSession={!loading && !!session} />;
 
   return (
     <LinearGradient

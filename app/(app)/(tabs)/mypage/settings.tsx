@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   Switch,
-  Alert,
   ActivityIndicator,
   Platform,
   Modal,
@@ -16,6 +15,9 @@ import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
+// Alert.alert 는 react-native-web 에서 빈 함수라 웹에선 실패 알림이 통째로
+// 사라진다. 인앱 다이얼로그(DialogHost)로 통일한다.
+import { showNotice } from "@/lib/dialog";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import Constants from "expo-constants";
 
@@ -121,7 +123,7 @@ export default function SettingsScreen() {
       // 개별 토글 상태(DB/AsyncStorage)는 마스터 OFF 동안에도 유지돼 있으므로 그대로 적용.
       const granted = await requestNotificationPermission();
       if (!granted) {
-        Alert.alert(
+        showNotice(
           "알림 권한 필요",
           "기기 설정에서 몽글의 알림을 허용해 주세요.",
         );
@@ -147,7 +149,7 @@ export default function SettingsScreen() {
         await applyScheduleForFortune();
         await applyScheduleForReminder();
       }
-      Alert.alert("저장 실패", error.message);
+      showNotice("저장 실패", error.message);
     }
   };
 
@@ -157,7 +159,7 @@ export default function SettingsScreen() {
       if (notify) {
         const granted = await requestNotificationPermission();
         if (!granted) {
-          Alert.alert(
+          showNotice(
             "알림 권한 필요",
             "기기 설정에서 몽글의 알림을 허용해 주세요.",
           );
@@ -166,7 +168,7 @@ export default function SettingsScreen() {
         const { hour, minute } = parseHHMM(reminderTime);
         const ok = await scheduleDreamReminder(hour, minute);
         if (!ok) {
-          Alert.alert("스케줄 실패", "잠시 후 다시 시도해 주세요.");
+          showNotice("스케줄 실패", "잠시 후 다시 시도해 주세요.");
           return;
         }
       }
@@ -179,7 +181,7 @@ export default function SettingsScreen() {
     if (error) {
       setNotifyReminder(!next);
       if (next) await cancelDreamReminder();
-      Alert.alert("저장 실패", error.message);
+      showNotice("저장 실패", error.message);
     }
   };
 
@@ -189,7 +191,7 @@ export default function SettingsScreen() {
       if (notify) {
         const granted = await requestNotificationPermission();
         if (!granted) {
-          Alert.alert(
+          showNotice(
             "알림 권한 필요",
             "기기 설정에서 몽글의 알림을 허용해 주세요.",
           );
@@ -198,7 +200,7 @@ export default function SettingsScreen() {
         const { hour, minute } = parseHHMM(fortuneTime);
         const ok = await scheduleDailyFortune(hour, minute);
         if (!ok) {
-          Alert.alert("스케줄 실패", "잠시 후 다시 시도해 주세요.");
+          showNotice("스케줄 실패", "잠시 후 다시 시도해 주세요.");
           return;
         }
       }
@@ -270,12 +272,8 @@ export default function SettingsScreen() {
     const { error } = await deleteMyAccount();
     setActing(false);
     if (error) {
-      // 실패 알림은 네이티브 Alert / 웹 window.alert 로. 자주 나는 경로 아님.
-      if (Platform.OS === "web" && typeof window !== "undefined") {
-        window.alert(`탈퇴 실패\n\n${error.message}`);
-      } else {
-        Alert.alert("탈퇴 실패", error.message);
-      }
+      // showNotice 는 네이티브·웹 모두 인앱 다이얼로그로 뜬다 (플랫폼 분기 불필요).
+      showNotice("탈퇴 실패", error.message);
       return;
     }
     router.replace("/(auth)/login");

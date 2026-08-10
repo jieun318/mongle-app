@@ -4,13 +4,13 @@ import {
   TouchableOpacity,
   StyleSheet,
   Image,
-  Alert,
   Platform,
   ActivityIndicator,
 } from "react-native";
 import { useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { signInWithKakao, signInWithApple } from "@/features/auth/auth";
+import { showNotice } from "@/lib/dialog";
 import { supabase } from "@/lib/supabase";
 
 // 애플 로그인 임시 비활성화 플래그.
@@ -42,7 +42,10 @@ export default function LoginForm() {
     setSocial(null);
     if (canceled) return;
     if (error) {
-      Alert.alert(
+      // Alert.alert 는 react-native-web 에서 빈 함수라 웹에선 아무것도 안 뜬다.
+      // 로그인 실패는 웹(카카오 풀페이지 redirect)에서도 나는 경로라 인앱
+      // 다이얼로그로 알린다.
+      showNotice(
         provider === "kakao" ? "카카오 로그인 실패" : "애플 로그인 실패",
         error.message,
       );
@@ -64,7 +67,7 @@ export default function LoginForm() {
       if (error) throw error;
       await AsyncStorage.setItem(DEV_USER_KEY, JSON.stringify(DEV_USER));
     } catch (e) {
-      Alert.alert(
+      showNotice(
         "개발 로그인 실패",
         e instanceof Error ? e.message : String(e),
       );

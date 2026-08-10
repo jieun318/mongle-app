@@ -1,5 +1,6 @@
-import { ScrollView, View, Text, StyleSheet, Linking, TouchableOpacity, Alert } from "react-native";
+import { ScrollView, View, Text, StyleSheet, Linking, TouchableOpacity } from "react-native";
 import { Stack } from "expo-router";
+import { showNotice } from "@/lib/dialog";
 
 // 사업자 정보 — 「전자상거래법」 제10조 사업자 정보 표시 + 문의처.
 // 무료 서비스(통신판매 행위 없음)라 통신판매업 신고·전화번호 표시 의무 없음.
@@ -9,10 +10,11 @@ async function openContactEmail(): Promise<void> {
   try {
     await Linking.openURL(`mailto:${CONTACT_EMAIL}`);
   } catch {
-    Alert.alert(
+    // 로그인 없이 열리는 공개 페이지 — 웹 노출이 잦다. Alert.alert 는
+    // react-native-web 에서 빈 함수라 인앱 다이얼로그로 알려야 한다.
+    showNotice(
       "메일 앱을 열 수 없어요",
       `아래 주소로 문의해 주세요.\n\n${CONTACT_EMAIL}`,
-      [{ text: "확인" }],
     );
   }
 }

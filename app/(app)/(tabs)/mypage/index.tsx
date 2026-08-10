@@ -7,8 +7,8 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Linking,
-  Alert,
 } from "react-native";
+import { showNotice } from "@/lib/dialog";
 import { SettingsIcon, PencilIcon } from "@/components/ui/icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -32,11 +32,11 @@ async function openContactEmail(): Promise<void> {
   try {
     await Linking.openURL(url);
   } catch {
-    // 메일 앱이 없거나 mailto를 처리할 수 없는 기기 → 주소를 안내
-    Alert.alert(
+    // 메일 앱이 없거나 mailto를 처리할 수 없는 기기 → 주소를 안내.
+    // Alert.alert 는 react-native-web 에서 빈 함수라 웹에선 아무것도 안 뜬다.
+    showNotice(
       "메일 앱을 열 수 없어요",
       `아래 주소로 문의해 주세요.\n\n${CONTACT_EMAIL}`,
-      [{ text: "확인" }],
     );
   }
 }

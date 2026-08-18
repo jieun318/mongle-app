@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from "react";
 import { Platform } from "react-native";
 import type { Session } from "@supabase/supabase-js";
+import { isAuthRetryableFetchError } from "@supabase/supabase-js";
 import * as WebBrowser from "expo-web-browser";
 import * as Linking from "expo-linking";
 import { makeRedirectUri } from "expo-auth-session";
@@ -8,6 +9,10 @@ import { supabase } from "@/lib/supabase";
 
 // 소셜 로그인 결과 — error 가 null 이면 성공, 사용자가 취소하면 canceled=true
 export type SocialResult = { error: Error | null; canceled?: boolean };
+
+// 이메일 인증 결과 — 취소 개념이 없는 대신, 가입 후 메일 확인이 필요하면
+// needsEmailConfirm=true (이때 세션은 아직 없다).
+export type EmailResult = { error: Error | null; needsEmailConfirm?: boolean };
 
 // ── 세션 스토어 ────────────────────────────────────────────────
 // useSession 을 쓰는 화면마다 getSession() 을 따로 호출하면, 액세스 토큰이 만료된
@@ -56,6 +61,89 @@ export function useSession(): SessionSnapshot {
 
 export async function signOut() {
   return supabase.auth.signOut();
+}
+
+// ── 이메일/비밀번호 인증 ────────────────────────────────────────
+// 세션 반영은 카카오/애플과 동일하다. 여기서 스냅샷을 직접 건드리지 않고,
+// GoTrue 가 세션을 저장할 때 나오는 onAuthStateChange 를 start() 의 구독이
+// 받아 setSnapshot 한다.
+
+// GoTrue 에러 → 사용자에게 그대로 보여줄 한국어 문구.
+// 호출부(LoginForm)가 error.message 를 다이얼로그에 그대로 띄우므로
+// 원문(영문) 메시지가 새어나가지 않게 여기서 전부 갈아끼운다.
+function toKoreanAuthError(e: unknown): Error {
+  // fetch 실패/타임아웃은 code 가 없으므로 먼저 걸러낸다.
+  if (isAuthRetryableFetchError(e)) {
+    return new Error("네트워크 연결을 확인해 주세요");
+  }
+  const code =
+    e && typeof e === "object" && "code" in e
+      ? (e as { code?: string }).code
+      : undefined;
+
+  switch (code) {
+    case "user_already_exists":
+    case "email_exists":
+      return new Error("이미 가입된 이메일이에요");
+    case "invalid_credentials":
+      return new Error("이메일 또는 비밀번호가 일치하지 않아요");
+    case "email_address_invalid":
+      return new Error("이메일 형식이 올바르지 않아요");
+    case "weak_password":
+      return new Error("비밀번호는 8자 이상으로 입력해 주세요");
+    case "email_not_confirmed":
+      return new Error("메일함에서 인증 링크를 먼저 확인해 주세요");
+    case "over_request_rate_limit":
+    case "over_email_send_rate_limit":
+      return new Error("요청이 너무 잦아요. 잠시 후 다시 시도해 주세요");
+    default:
+      // RN 의 fetch 실패는 AuthRetryableFetchError 로 안 감싸이고
+      // TypeError("Network request failed") 로 올라오는 경로가 있다.
+      if (e instanceof TypeError && /network/i.test(e.message)) {
+        return new Error("네트워크 연결을 확인해 주세요");
+      }
+      // validation_failed 는 이메일 형식 외에도 붙는 범용 코드라 여기로 흘린다.
+      return new Error("로그인에 실패했어요. 잠시 후 다시 시도해 주세요");
+  }
+}
+
+export async function signUpWithEmail(
+  email: string,
+  password: string,
+): Promise<EmailResult> {
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email: email.trim(),
+      password,
+    });
+    if (error) return { error: toKoreanAuthError(error) };
+
+    // 이메일 확인이 켜져 있으면 GoTrue 는 이미 가입된 주소에도 에러 대신
+    // identities 가 빈 더미 user 를 돌려준다(주소 존재 여부 노출 방지).
+    // 이걸 성공으로 넘기면 "가입됨"이라고 안내하게 되므로 여기서 잡는다.
+    if (data.user && data.user.identities?.length === 0) {
+      return { error: new Error("이미 가입된 이메일이에요") };
+    }
+    // 확인 메일이 필요한 구성에서는 session 이 null 로 온다.
+    return { error: null, needsEmailConfirm: data.session === null };
+  } catch (e) {
+    return { error: toKoreanAuthError(e) };
+  }
+}
+
+export async function signInWithEmail(
+  email: string,
+  password: string,
+): Promise<EmailResult> {
+  try {
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+    return { error: error ? toKoreanAuthError(error) : null };
+  } catch (e) {
+    return { error: toKoreanAuthError(e) };
+  }
 }
 
 // 카카오 로그인 — 플랫폼별로 흐름이 다르다.

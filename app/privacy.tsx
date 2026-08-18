@@ -1,14 +1,16 @@
 import { ScrollView, View, Text, StyleSheet } from "react-native";
 import { Stack } from "expo-router";
+import ScreenHeader from "@/components/ui/ScreenHeader";
 
 // 개인정보 처리방침 — Google Play Console "데이터 안전" 섹션 및 마켓 등록 시 URL 로 제출.
 // 시행일/연락처 등 [   ] 자리는 운영 정보 확정되면 채워 넣어야 함.
 export default function PrivacyScreen() {
   return (
-    <>
+    <View style={styles.root}>
       <Stack.Screen options={{ title: "개인정보 처리방침", headerShown: false }} />
+      <ScreenHeader title="개인정보처리방침" maxWidth={760} />
       <ScrollView
-        style={styles.root}
+        style={styles.scroll}
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
       >
@@ -167,7 +169,7 @@ export default function PrivacyScreen() {
           <Text style={styles.footerText}>시행일자: 2026년 6월 23일</Text>
         </View>
       </ScrollView>
-    </>
+    </View>
   );
 }
 
@@ -248,9 +250,10 @@ function Table({ rows }: { rows: [string, string][] }) {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: "#FAF8FE" },
+  scroll: { flex: 1 },
   container: {
     paddingHorizontal: 20,
-    paddingTop: 48,
+    paddingTop: 16,
     paddingBottom: 64,
     maxWidth: 760,
     width: "100%",

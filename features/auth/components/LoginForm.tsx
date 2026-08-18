@@ -1,6 +1,7 @@
 import {
   View,
   Text,
+  TextInput,
   TouchableOpacity,
   StyleSheet,
   Image,
@@ -8,8 +9,14 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useState } from "react";
+import { useRouter } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { signInWithKakao, signInWithApple } from "@/features/auth/auth";
+import {
+  signInWithKakao,
+  signInWithApple,
+  signInWithEmail,
+} from "@/features/auth/auth";
 import { showNotice } from "@/lib/dialog";
 import { supabase } from "@/lib/supabase";
 
@@ -30,10 +37,39 @@ const DEV_USER = {
 };
 
 export default function LoginForm() {
+  const router = useRouter();
   const [social, setSocial] = useState<null | "kakao" | "apple">(null);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [emailLoading, setEmailLoading] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+
+  // 소셜/이메일 중 하나라도 진행 중이면 전부 잠근다.
+  const busy = emailLoading || social !== null;
+
+  const handleEmailLogin = async () => {
+    if (busy) return;
+    // 빈 값은 GoTrue 왕복 없이 여기서 막는다.
+    if (!email.trim() || !password) {
+      setFormError("이메일과 비밀번호를 모두 입력해 주세요");
+      return;
+    }
+    setFormError(null);
+    setEmailLoading(true);
+    const { error } = await signInWithEmail(email, password);
+    setEmailLoading(false);
+    if (error) {
+      // 소셜과 달리 입력 폼이 바로 위에 있으니, 다이얼로그보다 인라인이
+      // 어디를 고쳐야 하는지 분명하다. 메시지는 auth.ts 에서 이미 한국어.
+      setFormError(error.message);
+      return;
+    }
+    // 성공 시 이동은 (auth)/_layout 의 세션 리다이렉트가 담당한다.
+  };
 
   const handleSocial = async (provider: "kakao" | "apple") => {
-    if (social) return;
+    if (busy) return;
+    setFormError(null);
     setSocial(provider);
     const { error, canceled } =
       provider === "kakao"
@@ -57,7 +93,7 @@ export default function LoginForm() {
   const showApple = APPLE_LOGIN_ENABLED && Platform.OS === "ios";
 
   const handleDevLogin = async () => {
-    if (social) return;
+    if (busy) return;
     try {
       // raw_user_meta_data.nickname 을 같이 넘기면 handle_new_user 트리거가
       // profiles.nickname 을 "테스트유저"로 채워준다 (없으면 기본 '몽글이').
@@ -86,11 +122,80 @@ export default function LoginForm() {
         <Text style={styles.tagline}>어젯밤 어떤 꿈을 꾸셨나요?</Text>
       </View>
 
+      {/* ── 이메일 로그인 (메인 CTA) ── */}
+      <View style={styles.emailWrap}>
+        <TextInput
+          style={styles.input}
+          value={email}
+          onChangeText={setEmail}
+          placeholder="이메일"
+          placeholderTextColor="#C4B8D6"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoCorrect={false}
+          autoComplete="email"
+          textContentType="emailAddress"
+          editable={!busy}
+        />
+        <TextInput
+          style={styles.input}
+          value={password}
+          onChangeText={setPassword}
+          placeholder="비밀번호"
+          placeholderTextColor="#C4B8D6"
+          secureTextEntry
+          autoCapitalize="none"
+          autoComplete="current-password"
+          textContentType="password"
+          editable={!busy}
+          onSubmitEditing={handleEmailLogin}
+          returnKeyType="go"
+        />
+
+        {formError && <Text style={styles.errorText}>{formError}</Text>}
+
+        <TouchableOpacity
+          style={[styles.primaryBtn, busy && styles.btnDimmed]}
+          onPress={handleEmailLogin}
+          disabled={busy}
+          activeOpacity={0.85}
+        >
+          <LinearGradient
+            colors={["#B898F0", "#8868D8"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.primaryBtnGradient}
+          >
+            {emailLoading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.primaryBtnText}>로그인</Text>
+            )}
+          </LinearGradient>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => router.push("/(auth)/signup")}
+          disabled={busy}
+          activeOpacity={0.6}
+          style={styles.signupBtn}
+        >
+          <Text style={styles.signupLabel}>회원가입</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* ── 구분선 ── */}
+      <View style={styles.dividerRow}>
+        <View style={styles.dividerLine} />
+        <Text style={styles.dividerLabel}>간편 로그인</Text>
+        <View style={styles.dividerLine} />
+      </View>
+
       <View style={styles.socialWrap}>
         <TouchableOpacity
           style={[styles.socialBtn, styles.kakaoBtn]}
           onPress={() => handleSocial("kakao")}
-          disabled={social !== null}
+          disabled={busy}
           activeOpacity={0.85}
         >
           {social === "kakao" ? (
@@ -110,7 +215,7 @@ export default function LoginForm() {
           <TouchableOpacity
             style={[styles.socialBtn, styles.appleBtn]}
             onPress={() => handleSocial("apple")}
-            disabled={social !== null}
+            disabled={busy}
             activeOpacity={0.85}
           >
             {social === "apple" ? (
@@ -130,7 +235,7 @@ export default function LoginForm() {
         {__DEV__ && (
           <TouchableOpacity
             onPress={handleDevLogin}
-            disabled={social !== null}
+            disabled={busy}
             activeOpacity={0.6}
             style={styles.devBtn}
           >
@@ -153,24 +258,58 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     paddingHorizontal: 24,
-    paddingTop: 80,
+    paddingTop: 40,
     paddingBottom: 40,
   },
-  logoWrap: { alignItems: "center", marginBottom: 64, gap: -10 },
-  logo: { width: 200, height: 200, marginBottom: -15 },
+  logoWrap: { alignItems: "center", marginBottom: 24 },
+  logo: { width: 132, height: 132, marginBottom: -10 },
   brand: {
     fontFamily: "OnglyphPDH",
-    fontSize: 36,
+    fontSize: 30,
     color: "#3D2B5E",
     letterSpacing: 2,
   },
   tagline: { fontFamily: "OnglyphPDH", fontSize: 16, color: "#5C4A7A" },
 
-  socialWrap: { width: "100%", gap: 12 },
+  emailWrap: { width: "100%", gap: 10 },
+  input: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
+    fontSize: 14,
+    color: "#3D2B5E",
+    borderWidth: 1.5,
+    borderColor: "#EDE9F0",
+  },
+  errorText: { fontSize: 12, color: "#D9534F", paddingHorizontal: 2 },
+  primaryBtn: { borderRadius: 16, overflow: "hidden", marginTop: 2 },
+  primaryBtnGradient: { paddingVertical: 15, alignItems: "center" },
+  primaryBtnText: { fontSize: 15, fontWeight: "700", color: "#fff" },
+  btnDimmed: { opacity: 0.6 },
+  signupBtn: { alignSelf: "center", paddingVertical: 8, paddingHorizontal: 12 },
+  signupLabel: {
+    fontSize: 13,
+    color: "#7868B8",
+    fontWeight: "600",
+    textDecorationLine: "underline",
+  },
+
+  dividerRow: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginVertical: 18,
+  },
+  dividerLine: { flex: 1, height: 1, backgroundColor: "#E3DAF2" },
+  dividerLabel: { fontSize: 12, color: "#9B8BB4", fontWeight: "600" },
+
+  socialWrap: { width: "100%", gap: 10 },
   socialBtn: {
     width: "100%",
-    height: 52,
-    borderRadius: 14,
+    height: 46,
+    borderRadius: 12,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -178,10 +317,10 @@ const styles = StyleSheet.create({
   },
   kakaoBtn: { backgroundColor: "#FEE500" },
   appleBtn: { backgroundColor: "#000" },
-  socialIcon: { width: 22, height: 22 },
+  socialIcon: { width: 19, height: 19 },
   appleIcon: { tintColor: "#fff" },
-  kakaoLabel: { fontSize: 15, fontWeight: "700", color: "#3D2B5E" },
-  appleLabel: { fontSize: 15, fontWeight: "700", color: "#fff" },
+  kakaoLabel: { fontSize: 14, fontWeight: "700", color: "#3D2B5E" },
+  appleLabel: { fontSize: 14, fontWeight: "700", color: "#fff" },
 
   devBtn: { alignItems: "center", paddingVertical: 6 },
   devLabel: { fontSize: 14, color: "#9B8BB4" },

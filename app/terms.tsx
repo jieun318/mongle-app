@@ -1,14 +1,16 @@
 import { ScrollView, View, Text, StyleSheet } from "react-native";
 import { Stack } from "expo-router";
+import ScreenHeader from "@/components/ui/ScreenHeader";
 
 // 이용약관 — 마켓 등록 시 URL 로 제출(선택), 인앱 [마이페이지 > 약관 및 정책]에서 접근.
 // 결제/구독 기능 도입 시 제8조(유료서비스) 보강 필요.
 export default function TermsScreen() {
   return (
-    <>
+    <View style={styles.root}>
       <Stack.Screen options={{ title: "이용약관", headerShown: false }} />
+      <ScreenHeader title="이용약관" maxWidth={760} />
       <ScrollView
-        style={styles.root}
+        style={styles.scroll}
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
       >
@@ -178,7 +180,7 @@ export default function TermsScreen() {
           <Text style={styles.footerText}>시행일자: 2026년 6월 23일</Text>
         </View>
       </ScrollView>
-    </>
+    </View>
   );
 }
 
@@ -232,9 +234,10 @@ function Bullet({
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: "#FAF8FE" },
+  scroll: { flex: 1 },
   container: {
     paddingHorizontal: 20,
-    paddingTop: 48,
+    paddingTop: 16,
     paddingBottom: 64,
     maxWidth: 760,
     width: "100%",

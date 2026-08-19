@@ -220,6 +220,30 @@ function generateFortune(seedId: string, dKey: string, now: Date): Fortune {
   };
 }
 
+// ── 소유자 검증 ────────────────────────────────────────────────
+// 시드는 결정적이라, 같은 (seedId, dKey) 면 언제 돌려도 같은 결과가 나온다.
+// 이 성질로 "이 payload 가 이 시드에서 나왔는가" 를 직접 확인한다.
+// (payload 나 컬럼에 소유자를 따로 저장하지 않는 이유 — user_id 와 중복)
+//
+// 비교는 콘텐츠 배열에 의존하지 않는 두 값으로만 한다. message/tip/item 까지
+// 비교하면 나중에 문구 풀을 손댔을 때 정상 행이 위조로 판정된다.
+//   - grade       : 4단계 등급 체계라 사실상 불변 (DB check 제약으로도 고정)
+//   - luckyNumber : 1~49 산술이라 배열 인덱싱과 무관
+function seedFingerprint(f: Fortune): string {
+  return `${f.grade}|${f.luckyNumber}`;
+}
+
+function isOwnedBySeed(
+  f: Fortune,
+  seedId: string,
+  dKey: string,
+  now: Date,
+): boolean {
+  return (
+    seedFingerprint(f) === seedFingerprint(generateFortune(seedId, dKey, now))
+  );
+}
+
 // legacy DB row 호환: categories / lucky 가 비어있으면 시드로 채워서 반환.
 // score 가 비정상이면 (이전 시드 알고리즘이 다르면) 다시 생성.
 function backfillFortune(stored: Fortune, seedId: string, dKey: string): Fortune {
@@ -287,9 +311,11 @@ export async function getDailyFortune(): Promise<Fortune> {
   let fortune: Fortune;
   if (cached) {
     fortune = backfillFortune(cached, seedId, dKey);
-  } else if (dbFortune) {
+  } else if (dbFortune && isOwnedBySeed(dbFortune, seedId, dKey, now)) {
     fortune = backfillFortune(dbFortune, seedId, dKey);
   } else {
+    // DB 값이 다른 계정의 것이면(구버전 클라이언트가 남긴 오염 행) 버리고
+    // 새로 만든다. 이후 커밋이 올바른 값으로 덮어써 자기치유된다.
     fortune = generateFortune(seedId, dKey, now);
   }
 
@@ -304,6 +330,22 @@ export async function getDailyFortune(): Promise<Fortune> {
 // 사용자가 구슬을 처음 탭한 시점에 호출 — 이번 주 운세 위젯에 표시되기 시작한다.
 // upsert 라 여러 번 호출돼도 안전. 비로그인 시 no-op.
 export async function commitDailyFortuneToDB(fortune: Fortune): Promise<void> {
-  const dKey = dateKey(new Date());
-  await saveDailyFortuneToDB(dKey, fortune).catch(() => {});
+  const now = new Date();
+  const dKey = dateKey(now);
+
+  // 저장 직전에 현재 세션 uid 를 다시 확인한다. 화면에 떠 있던 fortune 이
+  // 다른 계정 것이면(구버전이 남긴 캐시 등) 여기서 걸러야 DB 가 오염되지 않는다.
+  let uid: string | undefined;
+  try {
+    const { data } = await supabase.auth.getUser();
+    uid = data.user?.id;
+  } catch {
+    return;
+  }
+  if (!uid) return; // 비로그인 → 기존과 동일하게 no-op
+
+  // 로그인 상태에서는 seedId === uid (getSeedId 참조).
+  if (!isOwnedBySeed(fortune, uid, dKey, now)) return;
+
+  await saveDailyFortuneToDB(dKey, fortune, uid).catch(() => {});
 }

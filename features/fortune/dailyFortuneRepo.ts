@@ -36,10 +36,14 @@ export async function loadDailyFortuneFromDB(
 export async function saveDailyFortuneToDB(
   dateKey: string,
   fortune: Fortune,
+  expectedUserId?: string,
 ): Promise<void> {
   const { data: userRes } = await supabase.auth.getUser();
   const user = userRes.user;
   if (!user) return;
+  // 호출부가 소유자 검증에 쓴 uid 와 실제 저장 대상이 같은지 확인.
+  // getUser() 가 두 번 불리는 사이에 계정이 바뀌는 좁은 창을 막는다.
+  if (expectedUserId && user.id !== expectedUserId) return;
 
   const { error } = await supabase
     .from("daily_fortunes")

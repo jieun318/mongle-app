@@ -6,6 +6,7 @@ import * as WebBrowser from "expo-web-browser";
 import * as Linking from "expo-linking";
 import { makeRedirectUri } from "expo-auth-session";
 import { supabase } from "@/lib/supabase";
+import { clearUserScopedCaches } from "@/lib/sessionCleanup";
 
 // 소셜 로그인 결과 — error 가 null 이면 성공, 사용자가 취소하면 canceled=true
 export type SocialResult = { error: Error | null; canceled?: boolean };
@@ -60,7 +61,11 @@ export function useSession(): SessionSnapshot {
 }
 
 export async function signOut() {
-  return supabase.auth.signOut();
+  const res = await supabase.auth.signOut();
+  // 정리는 signOut 이후에. 먼저 지우면 아직 살아있는 세션으로 진행 중이던
+  // 요청이 이전 계정 데이터를 캐시에 다시 채울 수 있다.
+  await clearUserScopedCaches();
+  return res;
 }
 
 // ── 이메일/비밀번호 인증 ────────────────────────────────────────

@@ -21,7 +21,8 @@ export async function listActiveNotices() {
 
 // 읽음 처리는 사용자별 row 가 아닌 전역 공지라 AsyncStorage 로 관리.
 // id 배열을 JSON 으로 저장. 모달 닫을 때 현재 보여진 id 들을 합집합으로 머지.
-const READ_KEY = "notice.readIds";
+// 로그아웃 정리(lib/sessionCleanup)에서도 지워야 해 export 한다.
+export const READ_KEY = "notice.readIds";
 
 export async function getReadNoticeIds(): Promise<string[]> {
   try {

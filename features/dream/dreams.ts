@@ -158,6 +158,16 @@ export async function listMyDreams() {
 // 오래돼도 화면 진입 시 자동 갱신되어 안전하다(첫 마운트의 스피너만 제거).
 let dreamsCache: { data: DreamRecord[]; at: number } | null = null;
 let dreamsInflight: Promise<void> | null = null;
+// 리셋 세대. 진행 중이던 프리페치가 리셋 이후에 완료돼도 이전 계정 데이터로
+// 캐시를 되살리지 않도록 구분한다.
+let dreamsCacheGen = 0;
+
+// 로그아웃/계정 전환 시 호출. queryClient.clear() 는 이 캐시를 건드리지 못한다.
+export function resetMyDreamsCache(): void {
+  dreamsCache = null;
+  dreamsInflight = null;
+  dreamsCacheGen++;
+}
 
 // 캐시가 maxAgeMs 이내면 반환, 아니면 null. 보관함 첫 마운트 초기 상태 seed 용.
 export function getCachedMyDreams(maxAgeMs = 15000): DreamRecord[] | null {
@@ -168,13 +178,15 @@ export function getCachedMyDreams(maxAgeMs = 15000): DreamRecord[] | null {
 // 백그라운드 프리페치. 동시 호출은 진행 중인 하나로 합친다(fire-and-forget).
 export function prefetchMyDreams(): Promise<void> {
   if (dreamsInflight) return dreamsInflight;
+  const gen = dreamsCacheGen;
   dreamsInflight = listMyDreams()
     .then(({ data, error }) => {
+      if (gen !== dreamsCacheGen) return; // 그 사이 로그아웃 → 결과 폐기
       if (!error && data) dreamsCache = { data, at: Date.now() };
     })
     .catch(() => {})
     .finally(() => {
-      dreamsInflight = null;
+      if (gen === dreamsCacheGen) dreamsInflight = null;
     });
   return dreamsInflight;
 }

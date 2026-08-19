@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { clearUserScopedCaches } from "@/lib/sessionCleanup";
 import * as ImageManipulator from "expo-image-manipulator";
 
 const AVATAR_BUCKET = "avatars";
@@ -115,6 +116,7 @@ export async function deleteMyAccount() {
   if (error) return { error };
   // 클라이언트 세션도 정리
   await supabase.auth.signOut();
+  await clearUserScopedCaches();
   return { error: null };
 }
 

@@ -46,7 +46,6 @@ function getTodayKey(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-const VIEWED_DATE_KEY = "fortune.viewedDate";
 import BottomNav from "@/components/ui/BottomNav";
 import { BellIcon } from "@/components/ui/icons";
 import Toast from "@/components/ui/Toast";
@@ -65,7 +64,9 @@ import {
   commitDailyFortuneToDB,
   getDailyFortune,
   getSmokePalette,
+  FORTUNE_VIEWED_DATE_KEY,
 } from "@/features/fortune/dailyFortune";
+import { useSession } from "@/features/auth/auth";
 import { prefetchMyDreams } from "@/features/dream/dreams";
 import { prefetchDreamBrowse } from "@/features/dream/dreamQueries";
 import {
@@ -273,11 +274,29 @@ function LuckyCell({
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const [fortune, setFortune] = useState<Fortune | null>(null);
+  const { session } = useSession();
+  const userId = session?.user?.id ?? null;
+  // 운세·구슬 상태는 소유자(userId)와 함께 보관한다. 계정이 바뀌면 이펙트가
+  // 돌기 전, 즉 리렌더 시점에 이미 무효로 판정돼야 이전 계정 값이 한 프레임
+  // 새어나가지 않는다.
+  const [fortuneState, setFortuneState] = useState<{
+    userId: string;
+    fortune: Fortune;
+  } | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
   const [darkMode, setDarkMode] = useState(getDefaultDarkMode);
-  const [alreadyViewed, setAlreadyViewed] = useState(false);
+  const [viewedState, setViewedState] = useState<{
+    userId: string;
+    viewed: boolean;
+  } | null>(null);
+
+  // ── 렌더 시점 파생값 ──────────────────────────────────────
+  // 소유자가 현재 userId 와 다르면 "없는 것"으로 본다. 이펙트를 기다리지
+  // 않으므로 stale 프레임이 원천적으로 생기지 않는다.
+  const fortune = fortuneState?.userId === userId ? fortuneState.fortune : null;
+  const alreadyViewed =
+    viewedState?.userId === userId ? viewedState.viewed : false;
   const [sunTimes, setSunTimes] = useState<SunTimes | null>(null);
   const [sunReady, setSunReady] = useState(false); // 첫 자동 업데이트 후 true
   const [showChat, setShowChat] = useState(false);
@@ -439,22 +458,42 @@ export default function HomeScreen() {
     setDarkMode(state.darkness > 0.5);
   }, [sunTimes, sunCX, sunCY, transitionProgress]);
 
-  // 매일 1회, 사용자별 운세 로드
+  // 매일 1회, 사용자별 운세 로드. userId 가 바뀌면(계정 전환) 다시 로드한다.
   useEffect(() => {
-    getDailyFortune().then(setFortune);
-  }, []);
+    // 이전 계정 값의 무효화는 렌더 시점 파생(fortune)이 이미 처리하므로,
+    // 여기서 state 를 비울 필요가 없다. 로드할 게 없으면 그냥 나간다.
+    if (!userId) return;
+    let cancelled = false;
+    getDailyFortune().then((f) => {
+      if (!cancelled) setFortuneState({ userId, fortune: f });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
 
-  // 오늘 이미 구슬을 탭했는지 확인 — 같은 날이면 구슬 채워진 상태로 시작
+  // 오늘 이미 구슬을 탭했는지 확인 — 같은 날이면 구슬 채워진 상태로 시작.
+  // 계정이 바뀌면 구슬 상태도 다시 판정해야 하므로 userId 에 함께 묶는다.
   useEffect(() => {
-    AsyncStorage.getItem(VIEWED_DATE_KEY)
+    // Animated.Value 는 React state 가 아니라 파생 무효화가 닿지 않는다.
+    // 계정이 바뀌면 먼저 0 으로 되돌린다 — 이전 계정의 "연기 피어오른" 값이
+    // 남아 있으면, 새 운세가 AsyncStorage 읽기보다 먼저 도착했을 때
+    // 애니메이션 없이 연기가 즉시 나타난다.
+    smokeOp.setValue(0);
+    if (!userId) return;
+    let cancelled = false;
+    AsyncStorage.getItem(FORTUNE_VIEWED_DATE_KEY)
       .then((saved) => {
-        if (saved === getTodayKey()) {
-          setAlreadyViewed(true);
-          smokeOp.setValue(1);
-        }
+        if (cancelled) return;
+        const viewed = saved === getTodayKey();
+        setViewedState({ userId, viewed });
+        smokeOp.setValue(viewed ? 1 : 0);
       })
       .catch(() => {});
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
 
   // 위치 권한 요청 + Open-Meteo 에서 오늘 일출/일몰 시각 가져오기
   useEffect(() => {
@@ -616,10 +655,12 @@ export default function HomeScreen() {
 
   const handlePress = () => {
     if (isAnimating.current) return;
-    if (!fortune) return; // 운세 로드 전 탭 무시
+    // userId 체크는 아래 setViewedState 의 소유자 태그용 (fortune 이 있으면
+    // 사실상 항상 존재하지만, 타입상 좁혀지지 않는다).
+    if (!fortune || !userId) return; // 운세 로드 전 탭 무시
 
     // 매 탭마다 commit 시도 — upsert 라 멱등하고, 이전 탭의 저장이 실패했을 때
-    // (네트워크/세션 타이밍 등) 다시 탭하면 복구된다. AsyncStorage 의 VIEWED_DATE_KEY 만
+    // (네트워크/세션 타이밍 등) 다시 탭하면 복구된다. AsyncStorage 의 FORTUNE_VIEWED_DATE_KEY 만
     // 보고 일찍 return 해 버리면, 첫 commit 실패 시 mypage 의 이번 주 운세에 영원히
     // 안 뜨는 버그가 생긴다.
     commitDailyFortuneToDB(fortune).catch(() => {});
@@ -631,8 +672,8 @@ export default function HomeScreen() {
     }
 
     // 첫 탭 → 봤다고 저장 (자정 지나면 자동 리셋)
-    AsyncStorage.setItem(VIEWED_DATE_KEY, getTodayKey()).catch(() => {});
-    setAlreadyViewed(true);
+    AsyncStorage.setItem(FORTUNE_VIEWED_DATE_KEY, getTodayKey()).catch(() => {});
+    setViewedState({ userId, viewed: true });
 
     isAnimating.current = true;
 
@@ -999,90 +1040,95 @@ export default function HomeScreen() {
                 </Svg>
 
                 {/* 연기 — cy(세로위치)에 따라 아래쪽 블롭 먼저, 위쪽 블롭 나중에 부드럽게 페이드인.
-                    각 블롭은 가장자리가 그라디언트로 흐려져서 직선 경계 없음. */}
-                <View
-                  pointerEvents="none"
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: 210,
-                    height: 210,
-                  }}
-                >
-                  {BLOBS.map((cfg, i) => {
-                    const diameter = cfg.size * 2;
-                    const color = smokeColors[cfg.colorIdx];
-                    // cy 25(top) ~ 185(bottom) 을 delay 0.65 ~ 0 으로 매핑 — 아래일수록 먼저 등장
-                    const delay = ((185 - cfg.cy) / 160) * 0.65;
-                    // 다크 모드에선 블롭 채도 낮춤 — 어두운 배경에서 색이 너무 진해지는 현상 완화
-                    const maxBlobOpacity = darkMode ? 0.45 : 0.65;
-                    const opacity = smokeOp.interpolate({
-                      inputRange: [delay, delay + 0.3, 1],
-                      outputRange: [0, maxBlobOpacity, maxBlobOpacity],
-                      extrapolate: "clamp",
-                    });
-                    const scale = smokeOp.interpolate({
-                      inputRange: [delay, delay + 0.35, 1],
-                      outputRange: [0.55, 1, 1],
-                      extrapolate: "clamp",
-                    });
-                    const translateY = smokeOp.interpolate({
-                      inputRange: [delay, delay + 0.35, 1],
-                      outputRange: [12, 0, 0],
-                      extrapolate: "clamp",
-                    });
-                    return (
-                      <Animated.View
-                        key={i}
-                        pointerEvents="none"
-                        style={{
-                          position: "absolute",
-                          width: diameter,
-                          height: diameter,
-                          left: cfg.cx - cfg.size,
-                          top: cfg.cy - cfg.size,
-                          opacity,
-                          transform: [{ scale }, { translateY }],
-                        }}
-                      >
-                        <Svg width={diameter} height={diameter}>
-                          <Defs>
-                            <RadialGradient
-                              id={`sg${i}`}
-                              cx="50%"
-                              cy="50%"
-                              rx="50%"
-                              ry="50%"
-                            >
-                              <Stop
-                                offset="0%"
-                                stopColor={color}
-                                stopOpacity="0.95"
-                              />
-                              <Stop
-                                offset="50%"
-                                stopColor={color}
-                                stopOpacity="0.6"
-                              />
-                              <Stop
-                                offset="100%"
-                                stopColor={color}
-                                stopOpacity="0"
-                              />
-                            </RadialGradient>
-                          </Defs>
-                          <Circle
-                            cx={cfg.size}
-                            cy={cfg.size}
-                            r={cfg.size}
-                            fill={`url(#sg${i})`}
-                          />
-                        </Svg>
-                      </Animated.View>
-                    );
-                  })}
-                </View>
+                    각 블롭은 가장자리가 그라디언트로 흐려져서 직선 경계 없음.
+                    운세가 확정되기 전에는 레이어 자체를 렌더하지 않는다 — smokeOp
+                    (Animated.Value)는 리렌더로 리셋되지 않으므로, 가시성 판정을
+                    React 파생값으로 올려야 계정 전환 시 stale 프레임이 안 생긴다. */}
+                {fortune && (
+                  <View
+                    pointerEvents="none"
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: 210,
+                      height: 210,
+                    }}
+                  >
+                    {BLOBS.map((cfg, i) => {
+                      const diameter = cfg.size * 2;
+                      const color = smokeColors[cfg.colorIdx];
+                      // cy 25(top) ~ 185(bottom) 을 delay 0.65 ~ 0 으로 매핑 — 아래일수록 먼저 등장
+                      const delay = ((185 - cfg.cy) / 160) * 0.65;
+                      // 다크 모드에선 블롭 채도 낮춤 — 어두운 배경에서 색이 너무 진해지는 현상 완화
+                      const maxBlobOpacity = darkMode ? 0.45 : 0.65;
+                      const opacity = smokeOp.interpolate({
+                        inputRange: [delay, delay + 0.3, 1],
+                        outputRange: [0, maxBlobOpacity, maxBlobOpacity],
+                        extrapolate: "clamp",
+                      });
+                      const scale = smokeOp.interpolate({
+                        inputRange: [delay, delay + 0.35, 1],
+                        outputRange: [0.55, 1, 1],
+                        extrapolate: "clamp",
+                      });
+                      const translateY = smokeOp.interpolate({
+                        inputRange: [delay, delay + 0.35, 1],
+                        outputRange: [12, 0, 0],
+                        extrapolate: "clamp",
+                      });
+                      return (
+                        <Animated.View
+                          key={i}
+                          pointerEvents="none"
+                          style={{
+                            position: "absolute",
+                            width: diameter,
+                            height: diameter,
+                            left: cfg.cx - cfg.size,
+                            top: cfg.cy - cfg.size,
+                            opacity,
+                            transform: [{ scale }, { translateY }],
+                          }}
+                        >
+                          <Svg width={diameter} height={diameter}>
+                            <Defs>
+                              <RadialGradient
+                                id={`sg${i}`}
+                                cx="50%"
+                                cy="50%"
+                                rx="50%"
+                                ry="50%"
+                              >
+                                <Stop
+                                  offset="0%"
+                                  stopColor={color}
+                                  stopOpacity="0.95"
+                                />
+                                <Stop
+                                  offset="50%"
+                                  stopColor={color}
+                                  stopOpacity="0.6"
+                                />
+                                <Stop
+                                  offset="100%"
+                                  stopColor={color}
+                                  stopOpacity="0"
+                                />
+                              </RadialGradient>
+                            </Defs>
+                            <Circle
+                              cx={cfg.size}
+                              cy={cfg.size}
+                              r={cfg.size}
+                              fill={`url(#sg${i})`}
+                            />
+                          </Svg>
+                        </Animated.View>
+                      );
+                    })}
+                  </View>
+                )}
 
                 {/* 연기 위에 다시 얹는 유리 표면 shine — 색이 들어와도 유리 질감 유지 */}
                 <Svg

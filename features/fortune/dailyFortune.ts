@@ -28,7 +28,15 @@ import {
 export { LUCKY_SMOKE, getSmokePalette } from "./smokePalette";
 
 const DEVICE_ID_KEY = "deviceId";
-const FORTUNE_CACHE_KEY = "dailyFortune";
+// 로그아웃 정리(lib/sessionCleanup)에서도 지워야 해 export 한다.
+export const FORTUNE_CACHE_KEY = "dailyFortune";
+// 오늘 구슬을 이미 탭했는지. 쓰는 곳은 홈 화면이지만 운세 로컬 상태라
+// 키는 여기서 함께 관리한다 (문자열이 두 곳에서 어긋나지 않게).
+export const FORTUNE_VIEWED_DATE_KEY = "fortune.viewedDate";
+
+// 캐시 payload — seedId 로 소유자를 함께 기록한다. 날짜가 같아도 계정이
+// 다르면 무효여야 하기 때문.
+type FortuneCache = { dateKey: string; seedId: string; fortune: Fortune };
 
 // 등급별 메타
 const GRADE_META: Record<FortuneGrade, {
@@ -232,11 +240,15 @@ function backfillFortune(stored: Fortune, seedId: string, dKey: string): Fortune
   return out;
 }
 
-async function cacheLocally(dKey: string, fortune: Fortune): Promise<void> {
+async function cacheLocally(
+  dKey: string,
+  seedId: string,
+  fortune: Fortune,
+): Promise<void> {
   try {
     await AsyncStorage.setItem(
       FORTUNE_CACHE_KEY,
-      JSON.stringify({ dateKey: dKey, fortune }),
+      JSON.stringify({ dateKey: dKey, seedId, fortune } satisfies FortuneCache),
     );
   } catch {}
 }
@@ -256,8 +268,13 @@ export async function getDailyFortune(): Promise<Fortune> {
   try {
     const raw = await AsyncStorage.getItem(FORTUNE_CACHE_KEY);
     if (raw) {
-      const parsed = JSON.parse(raw) as { dateKey: string; fortune: Fortune };
-      if (parsed.dateKey === dKey) cached = parsed.fortune;
+      const parsed = JSON.parse(raw) as Partial<FortuneCache>;
+      // seedId 불일치 = 다른 계정이 남긴 캐시.
+      // seedId 없음 = 이 필드가 생기기 전 버전의 캐시라 소유자를 알 수 없으므로
+      // 똑같이 버린다(= 오늘 1회 재생성되고 이후 정상).
+      if (parsed.dateKey === dKey && parsed.seedId === seedId && parsed.fortune) {
+        cached = parsed.fortune;
+      }
     }
   } catch {
     // 캐시 손상 시 무시
@@ -278,7 +295,7 @@ export async function getDailyFortune(): Promise<Fortune> {
 
   // 캐시 백필만 수행 — DB 저장은 commitDailyFortuneToDB 에서.
   if (!cached) {
-    await cacheLocally(dKey, fortune);
+    await cacheLocally(dKey, seedId, fortune);
   }
 
   return fortune;

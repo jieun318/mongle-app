@@ -9,6 +9,7 @@ import {
 import { useState } from "react";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
+import PasswordInput from "@/components/ui/PasswordInput";
 import ScreenHeader from "@/components/ui/ScreenHeader";
 import { signUpWithEmail } from "@/features/auth/auth";
 import { showNotice } from "@/lib/dialog";
@@ -125,26 +126,18 @@ export default function SignupForm() {
           textContentType="emailAddress"
           editable={!loading}
         />
-        <TextInput
-          style={styles.input}
+        <PasswordInput
           value={password}
           onChangeText={setPassword}
           placeholder="비밀번호 (8자 이상)"
-          placeholderTextColor="#C4B8D6"
-          secureTextEntry
-          autoCapitalize="none"
           autoComplete="new-password"
           textContentType="newPassword"
           editable={!loading}
         />
-        <TextInput
-          style={styles.input}
+        <PasswordInput
           value={passwordConfirm}
           onChangeText={setPasswordConfirm}
           placeholder="비밀번호 확인"
-          placeholderTextColor="#C4B8D6"
-          secureTextEntry
-          autoCapitalize="none"
           autoComplete="new-password"
           textContentType="newPassword"
           editable={!loading}

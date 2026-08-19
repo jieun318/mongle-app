@@ -17,6 +17,7 @@ import {
   signInWithApple,
   signInWithEmail,
 } from "@/features/auth/auth";
+import PasswordInput from "@/components/ui/PasswordInput";
 import { showNotice } from "@/lib/dialog";
 import { supabase } from "@/lib/supabase";
 
@@ -137,14 +138,10 @@ export default function LoginForm() {
           textContentType="emailAddress"
           editable={!busy}
         />
-        <TextInput
-          style={styles.input}
+        <PasswordInput
           value={password}
           onChangeText={setPassword}
           placeholder="비밀번호"
-          placeholderTextColor="#C4B8D6"
-          secureTextEntry
-          autoCapitalize="none"
           autoComplete="current-password"
           textContentType="password"
           editable={!busy}

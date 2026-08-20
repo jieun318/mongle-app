@@ -142,6 +142,41 @@ function pickRandom<T>(arr: readonly T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
+// ── 위기 발화 감지 ──────────────────────────────────────────────
+// 사용자가 "자신의 현재 상태"로 자살·자해를 표현한 경우만 잡는다.
+// 꿈 내용 서술("죽는 꿈", "죽었어", "죽이는")은 잡지 않는다 — 한국 해몽에서
+// 죽음은 재생·새 출발의 흔한 상징이라 여기서 위기 대응이 나오면 부자연스럽다.
+//
+// 구분 기준은 어미다. 본인 상태는 "~고 싶다"(의지·희망) 꼴이고,
+// 꿈 서술은 과거형·관형형("죽었다/죽는/죽은")이다. 그래서 "죽" 단독이 아니라
+// 어미까지 묶어서 매칭한다.
+// 과잉 탐지가 미탐보다 UX 를 크게 해치므로, 애매하면 잡지 않는 쪽으로 좁게 둔다.
+//
+// api/chat.ts 의 최우선 안전 규칙과 같은 기준. 서버가 놓치거나 응답이
+// 실패해도 동작하는 마지막 방어선이라 클라이언트에도 둔다.
+const CRISIS_PATTERNS: readonly RegExp[] = [
+  /죽고\s*싶/,
+  /죽어\s*버리고\s*싶/,
+  /사라지고\s*싶/,
+  /살기\s*싫/,
+  /살고\s*싶지\s*않/,
+  /자해/,
+];
+
+function isCrisisDisclosure(text: string): boolean {
+  return CRISIS_PATTERNS.some((re) => re.test(text));
+}
+
+// 위기 발화에는 공감 한 줄 대신 이 안내를 띄운다.
+// 이모지를 쓰지 않는다 — 다른 스텁과 톤을 맞추려다 가벼워지면 안 된다.
+const SAFETY_STUB = `지금 많이 힘드신 것 같아요. 그 마음, 혼자 감당하지 않으셨으면 해요.
+
+전문 상담사와 지금 바로 이야기 나눌 수 있어요.
+· 자살예방상담전화 109 (24시간)
+· 정신건강위기상담전화 1577-0199 (24시간)
+
+꿈 이야기는 마음이 좀 놓이시면 그때 이어가도 괜찮아요.`;
+
 // 어느 키워드에도 안 걸리면, 입력 텍스트의 분위기 + "꿈" 앞 토픽을 뽑아
 // 매번 다른 한 줄을 만든다.
 // 예: "자전거 타는 꿈을 꿨어요" → "자전거 타는 꿈, 좋은 기운이 느껴져요 💫"
@@ -370,7 +405,13 @@ export default function ChatBotModal({
   // 저장은 fire-and-forget — UI 는 즉시 닫히고, 결과는 onSaved 콜백으로 토스트에 띄운다.
   const handleClose = useCallback(() => {
     const userMsgs = messages.filter((m) => m.role === "user");
-    const shouldSave = !savedRef.current && userMsgs.length > 0;
+    // 위기 발화가 한 턴이라도 있으면 보관함에 저장하지 않는다.
+    // 저장하면 "✨ '요즘 죽고싶다는 생…' 보관함에 담겼어요" 토스트와 함께
+    // 꿈 카드로 남는다. 첫 턴뿐 아니라 모든 사용자 턴을 검사한다.
+    const hasCrisis = userMsgs.some((m) => isCrisisDisclosure(m.content));
+    const shouldSave = !savedRef.current && userMsgs.length > 0 && !hasCrisis;
+    // 저장을 건너뛰어도 가드는 세운다 — 닫기 경로가 여러 개라 재진입 방지.
+    if (hasCrisis) savedRef.current = true;
     if (shouldSave) {
       savedRef.current = true;
       const content = userMsgs.map((m) => m.content).join("\n\n");
@@ -461,13 +502,17 @@ export default function ChatBotModal({
     // AI 는 해몽만 단일 버블로 스트리밍.
     const isFirstDream =
       messages.filter((m) => m.role === "user").length === 0;
-    const stubMsg: ChatMessage | null = isFirstDream
-      ? {
-          id: makeId(),
-          role: "assistant",
-          content: pickEmpathy(trimmed),
-          isStub: true,
-        }
+    // 위기 발화는 첫 턴이 아니어도 안내한다. pickEmpathy 는 키워드 매칭이라
+    // "죽고싶다" 에 scary 큐("죽")가 걸려 "마음이 많이 졸였겠어요 😨" 같은
+    // 응답을 내놓는다 — 반드시 이 분기보다 먼저 걸러야 한다.
+    const crisis = isCrisisDisclosure(trimmed);
+    const stubContent = crisis
+      ? SAFETY_STUB
+      : isFirstDream
+        ? pickEmpathy(trimmed)
+        : null;
+    const stubMsg: ChatMessage | null = stubContent
+      ? { id: makeId(), role: "assistant", content: stubContent, isStub: true }
       : null;
     const next = [...messages, userMsg];
     setMessages(stubMsg ? [...next, stubMsg] : next);

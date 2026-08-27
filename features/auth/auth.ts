@@ -15,6 +15,47 @@ export type SocialResult = { error: Error | null; canceled?: boolean };
 // needsEmailConfirm=true (이때 세션은 아직 없다).
 export type EmailResult = { error: Error | null; needsEmailConfirm?: boolean };
 
+// ── 인증 코드 교환 ─────────────────────────────────────────────
+// 교환은 반드시 한 번만. 인증 코드는 1회용이라 두 번째 교환은 실패하고, 그
+// 실패가 사용자에게 "로그인 실패"로 뜬다 — 이미 로그인에 성공한 뒤에.
+// 전역 딥링크 핸들러와 signInWithKakaoNative 의 로컬 리스너가 같은 url 이벤트를
+// 각각 받는 것이 설계 전제라, 중복 호출은 버그가 아니라 정상 경로다.
+//   inFlight — 진행 중인 교환. settle 되면 지운다(결과 객체 참조 정리).
+//   consumed — 이미 성공한 코드. 재교환 없이 성공으로 답한다.
+// 실패한 코드는 어느 쪽에도 남기지 않아 재시도가 가능하다.
+const inFlightExchanges = new Map<string, Promise<{ error: Error | null }>>();
+const consumedCodes = new Set<string>();
+
+// URL 에 ?code= 가 있으면 세션으로 교환한다. code 가 없으면 null.
+// Map 등록이 await 앞에서 동기로 끝나므로 동시 호출도 하나로 합쳐진다.
+function exchangeAuthCode(
+  url: string,
+): Promise<{ error: Error | null } | null> {
+  const { queryParams } = Linking.parse(url);
+  const code = queryParams?.code as string | undefined;
+  if (!code) return Promise.resolve(null);
+  if (consumedCodes.has(code)) return Promise.resolve({ error: null });
+
+  const existing = inFlightExchanges.get(code);
+  if (existing) return existing;
+
+  const pending = supabase.auth
+    .exchangeCodeForSession(code)
+    .then(({ error }) => {
+      if (!error) consumedCodes.add(code);
+      return { error: (error as Error | null) ?? null };
+    })
+    .catch((e) => ({
+      error: e instanceof Error ? e : new Error(String(e)),
+    }))
+    .finally(() => {
+      inFlightExchanges.delete(code);
+    });
+
+  inFlightExchanges.set(code, pending);
+  return pending;
+}
+
 // ── 세션 스토어 ────────────────────────────────────────────────
 // useSession 을 쓰는 화면마다 getSession() 을 따로 호출하면, 액세스 토큰이 만료된
 // 콜드스타트에서 여러 갱신이 동시에 나간다. refresh token 은 1회용이라 뒤늦은
@@ -26,6 +67,16 @@ let snapshot: SessionSnapshot = { session: null, loading: true };
 const listeners = new Set<() => void>();
 let started = false;
 
+// 콜드스타트 딥링크에 code 가 있는지 확인하고 교환이 끝날 때까지 true.
+// onAuthStateChange 는 구독 즉시 INITIAL_SESSION(null) 을 쏘므로(GoTrueClient
+// _emitInitialSession), 이 플래그가 없으면 교환 전에 loading 이 풀린다.
+// 그러면 (app)/_layout 이 "세션 없음"으로 보고 로그인으로 튕긴다.
+let bootLinkPending = false;
+
+// getInitialURL 이나 교환이 네트워크에서 멈춰도 loading 이 영영 안 풀리면
+// 앱이 스피너에 갇힌다. 상한을 둔다.
+const BOOT_LINK_TIMEOUT_MS = 5000;
+
 function setSnapshot(next: SessionSnapshot): void {
   snapshot = next;
   listeners.forEach((l) => l());
@@ -35,13 +86,47 @@ function start(): void {
   if (started) return;
   started = true;
 
+  // 네이티브만 콜드스타트 딥링크를 확인한다. 이 플래그는 onAuthStateChange 를
+  // 구독하기 전에 세워야 한다 — 구독 즉시 INITIAL_SESSION 이 날아오기 때문.
+  bootLinkPending = Platform.OS !== "web";
+
   supabase.auth.onAuthStateChange((_event, s) => {
-    setSnapshot({ session: s, loading: false });
+    // 세션이 실제로 들어왔으면 대기할 이유가 없다.
+    setSnapshot({ session: s, loading: !s && bootLinkPending });
   });
 
-  void supabase.auth.getSession().then(({ data }) => {
-    setSnapshot({ session: data.session, loading: false });
+  // 웹은 detectSessionInUrl 이 URL 의 code 를 자동 교환한다. 여기서 또 교환하면
+  // 1회용 code 를 두고 충돌하므로 건드리지 않는다.
+  if (Platform.OS === "web") {
+    void supabase.auth.getSession().then(({ data }) => {
+      setSnapshot({ session: data.session, loading: false });
+    });
+    return;
+  }
+
+  // 딥링크를 앱 전역에서 상시로 받는다. signInWithKakaoNative 안의 리스너만으로는
+  // 놓치는 경로가 있다:
+  //  - 커스텀탭/카카오톡이 떠 있는 동안 프로세스가 회수되면 콜드스타트로 들어오는데,
+  //    그 리스너는 사라진 프로세스에 있었다 → getInitialURL 로만 잡을 수 있다.
+  //  - 유예시간(DEEP_LINK_GRACE_MS) 뒤에 도착하면 finally 가 이미 리스너를 제거한 뒤다.
+  // 이 리스너는 앱 수명 내내 유지한다(제거하지 않는다).
+  Linking.addEventListener("url", (e) => {
+    void exchangeAuthCode(e.url);
   });
+
+  void Promise.race([
+    Linking.getInitialURL()
+      .then((url) => (url ? exchangeAuthCode(url) : null))
+      .catch(() => null),
+    new Promise<null>((r) => setTimeout(() => r(null), BOOT_LINK_TIMEOUT_MS)),
+  ])
+    .then(() => {
+      bootLinkPending = false;
+      return supabase.auth.getSession();
+    })
+    .then(({ data }) => {
+      setSnapshot({ session: data.session, loading: false });
+    });
 }
 
 function subscribe(listener: () => void): () => void {
@@ -225,20 +310,20 @@ async function signInWithKakaoNative(): Promise<SocialResult> {
     }
 
     if (!callbackUrl) {
-      // 딥링크도 안 왔으면 사용자가 브라우저를 닫은 것으로 본다.
+      // 전역 딥링크 핸들러가 먼저 처리했을 수 있다(유예시간 초과 등).
+      // 세션이 생겼으면 성공이다 — 여기서 canceled 로 단정하면 성공한 로그인이
+      // 아무 메시지 없이 로그인 화면으로 되돌아간다.
+      const { data: cur } = await supabase.auth.getSession();
+      if (cur.session) return { error: null };
       if (res.type === "cancel" || res.type === "dismiss") {
         return { error: null, canceled: true };
       }
       return { error: new Error("카카오 로그인에 실패했어요") };
     }
 
-    const { queryParams } = Linking.parse(callbackUrl);
-    const code = queryParams?.code as string | undefined;
-    if (!code) return { error: new Error("인증 코드를 받지 못했어요") };
-
-    const { error: exchangeError } =
-      await supabase.auth.exchangeCodeForSession(code);
-    return { error: exchangeError ?? null };
+    const result = await exchangeAuthCode(callbackUrl);
+    if (!result) return { error: new Error("인증 코드를 받지 못했어요") };
+    return { error: result.error };
   } catch (e) {
     return { error: e instanceof Error ? e : new Error(String(e)) };
   } finally {

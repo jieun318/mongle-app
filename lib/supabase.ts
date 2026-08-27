@@ -20,7 +20,14 @@ const noopStorage = {
   setItem: async (_key: string, _value: string) => {},
   removeItem: async (_key: string) => {},
 };
-const authStorage = typeof window === "undefined" ? noopStorage : AsyncStorage;
+// 네이티브는 조건에서 아예 빼둔다. window 유무만 보면, RN 이 InitializeCore 에서
+// global.window = global 로 별칭을 까는 부수 효과에 세션 영속화 전체가 매달린다.
+// 그게 흔들리면 네이티브가 조용히 noopStorage 로 떨어지면서 세션 영속화와
+// PKCE code_verifier 가 동시에 죽는다 — "재시작마다 로그아웃 + 카카오 로그인 실패".
+const authStorage =
+  Platform.OS === "web" && typeof window === "undefined"
+    ? noopStorage
+    : AsyncStorage;
 
 // 웹에선 Supabase 가 풀페이지 redirect 후 URL 의 ?code 를 자동으로 세션으로 교환한다.
 // 네이티브에선 브라우저를 직접 열고 code 를 수동 교환하므로 자동 처리는 꺼둔다.

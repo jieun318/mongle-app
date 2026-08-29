@@ -1,6 +1,7 @@
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, Pressable, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ChevronLeftIcon } from "@/components/ui/icons";
 
 type Props = {
   title: string;
@@ -32,15 +33,25 @@ export default function ScreenHeader({
       <View
         style={[styles.row, maxWidth ? { maxWidth, alignSelf: "center" } : null]}
       >
-        <TouchableOpacity
+        {/* 화살표와 제목을 한 덩어리로 묶는다. 화살표만 누르게 두면
+            터치 영역이 약 18×34dp 밖에 안 된다.
+            우측 여백은 일부러 제외 — 나중에 우측 버튼이 생겨도 겹치지 않는다. */}
+        <Pressable
           onPress={handleBack}
-          style={styles.backBtn}
+          style={({ pressed }) => [
+            styles.backHit,
+            pressed && styles.backHitPressed,
+          ]}
+          hitSlop={{ top: 16, bottom: 16, left: 16, right: 12 }}
+          android_ripple={{ color: "rgba(184,152,240,0.18)", borderless: false }}
           accessibilityRole="button"
-          accessibilityLabel="뒤로 가기"
+          accessibilityLabel={`뒤로 가기, ${title}`}
         >
-          <Text style={styles.backIcon}>‹</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerText}>{title}</Text>
+          <ChevronLeftIcon size={26} color="#8878CC" />
+          <Text style={styles.headerText} numberOfLines={1}>
+            {title}
+          </Text>
+        </Pressable>
       </View>
     </View>
   );
@@ -55,12 +66,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     gap: 4,
   },
-  backBtn: { padding: 4 },
-  backIcon: { fontSize: 26, color: "#8878CC", lineHeight: 26 },
+  backHit: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    minHeight: 48,
+    minWidth: 48,
+    // 제목 오른쪽에 약간의 여유 — 탭 영역이 글자에 딱 붙지 않게.
+    paddingRight: 8,
+    // ripple/pressed 배경이 각지지 않게.
+    borderRadius: 12,
+    // 제목이 길어져도 헤더 밖으로 밀고 나가지 않게.
+    flexShrink: 1,
+  },
+  // android_ripple 은 안드로이드 전용이라 iOS·웹은 이 스타일이 담당.
+  backHitPressed: { backgroundColor: "rgba(184,152,240,0.10)" },
   headerText: {
     fontFamily: "OnglyphPDH",
     fontSize: 18,
     color: "#6858B8",
     letterSpacing: 0.5,
+    flexShrink: 1,
   },
 });

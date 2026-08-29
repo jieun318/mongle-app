@@ -119,6 +119,23 @@ export function PencilIcon({ size = 24, color = DEFAULT_COLOR }: IconProps) {
   );
 }
 
+// ── ChevronLeft (뒤로가기) ───────────────────────────────────
+// 스트로크가 다른 아이콘(1.8)보다 두껍다. 네비게이션 어포던스라
+// "누를 수 있는 것"으로 한눈에 보여야 한다.
+export function ChevronLeftIcon({ size = 24, color = DEFAULT_COLOR }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M15.75 19.5L8.25 12l7.5-7.5"
+        stroke={color}
+        strokeWidth={2.2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
 // ── Eye (비밀번호 표시) ──────────────────────────────────────
 export function EyeIcon({ size = 24, color = DEFAULT_COLOR }: IconProps) {
   return (

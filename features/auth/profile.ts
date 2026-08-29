@@ -112,6 +112,23 @@ export async function updateMyProfile(input: UpdateProfileInput) {
 // auth.users 가 삭제되면 profiles / dreams / bookmarks 는
 // ON DELETE CASCADE 로 자동 정리된다.
 export async function deleteMyAccount() {
+  // 아바타 파일은 RPC 앞에서 지운다. storage.objects 는 SQL DELETE 가 막혀 있어
+  // (0017 참고) 함수 안에서 처리할 수 없고, auth.users 를 지운 뒤에는 RLS 가
+  // 본인 폴더를 인정하지 못할 수 있다.
+  //
+  // 실패는 무시한다 — 파일 하나가 남는 것보다 탈퇴가 막히는 쪽이 훨씬 나쁘다.
+  // (아바타를 한 번도 올리지 않은 계정이면 지울 대상이 없는 게 정상이다.
+  //  Storage API 의 remove 는 없는 경로에도 에러를 내지 않는다.)
+  try {
+    const { data: userRes } = await supabase.auth.getUser();
+    const uid = userRes.user?.id;
+    if (uid) {
+      await supabase.storage.from(AVATAR_BUCKET).remove([avatarPath(uid)]);
+    }
+  } catch {
+    // 무시
+  }
+
   const { error } = await supabase.rpc("delete_my_account");
   if (error) return { error };
   // 클라이언트 세션도 정리

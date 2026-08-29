@@ -9,6 +9,7 @@ import {
   Easing,
   ScrollView,
   Dimensions,
+  PanResponder,
   AppState,
   InteractionManager,
 } from "react-native";
@@ -270,6 +271,12 @@ function LuckyCell({
     </View>
   );
 }
+
+// 손잡이 드래그로 시트를 닫는 기준.
+// 거리(100px) 또는 속도(0.8px/ms) 중 하나만 넘으면 닫는다 — 짧고 빠르게
+// 튕기는 동작도 닫힘으로 받아야 자연스럽다.
+const SHEET_CLOSE_DISTANCE = 100;
+const SHEET_CLOSE_VELOCITY = 0.8;
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -653,8 +660,60 @@ export default function HomeScreen() {
     });
   }, []);
 
+  // 손잡이 드래그 오프셋. 시트가 손가락을 따라 내려온다.
+  const sheetY = useRef(new Animated.Value(0)).current;
+  const [handlePressed, setHandlePressed] = useState(false);
+
+  // 손잡이 띠 전용 제스처. 이 영역은 ScrollView 바깥(형제)이고 레이아웃상
+  // 겹치지도 않아, 배경 탭·스크롤과 responder 를 다투지 않는다.
+  // gesture-handler 없이 PanResponder 로 충분한 이유.
+  const handlePan = useRef(
+    PanResponder.create({
+      // 탭도 여기서 받는다(release 에서 이동량으로 구분). 별도 Pressable 을
+      // 겹치면 두 responder 가 같은 터치를 두고 다툰다.
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_e, g) => g.dy > 2,
+      onPanResponderGrant: () => setHandlePressed(true),
+      onPanResponderMove: (_e, g) => {
+        // 아래로만. 위로 끌면 시트가 천장을 뚫고 올라간다.
+        if (g.dy > 0) sheetY.setValue(g.dy);
+      },
+      onPanResponderRelease: (_e, g) => {
+        setHandlePressed(false);
+        const moved = Math.abs(g.dx) > 5 || Math.abs(g.dy) > 5;
+        const shouldClose =
+          !moved || // 움직임이 없었으면 탭 → 닫기
+          g.dy > SHEET_CLOSE_DISTANCE ||
+          g.vy > SHEET_CLOSE_VELOCITY;
+        if (shouldClose) {
+          // 끌던 위치에서 그대로 Modal 의 slide-out 으로 이어진다.
+          handleModalCloseRef.current();
+          return;
+        }
+        Animated.spring(sheetY, {
+          toValue: 0,
+          bounciness: 4,
+          useNativeDriver: true,
+        }).start();
+      },
+      onPanResponderTerminate: () => {
+        setHandlePressed(false);
+        Animated.spring(sheetY, {
+          toValue: 0,
+          bounciness: 4,
+          useNativeDriver: true,
+        }).start();
+      },
+    }),
+  ).current;
+
   const handlePress = () => {
     if (isAnimating.current) return;
+    // 드래그 오프셋을 여는 시점에 미리 0 으로 되돌린다. 닫을 때 되돌리면
+    // Modal 의 slide-out 이 시작되는 순간 시트가 위로 튀어오르고, 여는 쪽
+    // useEffect 로 미루면 첫 프레임이 끌던 위치로 한 번 그려질 수 있다.
+    // Modal 이 마운트되기 전에 동기로 끝내는 게 확실하다.
+    sheetY.setValue(0);
     // userId 체크는 아래 setViewedState 의 소유자 태그용 (fortune 이 있으면
     // 사실상 항상 존재하지만, 타입상 좁혀지지 않는다).
     if (!fortune || !userId) return; // 운세 로드 전 탭 무시
@@ -730,6 +789,13 @@ export default function HomeScreen() {
       }),
     ]).start();
   };
+
+  // PanResponder 는 useRef 로 한 번만 만들어져 첫 렌더의 클로저를 붙든다.
+  // 최신 핸들러를 보도록 ref 로 우회한다.
+  const handleModalCloseRef = useRef(handleModalClose);
+  useEffect(() => {
+    handleModalCloseRef.current = handleModalClose;
+  });
 
   return (
     <View style={{ flex: 1 }}>
@@ -1264,7 +1330,17 @@ export default function HomeScreen() {
 
       <BottomNav active="home" />
 
-      <Modal visible={showModal && !!fortune} transparent animationType="slide">
+      <Modal
+        visible={showModal && !!fortune}
+        transparent
+        animationType="slide"
+        // 이 Modal 만 onRequestClose 가 빠져 있어 안드로이드 하드웨어 백이
+        // 무반응이었다. 가이드가 열려 있으면 가이드부터 닫는다.
+        onRequestClose={() => {
+          if (showGuide) setShowGuide(false);
+          else handleModalClose();
+        }}
+      >
         {fortune && (
           <View style={styles.modalOverlay}>
             <TouchableOpacity
@@ -1272,8 +1348,25 @@ export default function HomeScreen() {
               activeOpacity={1}
               onPress={handleModalClose}
             />
-            <View style={styles.modalContainer}>
-              <View style={styles.handle} />
+            <Animated.View
+              style={[
+                styles.modalContainer,
+                { transform: [{ translateY: sheetY }] },
+              ]}
+            >
+              {/* 손잡이 "띠" 전체가 터치 대상 — pill(40×4)만 노리게 하면
+                  사실상 못 누른다. 시트 최상단부터 헤더 직전까지, 폭은 시트 전체.
+                  음수 마진으로 modalContainer 의 padding(상 12 / 좌우 24)을 상쇄. */}
+              <View
+                style={styles.handleZone}
+                accessibilityRole="button"
+                accessibilityLabel="닫기"
+                {...handlePan.panHandlers}
+              >
+                <View
+                  style={[styles.handle, handlePressed && styles.handleActive]}
+                />
+              </View>
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>오늘의 운세</Text>
                 <TouchableOpacity
@@ -1348,7 +1441,7 @@ export default function HomeScreen() {
                   <Text style={styles.closeBtnText}>확인</Text>
                 </TouchableOpacity>
               </ScrollView>
-            </View>
+            </Animated.View>
 
             {showGuide && (
               <>
@@ -1358,7 +1451,10 @@ export default function HomeScreen() {
                   onPress={() => setShowGuide(false)}
                 />
                 <View style={styles.guideModalContainer}>
-                  <View style={styles.handle} />
+                  {/* handle 의 marginBottom 은 운세 시트의 handleZone 이 대신하게
+                      되면서 스타일에서 빠졌다. 가이드는 이번 변경 대상이 아니라
+                      기존 간격을 인라인으로 유지한다. */}
+                  <View style={[styles.handle, { marginBottom: 16 }]} />
                   <ScrollView showsVerticalScrollIndicator={false}>
                     <FortuneGradeGuide />
                     <TouchableOpacity
@@ -1509,7 +1605,18 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 28,
     padding: 24,
     paddingTop: 12,
-    maxHeight: "78%",
+    // 배경 탭 영역을 넓힌다. 78% 면 위쪽 배경이 22% 띠뿐이라 조준이 필요했다.
+    maxHeight: "72%",
+  },
+  // 시트 최상단 ~ 헤더 직전. pill 중심은 y=14 로 기존과 동일하다
+  // (기존: paddingTop 12 + pill 4 → 중심 14 / 변경: 28 띠의 중앙 → 14).
+  handleZone: {
+    height: 28,
+    marginTop: -12, // modalContainer paddingTop 상쇄 → 시트 맨 위까지
+    marginHorizontal: -24, // 좌우 padding 상쇄 → 시트 폭 전체
+    marginBottom: 4, // 기존 헤더 위치(y=32) 유지
+    alignItems: "center",
+    justifyContent: "center",
   },
   handle: {
     width: 40,
@@ -1517,12 +1624,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#D1C9E0",
     borderRadius: 2,
     alignSelf: "center",
-    marginBottom: 16,
   },
+  handleActive: { backgroundColor: "#A594C4" },
   modalHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    minHeight: 44,
     marginBottom: 16,
     position: "relative",
   },

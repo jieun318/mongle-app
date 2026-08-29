@@ -4,6 +4,7 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
+  Pressable,
   Switch,
   ActivityIndicator,
   Platform,
@@ -57,6 +58,15 @@ export default function SettingsScreen() {
 
   // 운세 알림 / 꿈 리마인드 (로컬 스케줄 — 시간은 AsyncStorage, on/off 는 토글 시점에 expo-notifications 등록)
   const [notifyFortune, setNotifyFortune] = useState(false);
+  // 토글별로 따로 잡는다. 하나가 진행 중이어도 다른 토글은 눌려야 한다.
+  // 행 전체가 눌리게 되면서 연타가 쉬워졌는데, 핸들러가 권한 요청 → OS 스케줄
+  // 등록 → DB 저장을 순차로 하는 async 라 재진입하면 권한 팝업이 두 번 뜨거나
+  // 롤백이 꼬인다.
+  const [busyToggle, setBusyToggle] = useState<{
+    notify: boolean;
+    reminder: boolean;
+    fortune: boolean;
+  }>({ notify: false, reminder: false, fortune: false });
   const [fortuneTime, setFortuneTime] = useState(DEFAULT_FORTUNE_NOTIF_TIME);
   const [reminderTime, setReminderTime] = useState(DEFAULT_DREAM_REMINDER_TIME);
   // 둘 다 같은 picker 컴포넌트 재사용 — 어느 토글에서 열었는지 target 으로 구분
@@ -213,6 +223,26 @@ export default function SettingsScreen() {
     }
   };
 
+  // 토글 실행을 가드로 감싼다. 원 핸들러는 중간 return 경로가 여럿이라
+  // (권한 거부, 스케줄 실패) finally 로만 확실히 해제된다.
+  const runToggle = async (
+    key: "notify" | "reminder" | "fortune",
+    fn: () => Promise<void>,
+  ) => {
+    if (busyToggle[key]) return;
+    setBusyToggle((b) => ({ ...b, [key]: true }));
+    try {
+      await fn();
+    } finally {
+      setBusyToggle((b) => ({ ...b, [key]: false }));
+    }
+  };
+
+  // Switch 와 Pressable 이 같은 조건을 봐야 한다. 한쪽만 고치면
+  // 스위치는 회색인데 행은 눌리는 상태가 된다.
+  const reminderDisabled = IS_EXPO_GO || !notify;
+  const fortuneDisabled = IS_EXPO_GO || !notify;
+
   const persistFortuneTime = async (date: Date) => {
     const h = date.getHours();
     const m = date.getMinutes();
@@ -300,22 +330,61 @@ export default function SettingsScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>알림</Text>
 
-            <View style={styles.row}>
+            <Pressable
+              style={({ pressed }) => [
+                styles.row,
+                pressed && styles.rowPressed,
+                busyToggle.notify && styles.rowBusy,
+              ]}
+              onPress={() =>
+                runToggle("notify", () => handleToggleNotify(!notify))
+              }
+              disabled={busyToggle.notify}
+              android_ripple={{ color: "rgba(184,152,240,0.18)" }}
+              accessibilityRole="switch"
+              accessibilityState={{
+                checked: notify,
+                disabled: busyToggle.notify,
+              }}
+              accessibilityLabel="알림"
+            >
               <View style={{ flex: 1 }}>
                 <Text style={styles.rowLabel}>알림</Text>
                 <Text style={styles.rowDesc}>몽글 앱의 알림을 받아요</Text>
               </View>
+              {/* pointerEvents="none" — 터치는 Pressable 만 받는다.
+                  Switch 가 직접 받으면 onValueChange 와 onPress 가 이중 발화한다. */}
               <Switch
                 value={notify}
-                onValueChange={handleToggleNotify}
                 trackColor={{ true: "#B898F0", false: "#D8D0E8" }}
                 thumbColor="#fff"
+                pointerEvents="none"
               />
-            </View>
+            </Pressable>
 
             <View style={styles.divider} />
 
-            <View style={styles.row}>
+            <Pressable
+              style={({ pressed }) => [
+                styles.row,
+                pressed && styles.rowPressed,
+                reminderDisabled && styles.rowDisabled,
+                busyToggle.reminder && styles.rowBusy,
+              ]}
+              onPress={() =>
+                runToggle("reminder", () =>
+                  handleToggleReminder(!notifyReminder),
+                )
+              }
+              disabled={reminderDisabled || busyToggle.reminder}
+              android_ripple={{ color: "rgba(184,152,240,0.18)" }}
+              accessibilityRole="switch"
+              accessibilityState={{
+                checked: notifyReminder,
+                disabled: reminderDisabled || busyToggle.reminder,
+              }}
+              accessibilityLabel="꿈 기록 리마인드"
+            >
               <View style={{ flex: 1 }}>
                 <Text style={styles.rowLabel}>꿈 기록 리마인드</Text>
                 <Text style={styles.rowDesc}>
@@ -326,12 +395,12 @@ export default function SettingsScreen() {
               </View>
               <Switch
                 value={notifyReminder}
-                onValueChange={handleToggleReminder}
-                disabled={IS_EXPO_GO || !notify}
+                disabled={reminderDisabled}
                 trackColor={{ true: "#B898F0", false: "#D8D0E8" }}
                 thumbColor="#fff"
+                pointerEvents="none"
               />
-            </View>
+            </Pressable>
 
             {/* 마스터 OFF 면 시간 행 숨김 — OS 스케줄러에 실제로 등록 안 돼 있으니
                 혼란 방지 위해 미노출 */}
@@ -359,7 +428,27 @@ export default function SettingsScreen() {
 
             <View style={styles.divider} />
 
-            <View style={styles.row}>
+            <Pressable
+              style={({ pressed }) => [
+                styles.row,
+                pressed && styles.rowPressed,
+                fortuneDisabled && styles.rowDisabled,
+                busyToggle.fortune && styles.rowBusy,
+              ]}
+              onPress={() =>
+                runToggle("fortune", () =>
+                  handleToggleFortuneNotify(!notifyFortune),
+                )
+              }
+              disabled={fortuneDisabled || busyToggle.fortune}
+              android_ripple={{ color: "rgba(184,152,240,0.18)" }}
+              accessibilityRole="switch"
+              accessibilityState={{
+                checked: notifyFortune,
+                disabled: fortuneDisabled || busyToggle.fortune,
+              }}
+              accessibilityLabel="운세 알림"
+            >
               <View style={{ flex: 1 }}>
                 <Text style={styles.rowLabel}>운세 알림</Text>
                 <Text style={styles.rowDesc}>
@@ -370,12 +459,12 @@ export default function SettingsScreen() {
               </View>
               <Switch
                 value={notifyFortune}
-                onValueChange={handleToggleFortuneNotify}
-                disabled={IS_EXPO_GO || !notify}
+                disabled={fortuneDisabled}
                 trackColor={{ true: "#B898F0", false: "#D8D0E8" }}
                 thumbColor="#fff"
+                pointerEvents="none"
               />
-            </View>
+            </Pressable>
 
             {notify && notifyFortune && !IS_EXPO_GO && (
               <>
@@ -545,7 +634,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 12,
+    // 터치 타깃 최소 크기. rowDesc 가 없는 행(시간 선택)은 내용만으로는
+    // 38dp 정도라 48 에 못 미친다.
+    minHeight: 48,
   },
+  // 터치 피드백 — android_ripple 은 안드로이드 전용이라 iOS·웹은 이 스타일이 담당.
+  rowPressed: { backgroundColor: "rgba(184,160,240,0.10)" },
+  rowBusy: { opacity: 0.5 }, // 처리 중 (일시적)
+  rowDisabled: { opacity: 0.4 }, // 사용 불가 (상시)
   rowLabel: { fontSize: 14, fontWeight: "600", color: "#3828A0" },
   rowDesc: { fontSize: 11, color: "#9888CC", marginTop: 2 },
 

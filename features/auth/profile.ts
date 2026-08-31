@@ -56,8 +56,22 @@ export async function getMyProfile(): Promise<{
   // handle_new_user 트리거가 누락됐거나 트리거 추가 이전에 가입한 사용자는
   // profiles 행이 없을 수 있다. 이 경우 기본값으로 즉시 생성한다.
   if (!data) {
+    // handle_new_user 트리거(0018)와 같은 우선순위를 쓴다. 두 곳이 어긋나면
+    // 같은 계정이 경로에 따라 다른 닉네임을 갖게 된다.
+    // 카카오는 nickname 키를 만들지 않고 name/full_name/user_name/
+    // preferred_username 에 같은 값을 넣는다.
+    const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
+    const pickMeta = (key: string): string | undefined => {
+      const v = meta[key];
+      return typeof v === "string" && v.trim() ? v.trim() : undefined;
+    };
     const fallbackNickname =
-      (user.user_metadata?.nickname as string | undefined) ?? "몽글이";
+      pickMeta("nickname") ??
+      pickMeta("name") ??
+      pickMeta("full_name") ??
+      pickMeta("user_name") ??
+      pickMeta("preferred_username") ??
+      "몽글이";
     const { data: created, error: createErr } = await supabase
       .from("profiles")
       .insert({ uid: user.id, nickname: fallbackNickname })

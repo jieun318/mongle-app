@@ -24,7 +24,9 @@
         "backgroundColor": "#BCACEC"
       },
       "package": "com.mongle.app",
-      "permissions": ["android.permission.ACCESS_COARSE_LOCATION"]
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION"
+      ]
     },
     "plugins": [
       "expo-router",
@@ -67,8 +69,16 @@
           "isAndroidBackgroundLocationEnabled": false
         }
       ],
-      "./plugins/withTrimmedPermissions.js"
+      "./plugins/withTrimmedPermissions.js",
+      "expo-font"
     ],
+    "runtimeVersion": {
+      "policy": "fingerprint"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/76bbf748-44bf-4f6f-81d3-3c59602f1320",
+      "fallbackToCacheTimeout": 0
+    },
     "extra": {
       "router": {},
       "eas": {

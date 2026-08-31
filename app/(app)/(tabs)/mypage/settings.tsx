@@ -37,6 +37,8 @@ import {
   scheduleDreamReminder,
   cancelDreamReminder,
   requestNotificationPermission,
+  // ⚠️ 임시 진단 — 확인 끝나면 이 import 도 함께 제거
+  dumpScheduledNotifications,
   FORTUNE_NOTIF_ENABLED_KEY,
   FORTUNE_NOTIF_TIME_KEY,
   DEFAULT_FORTUNE_NOTIF_TIME,
@@ -76,6 +78,10 @@ export default function SettingsScreen() {
   // 인앱 confirm 다이얼로그 — Alert.alert / window.confirm 대신 사용.
   // type: 'logout' | 'delete' 로 어떤 액션을 띄울지 구분.
   const [confirmType, setConfirmType] = useState<null | "logout" | "delete">(null);
+
+  /* ⚠️ 임시 진단 시작 — 운세 알림 지연 원인 파악용. 확인 후 이 블록 삭제 */
+  const [diagText, setDiagText] = useState<string | null>(null);
+  /* ⚠️ 임시 진단 끝 */
 
   useEffect(() => {
     let cancelled = false;
@@ -512,8 +518,41 @@ export default function SettingsScreen() {
               <Text style={[styles.actionChevron, styles.danger]}>›</Text>
             </TouchableOpacity>
           </View>
+
+          {/* ⚠️ 임시 진단 버튼 — 운세 알림이 설정 시각보다 1시간 늦게 오는 원인
+              파악용. __DEV__ 가드 없음(릴리스 빌드에서 확인해야 함).
+              확인이 끝나면 이 블록과 diag* 스타일, dumpScheduledNotifications
+              import 를 함께 제거할 것. */}
+          <TouchableOpacity
+            style={styles.diagBtn}
+            onPress={async () => setDiagText(await dumpScheduledNotifications())}
+          >
+            <Text style={styles.diagBtnText}>알림 스케줄 진단</Text>
+          </TouchableOpacity>
         </ScrollView>
       )}
+
+      {/* ⚠️ 임시 진단 모달 — showNotice 는 ConfirmDialog 가 Text 로만 렌더해
+          스크롤이 없어 긴 진단 텍스트를 감당하지 못한다. 공유 컴포넌트를
+          진단 목적으로 고치지 않고 여기 자체 모달을 둔다. 확인 후 삭제. */}
+      <Modal visible={diagText !== null} transparent animationType="fade">
+        <View style={styles.diagBackdrop}>
+          <View style={styles.diagCard}>
+            <Text style={styles.diagTitle}>알림 스케줄 진단</Text>
+            <ScrollView style={styles.diagScroll}>
+              <Text selectable style={styles.diagBody}>
+                {diagText}
+              </Text>
+            </ScrollView>
+            <TouchableOpacity
+              style={styles.diagClose}
+              onPress={() => setDiagText(null)}
+            >
+              <Text style={styles.diagCloseText}>닫기</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       <ConfirmDialog
         visible={confirmType === "logout"}
@@ -665,6 +704,49 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#6858B8",
   },
+
+  /* ⚠️ 임시 진단 스타일 시작 — 확인 후 diag* 전체 삭제 */
+  diagBtn: {
+    marginTop: 8,
+    marginBottom: 24,
+    alignSelf: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#D8D0E8",
+  },
+  diagBtnText: { fontSize: 13, color: "#7868B8", fontWeight: "600" },
+  diagBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(36,24,56,0.42)",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 20,
+  },
+  diagCard: {
+    width: "100%",
+    maxHeight: "80%",
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 16,
+  },
+  diagTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#3828A0",
+    marginBottom: 10,
+  },
+  diagScroll: { flexGrow: 0 },
+  diagBody: { fontSize: 11, color: "#3D2B5E", lineHeight: 16 },
+  diagClose: {
+    marginTop: 12,
+    alignSelf: "flex-end",
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+  },
+  diagCloseText: { fontSize: 14, fontWeight: "700", color: "#7868B8" },
+  /* ⚠️ 임시 진단 스타일 끝 */
 
   iosPickerBackdrop: {
     flex: 1,

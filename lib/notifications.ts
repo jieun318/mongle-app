@@ -154,6 +154,51 @@ export async function cancelDreamReminder(): Promise<void> {
   } catch {}
 }
 
+// ⚠️ 임시 진단 — 운세 알림이 설정 시각보다 1시간 늦게 오는 원인 파악용.
+// 코드가 꿈 리마인드와 완전히 대칭인데 결과만 달라, 실제 등록 상태를 봐야 한다.
+// 확인이 끝나면 이 함수와 settings.tsx 의 진단 버튼/모달을 함께 제거할 것.
+export async function dumpScheduledNotifications(): Promise<string> {
+  const lines: string[] = [];
+  const now = new Date();
+  lines.push(`기기시각: ${now.toString()}`);
+  lines.push(`TZ offset: ${now.getTimezoneOffset()}분 (KST=-540)`);
+
+  try {
+    const all = await Notifications.getAllScheduledNotificationsAsync();
+    lines.push(`\n등록된 알림: ${all.length}건`);
+    for (const n of all) {
+      const t = n.trigger as unknown as Record<string, unknown>;
+      let next = "?";
+      try {
+        const ms = await Notifications.getNextTriggerDateAsync(
+          n.trigger as never,
+        );
+        if (ms) next = new Date(ms).toString();
+      } catch (e) {
+        next = `계산실패(${String(e)})`;
+      }
+      lines.push(
+        `\n─ id: ${n.identifier}` +
+          `\n  title: ${n.content.title ?? "-"}` +
+          `\n  trigger: ${JSON.stringify(t)}` +
+          `\n  다음발송: ${next}`,
+      );
+    }
+
+    if (Platform.OS === "android") {
+      const chs = await Notifications.getNotificationChannelsAsync();
+      lines.push(`\n채널: ${chs.length}개`);
+      for (const c of chs) {
+        lines.push(`  ${c.id} / importance=${c.importance} / ${c.name}`);
+      }
+    }
+  } catch (e) {
+    lines.push(`\n조회 실패: ${String(e)}`);
+  }
+
+  return lines.join("\n");
+}
+
 export function parseHHMM(hhmm: string): { hour: number; minute: number } {
   const [h, m] = hhmm.split(":").map((s) => Number(s));
   return {

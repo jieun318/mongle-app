@@ -537,7 +537,10 @@ export default function SettingsScreen() {
         onCancel={() => setConfirmType(null)}
       />
 
-      {/* 시간 선택기 — iOS: 모달 + 완료 버튼, Android: 네이티브 다이얼로그.
+      {/* 시간 선택기 — iOS: 모달 + 완료 버튼, Android: 네이티브 다이얼로그(휠).
+          Android 는 display 를 안 주면 시계 다이얼이 기본이라 구형 기기(S8/Android 9)에서
+          조준이 어렵다. spinner 는 구형 위젯이라 오히려 그쪽에서 잘 맞는다.
+          is24Hour 를 빼야 오전/오후 · 시 · 분 3단이 되고 formatTimeKR 표시와도 맞는다.
           target 으로 fortune / reminder 어느 토글에서 열렸는지 구분해 해당 시간 저장. */}
       {pickerTarget !== null &&
         (() => {
@@ -580,7 +583,7 @@ export default function SettingsScreen() {
             <DateTimePicker
               value={timeStringToDate(currentTime)}
               mode="time"
-              is24Hour
+              display="spinner"
               onChange={(event, d) => {
                 setPickerTarget(null);
                 if (event.type === "set" && d) {

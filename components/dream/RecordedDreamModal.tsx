@@ -7,6 +7,7 @@ import {
   View,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { DreamRecord } from "@/features/dream/dreams";
 import {
   getCategoryById,
@@ -34,12 +35,17 @@ export default function RecordedDreamModal({
   const isAi = dream?.source === "ai";
   // 여기선 길몽/흉몽을 따로 거르지 않는다(기존 동작 유지) — 정규화만 한다.
   const moodTags = normalizeMoodTags(dream?.mood_tags);
+  // 시트가 화면 맨 아래에 붙어서(justifyContent: flex-end) 마지막 요소인
+  // 닫기 버튼이 시스템 내비바에 물려 잘렸다. 내비 영역만큼 아래 여백을 주되,
+  // 인셋이 0으로 잡히는 기기에서도 최소 48은 남긴다.
+  const insets = useSafeAreaInsets();
 
   return (
     <Modal
       visible={!!dream}
       transparent
       animationType="slide"
+      statusBarTranslucent
       onRequestClose={onClose}
     >
       {dream && (
@@ -53,7 +59,10 @@ export default function RecordedDreamModal({
             <View style={styles.handle} />
             <ScrollView
               showsVerticalScrollIndicator={false}
-              contentContainerStyle={styles.scrollContent}
+              contentContainerStyle={[
+                styles.scrollContent,
+                { paddingBottom: 24 + Math.max(insets.bottom, 24) },
+              ]}
             >
               <LinearGradient
                 colors={["#FFF0F8", "#F0E8FF"]}
@@ -216,7 +225,8 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     marginBottom: 12,
   },
-  scrollContent: { paddingHorizontal: 24, paddingBottom: 36, gap: 12 },
+  // paddingBottom 은 시스템 내비 인셋에 맞춰 렌더 시점에 덮어쓴다.
+  scrollContent: { paddingHorizontal: 24, gap: 12 },
   emojiWrap: { borderRadius: 20, paddingVertical: 24, alignItems: "center" },
   emoji: { fontSize: 64 },
   badgeRow: { flexDirection: "row", justifyContent: "center", gap: 6 },

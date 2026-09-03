@@ -293,7 +293,19 @@ async function signInWithKakaoNative(): Promise<SocialResult> {
       });
     });
 
-    const res = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
+    // createTask: false 가 이 파일에서 유일하게 바뀐 곳이다.
+    //
+    // 기본값(true)은 커스텀탭을 앱과 "별도 태스크"로 띄운다. 그러면 화면 스택이
+    // [몽글 태스크] + [커스텀탭 태스크] 로 갈라지는데, 여기서 카카오톡 앱까지
+    // 끼어들면 카카오톡이 인증을 마치고 돌아올 때 커스텀탭 태스크가 아니라
+    // 몽글 태스크가 앞으로 나온다. 사용자 눈에는 커스텀탭이 빈 화면으로 남고
+    // 곧바로 몽글 로그인 화면이 뜬다 — 지금 증상 그대로다.
+    // 브라우저 종류와 무관한 안드로이드 태스크 문제라, 삼성 인터넷과 Chrome 에서
+    // 똑같이 재현되는 것도 이걸로 설명된다.
+    // false 로 두면 커스텀탭이 몽글과 같은 태스크에 들어가 복귀 대상이 하나가 된다.
+    const res = await WebBrowser.openAuthSessionAsync(data.url, redirectTo, {
+      createTask: false,
+    });
 
     let callbackUrl: string | undefined;
     if (res.type === "success" && res.url) {

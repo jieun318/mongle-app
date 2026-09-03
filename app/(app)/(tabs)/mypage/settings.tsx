@@ -16,6 +16,7 @@ import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import TimeTile from "@/components/ui/TimeTile";
 // Alert.alert 는 react-native-web 에서 빈 함수라 웹에선 실패 알림이 통째로
 // 사라진다. 인앱 다이얼로그(DialogHost)로 통일한다.
 import { showNotice } from "@/lib/dialog";
@@ -37,8 +38,6 @@ import {
   scheduleDreamReminder,
   cancelDreamReminder,
   requestNotificationPermission,
-  // ⚠️ 임시 진단 — 확인 끝나면 이 import 도 함께 제거
-  dumpScheduledNotifications,
   FORTUNE_NOTIF_ENABLED_KEY,
   FORTUNE_NOTIF_TIME_KEY,
   DEFAULT_FORTUNE_NOTIF_TIME,
@@ -46,7 +45,6 @@ import {
   DEFAULT_DREAM_REMINDER_TIME,
   parseHHMM,
   formatHHMM,
-  formatTimeKR,
   timeStringToDate,
 } from "@/lib/notifications";
 
@@ -78,10 +76,6 @@ export default function SettingsScreen() {
   // 인앱 confirm 다이얼로그 — Alert.alert / window.confirm 대신 사용.
   // type: 'logout' | 'delete' 로 어떤 액션을 띄울지 구분.
   const [confirmType, setConfirmType] = useState<null | "logout" | "delete">(null);
-
-  /* ⚠️ 임시 진단 시작 — 운세 알림 지연 원인 파악용. 확인 후 이 블록 삭제 */
-  const [diagText, setDiagText] = useState<string | null>(null);
-  /* ⚠️ 임시 진단 끝 */
 
   useEffect(() => {
     let cancelled = false;
@@ -358,14 +352,18 @@ export default function SettingsScreen() {
                 <Text style={styles.rowLabel}>알림</Text>
                 <Text style={styles.rowDesc}>몽글 앱의 알림을 받아요</Text>
               </View>
-              {/* pointerEvents="none" — 터치는 Pressable 만 받는다.
-                  Switch 가 직접 받으면 onValueChange 와 onPress 가 이중 발화한다. */}
-              <Switch
-                value={notify}
-                trackColor={{ true: "#B898F0", false: "#D8D0E8" }}
-                thumbColor="#fff"
-                pointerEvents="none"
-              />
+              {/* pointerEvents 는 View 의 prop 이다. Switch 에 직접 주면
+                  네이티브 스위치까지 전달되지 않아 스위치가 터치를 그대로
+                  먹어버린다 — Switch 에는 onValueChange 도 없으니 스위치를
+                  직접 누르면 아무 일도 안 일어난다(행 여백만 동작).
+                  View 로 감싸야 실제로 통과돼서 Pressable 이 받는다. */}
+              <View pointerEvents="none">
+                <Switch
+                  value={notify}
+                  trackColor={{ true: "#B898F0", false: "#D8D0E8" }}
+                  thumbColor="#fff"
+                />
+              </View>
             </Pressable>
 
             <View style={styles.divider} />
@@ -399,37 +397,25 @@ export default function SettingsScreen() {
                     : "정한 시간에 어젯밤 꿈을 적게 알려줘요"}
                 </Text>
               </View>
-              <Switch
-                value={notifyReminder}
-                disabled={reminderDisabled}
-                trackColor={{ true: "#B898F0", false: "#D8D0E8" }}
-                thumbColor="#fff"
-                pointerEvents="none"
-              />
+              <View pointerEvents="none">
+                <Switch
+                  value={notifyReminder}
+                  disabled={reminderDisabled}
+                  trackColor={{ true: "#B898F0", false: "#D8D0E8" }}
+                  thumbColor="#fff"
+                />
+              </View>
             </Pressable>
 
             {/* 마스터 OFF 면 시간 행 숨김 — OS 스케줄러에 실제로 등록 안 돼 있으니
                 혼란 방지 위해 미노출 */}
             {notify && notifyReminder && !IS_EXPO_GO && (
-              <>
-                <View style={styles.divider} />
-                <TouchableOpacity
-                  style={styles.row}
-                  onPress={() => openTimePicker("reminder")}
-                  activeOpacity={0.7}
-                >
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.rowLabel}>리마인드 시간</Text>
-                  </View>
-                  <Text style={styles.timeValue}>
-                    {(() => {
-                      const { hour, minute } = parseHHMM(reminderTime);
-                      return formatTimeKR(hour, minute);
-                    })()}
-                  </Text>
-                  <Text style={styles.actionChevron}> ›</Text>
-                </TouchableOpacity>
-              </>
+              <TimeTile
+                label="리마인드 시간"
+                icon="🌙"
+                time={reminderTime}
+                onPress={() => openTimePicker("reminder")}
+              />
             )}
 
             <View style={styles.divider} />
@@ -463,35 +449,23 @@ export default function SettingsScreen() {
                     : "매일 정한 시간에 오늘의 운세를 알려줘요"}
                 </Text>
               </View>
-              <Switch
-                value={notifyFortune}
-                disabled={fortuneDisabled}
-                trackColor={{ true: "#B898F0", false: "#D8D0E8" }}
-                thumbColor="#fff"
-                pointerEvents="none"
-              />
+              <View pointerEvents="none">
+                <Switch
+                  value={notifyFortune}
+                  disabled={fortuneDisabled}
+                  trackColor={{ true: "#B898F0", false: "#D8D0E8" }}
+                  thumbColor="#fff"
+                />
+              </View>
             </Pressable>
 
             {notify && notifyFortune && !IS_EXPO_GO && (
-              <>
-                <View style={styles.divider} />
-                <TouchableOpacity
-                  style={styles.row}
-                  onPress={() => openTimePicker("fortune")}
-                  activeOpacity={0.7}
-                >
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.rowLabel}>알림 시간</Text>
-                  </View>
-                  <Text style={styles.timeValue}>
-                    {(() => {
-                      const { hour, minute } = parseHHMM(fortuneTime);
-                      return formatTimeKR(hour, minute);
-                    })()}
-                  </Text>
-                  <Text style={styles.actionChevron}> ›</Text>
-                </TouchableOpacity>
-              </>
+              <TimeTile
+                label="운세 알림 시간"
+                icon="🔮"
+                time={fortuneTime}
+                onPress={() => openTimePicker("fortune")}
+              />
             )}
           </View>
 
@@ -519,40 +493,8 @@ export default function SettingsScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* ⚠️ 임시 진단 버튼 — 운세 알림이 설정 시각보다 1시간 늦게 오는 원인
-              파악용. __DEV__ 가드 없음(릴리스 빌드에서 확인해야 함).
-              확인이 끝나면 이 블록과 diag* 스타일, dumpScheduledNotifications
-              import 를 함께 제거할 것. */}
-          <TouchableOpacity
-            style={styles.diagBtn}
-            onPress={async () => setDiagText(await dumpScheduledNotifications())}
-          >
-            <Text style={styles.diagBtnText}>알림 스케줄 진단</Text>
-          </TouchableOpacity>
         </ScrollView>
       )}
-
-      {/* ⚠️ 임시 진단 모달 — showNotice 는 ConfirmDialog 가 Text 로만 렌더해
-          스크롤이 없어 긴 진단 텍스트를 감당하지 못한다. 공유 컴포넌트를
-          진단 목적으로 고치지 않고 여기 자체 모달을 둔다. 확인 후 삭제. */}
-      <Modal visible={diagText !== null} transparent animationType="fade">
-        <View style={styles.diagBackdrop}>
-          <View style={styles.diagCard}>
-            <Text style={styles.diagTitle}>알림 스케줄 진단</Text>
-            <ScrollView style={styles.diagScroll}>
-              <Text selectable style={styles.diagBody}>
-                {diagText}
-              </Text>
-            </ScrollView>
-            <TouchableOpacity
-              style={styles.diagClose}
-              onPress={() => setDiagText(null)}
-            >
-              <Text style={styles.diagCloseText}>닫기</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
 
       <ConfirmDialog
         visible={confirmType === "logout"}
@@ -579,7 +521,7 @@ export default function SettingsScreen() {
       {/* 시간 선택기 — iOS: 모달 + 완료 버튼, Android: 네이티브 다이얼로그(휠).
           Android 는 display 를 안 주면 시계 다이얼이 기본이라 구형 기기(S8/Android 9)에서
           조준이 어렵다. spinner 는 구형 위젯이라 오히려 그쪽에서 잘 맞는다.
-          is24Hour 를 빼야 오전/오후 · 시 · 분 3단이 되고 formatTimeKR 표시와도 맞는다.
+          is24Hour 를 빼야 오전/오후 · 시 · 분 3단이 되고 TimeTile 표시와도 맞는다.
           target 으로 fortune / reminder 어느 토글에서 열렸는지 구분해 해당 시간 저장. */}
       {pickerTarget !== null &&
         (() => {
@@ -698,55 +640,6 @@ const styles = StyleSheet.create({
   danger: { color: "#D85858" },
 
   divider: { height: 1, backgroundColor: "rgba(180,160,230,0.18)" },
-
-  timeValue: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#6858B8",
-  },
-
-  /* ⚠️ 임시 진단 스타일 시작 — 확인 후 diag* 전체 삭제 */
-  diagBtn: {
-    marginTop: 8,
-    marginBottom: 24,
-    alignSelf: "center",
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#D8D0E8",
-  },
-  diagBtnText: { fontSize: 13, color: "#7868B8", fontWeight: "600" },
-  diagBackdrop: {
-    flex: 1,
-    backgroundColor: "rgba(36,24,56,0.42)",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 20,
-  },
-  diagCard: {
-    width: "100%",
-    maxHeight: "80%",
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 16,
-  },
-  diagTitle: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#3828A0",
-    marginBottom: 10,
-  },
-  diagScroll: { flexGrow: 0 },
-  diagBody: { fontSize: 11, color: "#3D2B5E", lineHeight: 16 },
-  diagClose: {
-    marginTop: 12,
-    alignSelf: "flex-end",
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-  },
-  diagCloseText: { fontSize: 14, fontWeight: "700", color: "#7868B8" },
-  /* ⚠️ 임시 진단 스타일 끝 */
 
   iosPickerBackdrop: {
     flex: 1,

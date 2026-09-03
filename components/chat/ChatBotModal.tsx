@@ -20,6 +20,12 @@ import { getMyProfile } from "@/features/auth/profile";
 import { supabase } from "@/lib/supabase";
 import { createDream, todayISODate } from "@/features/dream/dreams";
 import { reportAiMessage } from "@/features/chat/reports";
+import {
+  clearChatSession,
+  loadChatSession,
+  saveChatSession,
+  type DreamMeta,
+} from "@/features/chat/chatSession";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 interface Props {
@@ -39,11 +45,26 @@ interface ChatMessage {
   isStub?: boolean;
 }
 
+// 가위눌림(수면마비). "가위" 와 "눌" 사이에 부사·시간 표현이 끼는 경우가 많아
+// 문자열 포함으로는 대부분 놓친다. 문장 경계는 넘지 않게 10자로 제한.
+const GAWI_RE = /가위[^.!?\n]{0,10}눌/;
+
 // 자주 등장하는 꿈 키워드에 대한 contextual 공감 멘트. 위에서부터 먼저 매칭되는 항목 사용.
 const CONTEXTUAL_EMPATHY: ReadonlyArray<{
   keywords: readonly string[];
+  // 사이에 다른 말이 끼는 표현을 위한 선택적 정규식 (keywords 와 OR)
+  pattern?: RegExp;
   line: string;
 }> = [
+  // 가위눌림은 꿈이 아니라 수면마비다. 목록 맨 위에 둬서 다른 키워드보다 먼저
+  // 잡히게 하고, 문구에서도 "꿈"이라 부르지 않는다.
+  {
+    keywords: ["가위눌", "수면마비", "몸이 안 움직", "몸을 못 움직"],
+    // "가위에 자주 눌려", "어젯밤 가위 심하게 눌렸어" 처럼 사이에 말이 끼는 게
+    // 오히려 흔하다. 단순 문자열 매칭으로는 다 놓친다.
+    pattern: GAWI_RE,
+    line: "가위에 눌리셨군요, 몸이 안 움직여서 많이 무서우셨겠어요 😰",
+  },
   { keywords: ["좀비"], line: "좀비 꿈, 정말 무서웠겠어요 🧟" },
   { keywords: ["쫓기", "도망"], line: "쫓기는 꿈, 마음이 많이 졸였겠어요 😨" },
   { keywords: ["물에 빠지", "홍수", "바다"], line: "물에 빠지는 꿈, 정말 숨막혔겠어요 🌊" },
@@ -95,6 +116,7 @@ const SENTIMENT_CUES: Record<"scary" | "sad" | "good", readonly string[]> = {
   scary: [
     "무서", "공포", "쫓", "도망", "괴물", "귀신", "악몽", "피",
     "죽", "사고", "추락", "떨어", "불안", "소름", "오싹", "납치", "위험",
+    "수면마비",
   ],
   sad: ["슬프", "울었", "눈물", "이별", "헤어", "그리", "외로", "보고싶", "잃", "장례", "후회"],
   good: [
@@ -131,7 +153,31 @@ const FALLBACK_CLOSERS: Record<"scary" | "sad" | "good" | "neutral", readonly st
   ],
 };
 
+// 사용자가 "꿈"이라는 말을 쓰지 않았을 때 쓰는 문구. 무엇을 겪었는지 모르는
+// 상태에서 "그런 꿈을 꾸셨군요" 라고 단정하면(가위눌림·불면·잠꼬대 등) 어긋난다.
+// 여기선 겪은 일을 꿈으로 규정하지 않고 마음만 받아준다.
+const NON_DREAM_OPENERS: Record<"scary" | "sad" | "good" | "neutral", readonly string[]> = {
+  scary: [
+    "많이 놀라셨겠어요 😰",
+    "무서우셨겠어요, 지금은 좀 괜찮으신가요 😨",
+  ],
+  sad: [
+    "마음이 많이 무거우셨겠어요 🥺",
+    "그런 밤은 유난히 길게 느껴지죠 💧",
+  ],
+  good: [
+    "좋은 기운이 느껴지네요 ✨",
+    "기분 좋은 밤이었겠어요 💫",
+  ],
+  neutral: [
+    "그러셨군요, 편하게 더 들려주세요 🌙",
+    "이야기해 주셔서 고마워요. 조금만 더 자세히 들려주실래요? 💭",
+  ],
+};
+
 function detectSentiment(text: string): keyof typeof FALLBACK_CLOSERS {
+  // 가위눌림은 문자열 큐로 안 잡히므로 먼저 본다.
+  if (GAWI_RE.test(text)) return "scary";
   for (const key of ["scary", "sad", "good"] as const) {
     if (SENTIMENT_CUES[key].some((c) => text.includes(c))) return key;
   }
@@ -184,36 +230,43 @@ const SAFETY_STUB = `지금 많이 힘드신 것 같아요. 그 마음, 혼자 �
 function pickEmpathy(userText: string): string {
   const lower = userText.toLowerCase();
   for (const entry of CONTEXTUAL_EMPATHY) {
-    if (entry.keywords.some((k) => lower.includes(k))) {
+    if (
+      entry.pattern?.test(userText) ||
+      entry.keywords.some((k) => lower.includes(k))
+    ) {
       return entry.line;
     }
   }
-  const closer = pickRandom(FALLBACK_CLOSERS[detectSentiment(userText)]);
+  const mood = detectSentiment(userText);
   // 토픽 추출: "꿈" 앞에 있는 짧은 문구를 뽑아 템플릿에 끼움.
   const m = userText.match(/([가-힣A-Za-z0-9 ]{1,15}?)\s*꿈/);
   const topic = m?.[1]?.trim();
   if (topic && topic.length > 0 && topic.length <= 12) {
-    return `${topic} 꿈, ${closer}`;
+    return `${topic} 꿈, ${pickRandom(FALLBACK_CLOSERS[mood])}`;
   }
-  // 토픽을 못 뽑았을 때
-  return `그런 꿈을 꾸셨군요, ${closer}`;
+  // "꿈" 이라는 말 자체가 없으면 꿈이라고 단정하지 않는다.
+  // ("가위에 자주 눌려" → "그런 꿈을 꾸셨군요" 가 나오던 문제)
+  if (!userText.includes("꿈")) {
+    return pickRandom(NON_DREAM_OPENERS[mood]);
+  }
+  // "꿈" 은 있는데 토픽만 못 뽑았을 때
+  return `그런 꿈을 꾸셨군요, ${pickRandom(FALLBACK_CLOSERS[mood])}`;
 }
 
-// 서버가 첫 턴 응답에 함께 내려주는 보관함용 메타데이터.
-interface DreamMeta {
-  title: string;
-  emoji: string;
-  luckIndex: number;
-  isWarning: boolean;
-  moodTags: string[];
-  // 챗봇 대화와 별개로 추출된 해몽 본문 요약 (2~3문장, 공감/질문/이모지 없음)
-  interpretation: string;
-}
+// DreamMeta(서버가 첫 턴 응답에 함께 내려주는 보관함용 메타)는 대화와 같이
+// 저장돼야 해서 features/chat/chatSession 으로 옮겼다.
 
 // AI 가 추출한 태그 라벨을 카드 컴포넌트들이 기대하는 DreamMoodTag 모양으로 감싼다.
 // (bg/color 는 AiDreamCard 가 자체 스타일로 그리므로 일관된 기본값으로 두면 충분)
 const DEFAULT_TAG_BG = "#F0E8FF";
 const DEFAULT_TAG_COLOR = "#7868C8";
+
+// 첫 화면에서 무엇을 입력해야 하는지 보여주는 예시. 탭하면 입력창에 채워진다.
+const EXAMPLE_PROMPTS = [
+  "누군가에게 쫓기는 꿈을 꿨어요",
+  "이가 빠지는 꿈을 꿨어요",
+  "돌아가신 할머니가 꿈에 나왔어요",
+];
 
 // 프로덕션은 EXPO_PUBLIC_API_BASE_URL (예: https://mongle.vercel.app) 로 절대경로 호출.
 // 미설정 시엔 dev 서버 host:8081 로 폴백 (Expo Go / 로컬 web 개발).
@@ -363,24 +416,54 @@ export default function ChatBotModal({
       h.remove();
     };
   }, []);
-  // 같은 세션을 두 번 저장하지 않도록 가드 (close 가 여러 경로로 호출될 수 있음)
-  const savedRef = useRef(false);
+  // 어디까지 보관함에 저장했는지. 이 인덱스 뒤의 메시지만 "아직 저장 안 된 꿈".
+  // 복원된 대화를 다시 저장해 보관함에 중복이 쌓이는 걸 막는다.
+  const savedCountRef = useRef(0);
   // 서버가 첫 턴 응답에 같이 내려주는 보관함용 메타. 저장 시 사용.
   const metaRef = useRef<DreamMeta | null>(null);
+  // 저장된 대화를 읽어오는 동안. 이때는 저장 이펙트가 돌면 안 된다
+  // (빈 messages 로 덮어써서 대화를 날려버린다).
+  const [hydrating, setHydrating] = useState(true);
+  // "새 대화" 확인 다이얼로그
+  const [confirmReset, setConfirmReset] = useState(false);
 
-  // 모달 열 때마다 프로필 다시 가져와서 최신 닉네임 반영 + 이전 세션 잔여 상태 초기화
+  // 모달 열 때: 저장된 대화 복원 + 최신 닉네임 반영 + 이전 세션 잔여 상태 초기화
   useEffect(() => {
     if (!visible) return;
-    savedRef.current = false;
-    metaRef.current = null;
-    setMessages([]);
+    let cancelled = false;
+
     setInput(initialText ?? "");
     setError(null);
     setLoading(false);
     setStreaming(false);
     setReportTarget(null);
     setReportNotice(null);
-    let cancelled = false;
+    setHydrating(true);
+
+    // 24시간 안에 나눈 대화가 있으면 그대로 이어서 보여준다.
+    loadChatSession()
+      .then((session) => {
+        if (cancelled) return;
+        if (session) {
+          setMessages(session.messages);
+          metaRef.current = session.meta;
+          savedCountRef.current = session.savedCount;
+        } else {
+          setMessages([]);
+          metaRef.current = null;
+          savedCountRef.current = 0;
+        }
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setMessages([]);
+        metaRef.current = null;
+        savedCountRef.current = 0;
+      })
+      .finally(() => {
+        if (!cancelled) setHydrating(false);
+      });
+
     getMyProfile()
       .then(({ data }) => {
         if (!cancelled && data?.nickname) {
@@ -393,6 +476,17 @@ export default function ChatBotModal({
     };
   }, [visible]);
 
+  // 대화가 바뀔 때마다 저장. 스트리밍 중엔 토큰마다 setMessages 가 불려서
+  // 그때마다 디스크에 쓰면 낭비 — 스트리밍이 끝난 뒤 한 번만 쓴다.
+  useEffect(() => {
+    if (!visible || hydrating || streaming) return;
+    saveChatSession({
+      messages,
+      meta: metaRef.current,
+      savedCount: savedCountRef.current,
+    });
+  }, [messages, visible, hydrating, streaming]);
+
   // 새 메시지 시 자동 스크롤
   useEffect(() => {
     if (!visible) return;
@@ -401,68 +495,100 @@ export default function ChatBotModal({
     });
   }, [messages, loading, visible]);
 
-  // 모달을 닫을 때 사용자 메시지가 있으면 보관함에 자동 저장.
+  // 아직 보관함에 저장하지 않은 구간(savedCountRef 뒤)을 저장한다.
   // 저장은 fire-and-forget — UI 는 즉시 닫히고, 결과는 onSaved 콜백으로 토스트에 띄운다.
-  const handleClose = useCallback(() => {
-    const userMsgs = messages.filter((m) => m.role === "user");
+  //
+  // 대화가 24시간 유지되면서 "닫을 때 전체를 저장"은 성립하지 않게 됐다.
+  // 어제 저장한 꿈까지 다시 저장돼 보관함에 중복이 쌓이기 때문. 그래서 마지막
+  // 저장 지점 뒤에 새로 쌓인 메시지만 하나의 새 꿈으로 저장한다.
+  const flushSave = useCallback(() => {
+    const pending = messages.slice(savedCountRef.current);
+    const userMsgs = pending.filter((m) => m.role === "user");
+    if (userMsgs.length === 0) return;
+
+    // 이 구간을 저장하든 건너뛰든 저장 지점은 앞으로 민다 — 위기 발화 구간을
+    // 매번 다시 검사하며 저장 여부를 재고할 이유가 없다.
+    savedCountRef.current = messages.length;
+
     // 위기 발화가 한 턴이라도 있으면 보관함에 저장하지 않는다.
     // 저장하면 "✨ '요즘 죽고싶다는 생…' 보관함에 담겼어요" 토스트와 함께
-    // 꿈 카드로 남는다. 첫 턴뿐 아니라 모든 사용자 턴을 검사한다.
-    const hasCrisis = userMsgs.some((m) => isCrisisDisclosure(m.content));
-    const shouldSave = !savedRef.current && userMsgs.length > 0 && !hasCrisis;
-    // 저장을 건너뛰어도 가드는 세운다 — 닫기 경로가 여러 개라 재진입 방지.
-    if (hasCrisis) savedRef.current = true;
-    if (shouldSave) {
-      savedRef.current = true;
-      const content = userMsgs.map((m) => m.content).join("\n\n");
-      const chatPreview = messages.map((m) => ({
-        role: m.role,
-        // 저장 미리보기엔 요약+전체를 한 흐름으로 (마커는 문단 구분으로 치환)
-        text: m.content.split(MORE_MARKER).join("\n\n"),
-      }));
+    // 꿈 카드로 남는다.
+    if (userMsgs.some((m) => isCrisisDisclosure(m.content))) return;
 
-      const meta = metaRef.current;
-      const moodTags =
-        meta?.moodTags?.map((label) => ({
-          label,
-          emoji: "",
-          bg: DEFAULT_TAG_BG,
-          color: DEFAULT_TAG_COLOR,
-        })) ?? [];
+    const content = userMsgs.map((m) => m.content).join("\n\n");
+    const chatPreview = pending.map((m) => ({
+      role: m.role,
+      // 저장 미리보기엔 요약+전체를 한 흐름으로 (마커는 문단 구분으로 치환)
+      text: m.content.split(MORE_MARKER).join("\n\n"),
+    }));
 
-      // 제목: AI 가 추출한 title 우선, 없으면 첫 메시지 앞 10자 + "…"
-      const firstLine = userMsgs[0].content.split("\n")[0].trim();
-      const fallbackTitle =
-        firstLine.length > 10 ? `${firstLine.slice(0, 10)}…` : firstLine;
-      const title = meta?.title?.trim() || fallbackTitle || "AI 꿈 해몽";
+    const meta = metaRef.current;
+    const moodTags =
+      meta?.moodTags?.map((label) => ({
+        label,
+        emoji: "",
+        bg: DEFAULT_TAG_BG,
+        color: DEFAULT_TAG_COLOR,
+      })) ?? [];
 
-      createDream({
-        title,
-        content,
-        dreamDate: todayISODate(),
-        source: "ai",
-        emoji: meta?.emoji || "🌙",
-        luckIndex: meta?.luckIndex ?? 0,
-        isWarning: meta?.isWarning ?? false,
-        moodTags,
-        chatPreview,
-        interpretationSummary: meta?.interpretation ?? "",
-      })
-        .then(({ error: saveErr }) => {
-          if (saveErr) {
-            console.error("[chat] auto-save error:", saveErr);
-            onSaved?.("저장에 실패했어요");
-          } else {
-            onSaved?.(`✨ '${title}' 보관함에 담겼어요`);
-          }
-        })
-        .catch((err) => {
-          console.error("[chat] auto-save error:", err);
+    // 제목: AI 가 추출한 title 우선, 없으면 첫 메시지 앞 10자 + "…"
+    const firstLine = userMsgs[0].content.split("\n")[0].trim();
+    const fallbackTitle =
+      firstLine.length > 10 ? `${firstLine.slice(0, 10)}…` : firstLine;
+    const title = meta?.title?.trim() || fallbackTitle || "AI 꿈 해몽";
+
+    createDream({
+      title,
+      content,
+      dreamDate: todayISODate(),
+      source: "ai",
+      emoji: meta?.emoji || "🌙",
+      luckIndex: meta?.luckIndex ?? 0,
+      isWarning: meta?.isWarning ?? false,
+      moodTags,
+      chatPreview,
+      interpretationSummary: meta?.interpretation ?? "",
+    })
+      .then(({ error: saveErr }) => {
+        if (saveErr) {
+          console.error("[chat] auto-save error:", saveErr);
           onSaved?.("저장에 실패했어요");
-        });
+        } else {
+          onSaved?.(`✨ '${title}' 보관함에 담겼어요`);
+        }
+      })
+      .catch((err) => {
+        console.error("[chat] auto-save error:", err);
+        onSaved?.("저장에 실패했어요");
+      });
+  }, [messages, onSaved]);
+
+  const handleClose = useCallback(() => {
+    flushSave();
+    // 닫는 순간의 대화를 확정 저장한다. 갱신된 savedCount 까지 함께 넣어야
+    // 다음에 열었을 때 이미 저장한 구간을 또 저장하지 않는다.
+    if (messages.length > 0) {
+      saveChatSession({
+        messages,
+        meta: metaRef.current,
+        savedCount: savedCountRef.current,
+      });
     }
     onClose();
-  }, [messages, onClose, onSaved]);
+  }, [flushSave, messages, onClose]);
+
+  // "새 대화" — 화면만 비우는 게 아니라, 아직 저장 안 된 꿈은 보관함에 넣고
+  // 비운다. 그냥 지워버리면 방금 받은 해몽이 어디에도 안 남는다.
+  const handleReset = useCallback(() => {
+    setConfirmReset(false);
+    flushSave();
+    setMessages([]);
+    setInput("");
+    setError(null);
+    metaRef.current = null;
+    savedCountRef.current = 0;
+    clearChatSession();
+  }, [flushSave]);
 
   // 신고 확인 → ai_message_reports 에 저장. 직전 대화 맥락을 함께 첨부.
   const submitReport = useCallback(() => {
@@ -500,8 +626,14 @@ export default function ChatBotModal({
     // 공감 한 줄은 "첫 꿈 입력"에만 띄운다. 이후 후속 질문에 답할 때마다
     // 공감 한 줄이 반복되면 어색하므로, 이전에 보낸 사용자 메시지가 없을 때만 stub 추가.
     // AI 는 해몽만 단일 버블로 스트리밍.
+    // "첫 꿈"의 기준은 대화 전체가 아니라 아직 저장 안 된 구간이다. 대화가
+    // 24시간 남아있게 되면서 messages 에는 어제 꾼 꿈이 들어있을 수 있는데,
+    // 그걸 근거로 공감 한 줄을 건너뛰면 오늘의 첫 꿈이 무반응으로 시작한다.
     const isFirstDream =
-      messages.filter((m) => m.role === "user").length === 0;
+      messages.slice(savedCountRef.current).filter((m) => m.role === "user")
+        .length === 0;
+    // 새 꿈이면 이전 꿈의 보관함 메타를 물려받지 않도록 비운다.
+    if (isFirstDream) metaRef.current = null;
     // 위기 발화는 첫 턴이 아니어도 안내한다. pickEmpathy 는 키워드 매칭이라
     // "죽고싶다" 에 scary 큐("죽")가 걸려 "마음이 많이 졸였겠어요 😨" 같은
     // 응답을 내놓는다 — 반드시 이 분기보다 먼저 걸러야 한다.
@@ -653,11 +785,19 @@ export default function ChatBotModal({
         xhr.onerror = () => reject(new Error("네트워크 오류"));
         xhr.ontimeout = () => reject(new Error("응답 시간 초과"));
 
+        // 화면엔 24시간치 대화가 남아있지만 서버로는 "지금 이야기 중인 꿈"만
+        // 보낸다. 이미 보관함에 저장된 앞 구간은 다른 꿈이라 해몽에 도움이 안
+        // 되고, 매 턴 토큰만 늘려 응답을 느리게 만든다. 한 꿈 안에서도
+        // 최근 20턴으로 끊는다.
+        const convo = next
+          .slice(savedCountRef.current)
+          .filter((m) => !m.isStub)
+          .slice(-20)
+          .map((m) => ({ role: m.role, content: m.content }));
+
         xhr.send(
           JSON.stringify({
-            messages: next
-              .filter((m) => !m.isStub)
-              .map((m) => ({ role: m.role, content: m.content })),
+            messages: convo,
             nickname,
           }),
         );
@@ -699,10 +839,28 @@ export default function ChatBotModal({
             <View style={styles.header}>
               <View style={styles.handle} />
               <View style={styles.headerRow}>
-                <Text style={styles.title}>몽이와 꿈 이야기</Text>
-                <TouchableOpacity onPress={handleClose} hitSlop={8}>
-                  <Text style={styles.close}>✕</Text>
-                </TouchableOpacity>
+                {/* "몽이"만으로는 처음 온 사용자가 무엇을 하는 화면인지 모른다.
+                    기능명(AI 꿈해몽)을 앞에 세우고 캐릭터는 보조 설명으로 내린다. */}
+                <View>
+                  <Text style={styles.title}>AI 꿈해몽</Text>
+                  <Text style={styles.subtitle}>몽이가 꿈을 풀어드려요</Text>
+                </View>
+                <View style={styles.headerActions}>
+                  {/* 대화가 24시간 남아있으니, 새 꿈을 이야기하려는 사람에게
+                      비울 방법을 줘야 한다. 없으면 어제 대화 밑에 계속 쌓인다. */}
+                  {messages.length > 0 ? (
+                    <TouchableOpacity
+                      onPress={() => setConfirmReset(true)}
+                      hitSlop={8}
+                      style={styles.newChatBtn}
+                    >
+                      <Text style={styles.newChatText}>새 대화</Text>
+                    </TouchableOpacity>
+                  ) : null}
+                  <TouchableOpacity onPress={handleClose} hitSlop={8}>
+                    <Text style={styles.close}>✕</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
 
@@ -720,15 +878,39 @@ export default function ChatBotModal({
               }
             >
               {messages.length === 0 && (
-                <View style={[styles.bubble, styles.aiBubble]}>
-                  <Text style={styles.aiText}>
-                    안녕하세요{nickname ? `, ${nickname}님` : ""} 🌙
-                  </Text>
-                  <Text style={[styles.aiText, styles.paragraphGap]}>
-                    어젯밤 어떤 꿈을 꾸셨나요? 떠오르는 장면이나 느낌을 편하게
-                    들려주세요.
-                  </Text>
-                </View>
+                <>
+                  <View style={[styles.bubble, styles.aiBubble]}>
+                    <Text style={styles.aiText}>
+                      안녕하세요{nickname ? `, ${nickname}님` : ""} 🌙
+                    </Text>
+                    <Text style={[styles.aiText, styles.paragraphGap]}>
+                      어젯밤 어떤 꿈을 꾸셨나요? 떠오르는 장면이나 느낌을 편하게
+                      들려주세요.
+                    </Text>
+                    <Text style={[styles.aiText, styles.paragraphGap]}>
+                      해몽이 끝나면 꿈 보관함에 저장할 수 있어요.
+                    </Text>
+                    <Text style={[styles.aiHint, styles.paragraphGap]}>
+                      나눈 이야기는 24시간 동안 여기 그대로 있어요 🌙
+                    </Text>
+                  </View>
+
+                  {/* 빈 입력창 앞에서 무엇을 써야 할지 몰라 이탈하는 걸 막는다.
+                      탭하면 입력창에 채워지고, 사용자가 고쳐 쓸 수 있게 전송은 하지 않는다. */}
+                  <View style={styles.examples}>
+                    <Text style={styles.examplesLabel}>이렇게 적어보세요</Text>
+                    {EXAMPLE_PROMPTS.map((ex) => (
+                      <TouchableOpacity
+                        key={ex}
+                        style={styles.exampleChip}
+                        onPress={() => setInput(ex)}
+                        activeOpacity={0.8}
+                      >
+                        <Text style={styles.exampleChipText}>{ex}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </>
               )}
 
               {messages.map((msg) => (
@@ -809,6 +991,17 @@ export default function ChatBotModal({
           message={reportNotice ?? ""}
           confirmLabel="확인"
           onConfirm={() => setReportNotice(null)}
+        />
+
+        {/* 새 대화 — 화면은 비우되 아직 저장 안 된 꿈은 보관함으로 보낸다 */}
+        <ConfirmDialog
+          visible={confirmReset}
+          title="새 대화 시작"
+          message="지금까지 나눈 이야기를 지우고 새로 시작할까요? 해몽 결과는 꿈 보관함에 남아요."
+          confirmLabel="새로 시작"
+          cancelLabel="취소"
+          onConfirm={handleReset}
+          onCancel={() => setConfirmReset(false)}
         />
       </KeyboardAvoidingView>
     </Modal>
@@ -923,7 +1116,23 @@ const styles = StyleSheet.create({
     color: "#5848A8",
     letterSpacing: 0.5,
   },
+  subtitle: {
+    fontSize: 12,
+    color: "#9888CC",
+    marginTop: 2,
+    letterSpacing: 0.2,
+  },
   close: { fontSize: 20, color: "#9888CC", paddingHorizontal: 4 },
+  headerActions: { flexDirection: "row", alignItems: "center", gap: 6 },
+  newChatBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 14,
+    backgroundColor: "#F0EAFF",
+    borderWidth: 1,
+    borderColor: "rgba(120,104,200,0.25)",
+  },
+  newChatText: { fontSize: 12, fontWeight: "600", color: "#7868C8" },
 
   messages: { flex: 1 },
   messagesContent: {
@@ -950,8 +1159,27 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(180,160,230,0.18)",
   },
+  examples: { alignSelf: "flex-start", maxWidth: "88%", gap: 6, marginTop: 4 },
+  examplesLabel: {
+    fontSize: 12,
+    color: "#9888CC",
+    marginLeft: 4,
+    marginBottom: 2,
+  },
+  exampleChip: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 16,
+    backgroundColor: "#F6F2FF",
+    borderWidth: 1,
+    borderColor: "rgba(120,104,200,0.28)",
+  },
+  exampleChipText: { fontSize: 13, color: "#5848A8", lineHeight: 18 },
+
   userText: { fontSize: 14, color: "#fff", lineHeight: 21 },
   aiText: { fontSize: 14, color: "#3828A0", lineHeight: 21 },
+  aiHint: { fontSize: 12, color: "#9888CC", lineHeight: 18 },
   paragraphGap: { marginTop: 8 },
 
   reportBtn: { paddingHorizontal: 6, paddingVertical: 3, marginTop: 2 },

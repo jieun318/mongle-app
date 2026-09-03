@@ -7,6 +7,7 @@ import {
   View,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useState } from "react";
 import type { DreamRecord } from "@/features/dream/dreams";
 import { displayMoodTags } from "@/features/dream/dreamData";
@@ -33,6 +34,11 @@ function splitParagraphs(text: string): string[] {
 const PREVIEW_TURNS = 3;
 
 export default function AiDreamModal({ dream, onClose }: Props) {
+  // 시트가 화면 맨 아래에 붙어서(justifyContent: flex-end) 마지막 요소인
+  // 닫기 버튼이 시스템 내비바에 물려 잘렸다. 내비 영역만큼 아래 여백을 주되,
+  // 인셋이 0으로 잡히는 기기에서도 최소 48은 남긴다.
+  const insets = useSafeAreaInsets();
+
   const [showAll, setShowAll] = useState(false);
 
   // 모달이 닫힐 때 펼친 상태도 초기화
@@ -58,6 +64,7 @@ export default function AiDreamModal({ dream, onClose }: Props) {
       visible={!!dream}
       transparent
       animationType="slide"
+      statusBarTranslucent
       onRequestClose={handleClose}
     >
       {dream && (
@@ -71,7 +78,10 @@ export default function AiDreamModal({ dream, onClose }: Props) {
             <View style={styles.handle} />
             <ScrollView
               showsVerticalScrollIndicator={false}
-              contentContainerStyle={styles.scrollContent}
+              contentContainerStyle={[
+                styles.scrollContent,
+                { paddingBottom: 24 + Math.max(insets.bottom, 24) },
+              ]}
             >
               {/* 꿈 내용을 대표하는 큰 이모지 비주얼 */}
               <View style={styles.heroEmojiWrap}>
@@ -221,7 +231,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 20,
-    paddingBottom: 36,
+    // paddingBottom 은 시스템 내비 인셋에 맞춰 렌더 시점에 덮어쓴다.
     gap: 12,
   },
 

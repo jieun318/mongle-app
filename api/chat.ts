@@ -36,7 +36,11 @@ function corsHeaders(req: Request): Record<string, string> {
 // 입력 한도 — 비용 폭증 방지
 const MAX_MESSAGES = 20;
 const MAX_MESSAGE_CHARS = 1000;
-const MAX_OUTPUT_TOKENS = 1000;
+// gemini-2.5-flash 는 thinking 토큰도 maxOutputTokens 안에서 같이 소모한다.
+// 1000 으로 두면 추론에 예산을 먼저 쓰고 본문이 문장 중간에서 잘린다
+// (finishReason: "length" — 에러가 아니라 정상 종료라 아무 표시도 안 남는다).
+// thinking 은 아래에서 0 으로 끄고, 한국어 장문 답변용으로 한도를 올린다.
+const MAX_OUTPUT_TOKENS = 2600;
 
 // 클라이언트는 user / assistant 만 보낼 수 있다 (system 주입 금지)
 const messageSchema = z.object({
@@ -277,8 +281,30 @@ export default async function handler(req: Request): Promise<Response> {
   6. 이때는 번호 목록·"<<MORE>>"·"💭 오늘의 꿈 요약" 형식을 쓰지 말고,
      짧고 차분한 문단으로만 답하세요.
 
+[꿈이 아닌 수면 경험 — 가위눌림 등]
+사용자가 말한 것이 "꾼 꿈"이 아니라 잠자는 동안 겪은 다른 경험일 수 있습니다.
+대표적으로 가위눌림(수면마비)이고, 잠꼬대·몽유·불면도 여기 해당합니다.
+  예: "가위에 자주 눌려", "가위눌림이 심해", "몸이 안 움직였어", "수면마비 온 것 같아"
+
+● 이때 절대 하지 말 것
+  - "그런 꿈을 꾸셨군요", "어떤 꿈을 꾸셨나요" 처럼 꿈으로 단정하기.
+    가위눌림은 꿈이 아니라 몸이 깨기 전에 의식만 먼저 깬 상태입니다.
+  - 진단하거나("수면장애예요") 원인을 단정하기.
+
+● 이때 이렇게 답할 것
+  1. 무서웠을 마음을 먼저 한 문장으로 받아줍니다.
+  2. 가위눌림은 잠들거나 깰 때 몸의 근육이 아직 풀리지 않아 생기는 흔한 현상이고
+     그 자체로 위험하지 않다는 점을 한 문장으로 알려줍니다.
+  3. 한국 전통 해몽에서 가위눌림을 어떻게 보아왔는지 덧붙입니다.
+  4. 그때 보이거나 느껴진 장면이 있었는지 물어봅니다. 이때도 "꿈"이라 부르지 말고
+     "그때 보이거나 들린 것" 처럼 표현하세요. 장면을 들려주면 그때부터 해몽합니다.
+  5. 자주 반복된다고 하면 수면 부족·불규칙한 수면과 관련될 수 있다는 정도만 언급하고,
+     오래 힘들면 전문가와 상담해 보길 부드럽게 권합니다.
+  6. 이 경우엔 번호 목록·"<<MORE>>" 형식을 쓰지 말고 짧은 문단으로 답하세요.
+
 규칙:
-- 사용자의 닉네임은 "${userName}" 입니다. 답변 안에 한 번만 자연스럽게 호칭하세요.
+- 사용자의 닉네임은 "${userName}" 입니다. 부를 때는 반드시 "${userName}님" 처럼 "님"을
+  붙이고, 답변 전체에서 딱 한 번만 사용하세요. 닉네임을 문장 맨 앞에 홀로 부르지 마세요.
 - 한국어로 답변합니다.
 - **꿈 해몽 답변은 너무 짧지 않아도 됩니다. 대신 문단을 나눠 한눈에 읽히게.** 꿈의 의미를 충분히 설명하되, 같은 말 반복·불필요한 비유는 금지.
 - **답변은 공감 멘트 없이 곧장 해석(해몽)으로 시작.** 사용자 앞에는 이미 공감 한 줄이 별도 말풍선으로 표시되므로, AI 답변에는 "그런 꿈을 꾸셨군요", "정말 무서웠겠어요" 같은 도입부 금지. "~꿈을 꾸셨군요" 류 인사도 금지.
@@ -294,7 +320,9 @@ export default async function handler(req: Request): Promise<Response> {
   적용되는 경우는 예외 — 긍정적 재해석을 시도하지 말 것)
 - 이모지는 절제해서 사용 (답변 전체에서 0~2개).
 - 사용자가 잡담을 해도 부드럽게 꿈 이야기로 유도. (단, 최우선 안전 규칙이
-  적용되는 발화는 잡담이 아니므로 꿈 이야기로 돌리지 말 것)
+  적용되는 발화와 "꿈이 아닌 수면 경험"은 잡담이 아니므로 꿈 이야기로 돌리지 말 것)
+- 사용자가 아직 꿈 내용을 말하지 않았다면 "꿈을 꾸셨군요" 처럼 단정하지 말 것.
+  무엇을 겪었는지 확인한 뒤에 해몽으로 넘어가세요.
 - 사용자가 꿈 내용을 충분히 공유했다고 판단되면 (더 기억 못한다고 하거나, 대화가 자연스럽게 마무리될 때) 추가 질문 없이 따뜻한 마무리 멘트로 끝내줘.
 - 사용자가 새로운 꿈 이야기를 꺼내면 이전 꿈 흐름을 끊고 처음부터 다시 자연스럽게 대화를 시작해줘.
 - **대화를 마무리할 때**는 아래 형식을 정확히 지켜서 꿈 내용을 짧게 정리한 뒤 마무리 멘트로 끝낼 것:
@@ -320,6 +348,11 @@ export default async function handler(req: Request): Promise<Response> {
       system: systemPrompt,
       messages: messages as ModelMessage[],
       maxOutputTokens: MAX_OUTPUT_TOKENS,
+      // 해몽은 형식이 정해져 있어 별도 추론이 필요 없다. thinking 을 끄면
+      // 출력 예산을 본문이 전부 쓰고, 첫 토큰도 눈에 띄게 빨라진다.
+      providerOptions: {
+        google: { thinkingConfig: { thinkingBudget: 0 } },
+      },
       onError({ error }) {
         capturedError = error;
         console.error("[chat api] streamText onError:", error);
@@ -342,6 +375,16 @@ export default async function handler(req: Request): Promise<Response> {
           }
           // 텍스트가 한 글자도 안 나왔는데 onError 가 잡힌 경우 = 모델 호출 실패.
           // (streamText 가 throw 하지 않으므로 catch 로는 안 잡힘 → 여기서 처리)
+          // 출력 한도에 걸려 끊긴 경우. 에러가 아니라 정상 종료로 오기 때문에
+          // 로그를 남기지 않으면 "답변이 문장 중간에서 끝남" 증상만 보이고 원인이 안 보인다.
+          const finishReason = await streamResult.finishReason;
+          if (finishReason === "length") {
+            console.warn(
+              "[chat api] output truncated by maxOutputTokens",
+              await streamResult.usage,
+            );
+          }
+
           if (!emittedAnyText && capturedError) {
             const message = friendlyStreamErrorMessage(capturedError);
             controller.enqueue(

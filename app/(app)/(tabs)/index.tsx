@@ -16,7 +16,15 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { useState, useRef, useEffect, useCallback, lazy, Suspense } from "react";
+import {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+  lazy,
+  Suspense,
+} from "react";
 import Svg, {
   Defs,
   RadialGradient,
@@ -34,6 +42,21 @@ import {
 } from "@/lib/sun";
 
 const SCREEN_W = Dimensions.get("window").width;
+
+// GPU 레이어 힌트 — transform/opacity 만 바뀌는 뷰에 붙인다.
+//
+// 홈 화면은 전체 화면 레이어를 여러 겹 쌓는다(그라디언트 4장 + 딤 + 구름 +
+// 별 + 날씨 + 구슬). 이 힌트가 없으면 안드로이드는 매 프레임 각 레이어의
+// 내용을 다시 래스터라이즈한다 — 특히 구슬은 SVG 표면이 20장 가까이 들어있는데
+// 계속 위아래로 떠다녀서, 매 프레임 그걸 전부 다시 그린다. 프레임을 놓치면
+// 터치 이벤트 처리도 같이 밀려서 "눌러도 반응이 없다"로 나타난다.
+//
+// 힌트를 주면 한 번 텍스처로 구워두고 이후엔 텍스처만 옮긴다.
+// 주의: 내용이 매 프레임 바뀌는 뷰에 붙이면 오히려 손해다(매번 재굽기).
+const GPU_LAYER = {
+  renderToHardwareTextureAndroid: true,
+  shouldRasterizeIOS: true,
+} as const;
 
 // 시간 기반 테마 — 오전 6시~오후 6시 = 낮, 그 외 = 밤
 function getDefaultDarkMode(): boolean {
@@ -54,6 +77,9 @@ import Toast from "@/components/ui/Toast";
 // 단, 화면이 뜬 뒤 idle 에 백그라운드로 미리 로드해 첫 열기는 즉시 되게 한다(아래 예열).
 const importChatModal = () => import("@/components/chat/ChatBotModal");
 const ChatBotModal = lazy(importChatModal);
+// 챗봇 버튼 첫 사용 안내를 한 번이라도 봤는지. 마스코트 아이콘만 떠 있으면
+// 장식으로 읽혀서 챗봇인 줄 모른다 — 첫 진입에만 말풍선을 띄운다.
+const CHAT_HINT_SEEN_KEY = "chat_fab_hint_seen";
 import NoticeModal from "@/components/notice/NoticeModal";
 import { hasUnreadNotices } from "@/features/notice/notices";
 import FortuneGradeGuide from "@/components/fortune/FortuneGradeGuide";
@@ -309,6 +335,8 @@ export default function HomeScreen() {
   const [showChat, setShowChat] = useState(false);
   // 챗봇을 한 번이라도 열었는지 — 열린 뒤엔 계속 마운트 유지(닫힘 애니 보존).
   const [chatMounted, setChatMounted] = useState(false);
+  // 챗봇을 한 번도 안 열어본 사용자에게만 보이는 안내 말풍선.
+  const [showChatHint, setShowChatHint] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [showNotice, setShowNotice] = useState(false);
   const [hasUnread, setHasUnread] = useState(false);
@@ -316,24 +344,44 @@ export default function HomeScreen() {
   const [forceWeatherIdx, setForceWeatherIdx] = useState(0);
   const forceWeather = WEATHER_CYCLE[forceWeatherIdx];
 
-  // 마운트 시 + 포그라운드 복귀 시 안 읽은 공지 여부 확인
+  // 안 읽은 공지 여부 — 벨 위의 작은 점 하나를 위한 네트워크 호출이라
+  // 첫 페인트를 막을 이유가 없다. 홈이 그려진 뒤에 확인한다.
   useEffect(() => {
     let cancelled = false;
     const refresh = async () => {
       const unread = await hasUnreadNotices();
       if (!cancelled) setHasUnread(unread);
     };
-    refresh();
+    const task = InteractionManager.runAfterInteractions(refresh);
     const sub = AppState.addEventListener("change", (s) => {
       if (s === "active") refresh();
     });
     return () => {
       cancelled = true;
+      task.cancel();
       sub.remove();
     };
   }, []);
   const isAnimating = useRef(false);
-  const smokeColors = getSmokePalette(fortune?.luckyColor ?? "라벤더");
+  // 구슬 안 연기 색 — 매 렌더마다 새 배열을 만들면 아래 블롭 메모가 통째로 깨진다.
+  const luckyColor = fortune?.luckyColor ?? "라벤더";
+  const smokeColors = useMemo(() => getSmokePalette(luckyColor), [luckyColor]);
+
+  // 첫 방문 판정은 로컬만 본다 — 서버 왕복 없이 즉시 결정돼야 안내가 늦게 튀지 않는다.
+  useEffect(() => {
+    AsyncStorage.getItem(CHAT_HINT_SEEN_KEY)
+      .then((seen) => setShowChatHint(seen !== "1"))
+      .catch(() => {});
+  }, []);
+
+  const openChat = useCallback(() => {
+    setChatMounted(true);
+    setShowChat(true);
+    setShowChatHint((wasShown) => {
+      if (wasShown) AsyncStorage.setItem(CHAT_HINT_SEEN_KEY, "1").catch(() => {});
+      return false;
+    });
+  }, []);
 
   const theme = darkMode
     ? {
@@ -502,17 +550,23 @@ export default function HomeScreen() {
     };
   }, [userId]);
 
-  // 위치 권한 요청 + Open-Meteo 에서 오늘 일출/일몰 시각 가져오기
+  // 위치 권한 요청 + Open-Meteo 에서 오늘 일출/일몰 시각 가져오기.
+  //
+  // 마운트 즉시 돌리면 첫 실행에서 OS 권한 팝업이 홈이 그려지는 순간과 겹치고,
+  // 네트워크 2회가 첫 상호작용 구간의 JS 스레드를 물고 있는다. 하늘 테마는
+  // 시각 기반 기본값(getDefaultDarkMode)이 이미 맞는 값을 주므로, 정확한
+  // 일출/일몰은 홈이 다 그려진 뒤에 받아와 부드럽게 보정한다.
   useEffect(() => {
     let cancelled = false;
-    (async () => {
+    const task = InteractionManager.runAfterInteractions(async () => {
       const loc = await getCurrentLocation();
       const times = await fetchSunTimes(loc.lat, loc.lng);
       if (cancelled) return;
       if (times) setSunTimes(times);
-    })();
+    });
     return () => {
       cancelled = true;
+      task.cancel();
     };
   }, []);
 
@@ -572,13 +626,22 @@ export default function HomeScreen() {
   //  - 보관함 목록: 탭 첫 진입 스피너 제거
   //  - 꿈 사전(카테고리): 검색 화면에서 카테고리 카드 첫 진입 스피너 제거
   // (키워드 검색은 입력마다 달라 예열 불가 — 네트워크 유지)
+  // 화면에 보이지 않는 예열이라 우선순위가 가장 낮다. 위의 일출/일몰·공지가
+  // 먼저 끝나도록 한 박자 더 뒤로 미룬다 — 안 그러면 첫 진입에 네트워크 요청
+  // 대여섯 개가 동시에 출발해서 정작 눈에 보이는 것들이 늦어진다.
   useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | null = null;
     const task = InteractionManager.runAfterInteractions(() => {
-      prefetchMyDreams();
-      prefetchDreamBrowse();
-      importChatModal(); // 챗 모듈 예열 — 첫 열기 지연 제거 (import 캐시되어 1회만)
+      timer = setTimeout(() => {
+        prefetchMyDreams();
+        prefetchDreamBrowse();
+        importChatModal(); // 챗 모듈 예열 — 첫 열기 지연 제거 (import 캐시되어 1회만)
+      }, 600);
     });
-    return () => task.cancel();
+    return () => {
+      task.cancel();
+      if (timer) clearTimeout(timer);
+    };
   }, []);
 
   useEffect(() => {
@@ -663,6 +726,9 @@ export default function HomeScreen() {
   // 손잡이 드래그 오프셋. 시트가 손가락을 따라 내려온다.
   const sheetY = useRef(new Animated.Value(0)).current;
   const [handlePressed, setHandlePressed] = useState(false);
+  // 연기가 피어오르는 1.7초 동안만 true. 이때는 구슬 내용이 매 프레임 바뀌므로
+  // GPU 텍스처 캐싱을 끈다 — 켜두면 매 프레임 텍스처를 다시 구워 오히려 느려진다.
+  const [revealing, setRevealing] = useState(false);
 
   // 손잡이 띠 전용 제스처. 이 영역은 ScrollView 바깥(형제)이고 레이아웃상
   // 겹치지도 않아, 배경 탭·스크롤과 responder 를 다투지 않는다.
@@ -707,6 +773,100 @@ export default function HomeScreen() {
     }),
   ).current;
 
+  // 구슬 안 연기 — 블롭 17개 × 보간 3개 = 51개의 Animated 노드다.
+  // 렌더할 때마다 새로 만들면(공지 뱃지, 토스트, 날씨 갱신 등 사소한 state
+  // 변화마다) 그 51개가 통째로 재생성된다. 실제로 바뀌는 건 운세 색과
+  // 다크모드뿐이라 그 둘에만 묶어둔다.
+  const smokeBlobs = useMemo(() => {
+    if (!fortune) return null;
+    return (
+      <View
+        pointerEvents="none"
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: 210,
+          height: 210,
+        }}
+      >
+        {BLOBS.map((cfg, i) => {
+          const diameter = cfg.size * 2;
+          const color = smokeColors[cfg.colorIdx];
+          // cy 25(top) ~ 185(bottom) 을 delay 0.65 ~ 0 으로 매핑 — 아래일수록 먼저 등장
+          const delay = ((185 - cfg.cy) / 160) * 0.65;
+          // 다크 모드에선 블롭 채도 낮춤 — 어두운 배경에서 색이 너무 진해지는 현상 완화
+          const maxBlobOpacity = darkMode ? 0.45 : 0.65;
+          const opacity = smokeOp.interpolate({
+            inputRange: [delay, delay + 0.3, 1],
+            outputRange: [0, maxBlobOpacity, maxBlobOpacity],
+            extrapolate: "clamp",
+          });
+          const scale = smokeOp.interpolate({
+            inputRange: [delay, delay + 0.35, 1],
+            outputRange: [0.55, 1, 1],
+            extrapolate: "clamp",
+          });
+          const translateY = smokeOp.interpolate({
+            inputRange: [delay, delay + 0.35, 1],
+            outputRange: [12, 0, 0],
+            extrapolate: "clamp",
+          });
+          return (
+            <Animated.View
+              key={i}
+              pointerEvents="none"
+              style={{
+                position: "absolute",
+                width: diameter,
+                height: diameter,
+                left: cfg.cx - cfg.size,
+                top: cfg.cy - cfg.size,
+                opacity,
+                transform: [{ scale }, { translateY }],
+              }}
+            >
+              <Svg width={diameter} height={diameter}>
+                <Defs>
+                  <RadialGradient
+                    id={`sg${i}`}
+                    cx="50%"
+                    cy="50%"
+                    rx="50%"
+                    ry="50%"
+                  >
+                    <Stop
+                      offset="0%"
+                      stopColor={color}
+                      stopOpacity="0.95"
+                    />
+                    <Stop
+                      offset="50%"
+                      stopColor={color}
+                      stopOpacity="0.6"
+                    />
+                    <Stop
+                      offset="100%"
+                      stopColor={color}
+                      stopOpacity="0"
+                    />
+                  </RadialGradient>
+                </Defs>
+                <Circle
+                  cx={cfg.size}
+                  cy={cfg.size}
+                  r={cfg.size}
+                  fill={`url(#sg${i})`}
+                />
+              </Svg>
+            </Animated.View>
+          );
+        })}
+      </View>
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fortune, smokeColors, darkMode, smokeOp]);
+
   const handlePress = () => {
     if (isAnimating.current) return;
     // 드래그 오프셋을 여는 시점에 미리 0 으로 되돌린다. 닫을 때 되돌리면
@@ -735,6 +895,7 @@ export default function HomeScreen() {
     setViewedState({ userId, viewed: true });
 
     isAnimating.current = true;
+    setRevealing(true);
 
     // 구슬 흔들림 + 위로 살짝 이동
     Animated.sequence([
@@ -767,6 +928,7 @@ export default function HomeScreen() {
     setTimeout(() => {
       setShowModal(true);
       isAnimating.current = false;
+      setRevealing(false);
     }, 1700);
   };
 
@@ -807,6 +969,7 @@ export default function HomeScreen() {
       />
       <Animated.View
         pointerEvents="none"
+        {...GPU_LAYER}
         style={[StyleSheet.absoluteFillObject, { opacity: sunsetOp }]}
       >
         <LinearGradient
@@ -816,6 +979,7 @@ export default function HomeScreen() {
       </Animated.View>
       <Animated.View
         pointerEvents="none"
+        {...GPU_LAYER}
         style={[StyleSheet.absoluteFillObject, { opacity: twilightOp }]}
       >
         <LinearGradient
@@ -825,6 +989,7 @@ export default function HomeScreen() {
       </Animated.View>
       <Animated.View
         pointerEvents="none"
+        {...GPU_LAYER}
         style={[StyleSheet.absoluteFillObject, { opacity: nightOp }]}
       >
         <LinearGradient
@@ -838,6 +1003,7 @@ export default function HomeScreen() {
       {sunReady && (
         <Animated.View
           pointerEvents="none"
+          {...GPU_LAYER}
           style={{
             position: "absolute",
             top: 0,
@@ -871,6 +1037,7 @@ export default function HomeScreen() {
       {/* 흐르는 구름들 — opacity 가 낮 단계에서만 1, 그 외엔 0 */}
       <Animated.View
         pointerEvents="none"
+        {...GPU_LAYER}
         style={[
           StyleSheet.absoluteFillObject,
           { opacity: cloudsEnvelope },
@@ -880,6 +1047,7 @@ export default function HomeScreen() {
             <Animated.View
               key={`cloud${i}`}
               pointerEvents="none"
+              {...GPU_LAYER}
               style={{
                 position: "absolute",
                 top: c.y,
@@ -901,6 +1069,7 @@ export default function HomeScreen() {
       {/* 배경 별들 — 황혼(0.66) 부터 fadeIn */}
       <Animated.View
         pointerEvents="none"
+        {...GPU_LAYER}
         style={[
           StyleSheet.absoluteFillObject,
           { opacity: starsEnvelope },
@@ -910,6 +1079,7 @@ export default function HomeScreen() {
           <Animated.View
             key={`bgstar${i}`}
             pointerEvents="none"
+            {...GPU_LAYER}
             style={{
               position: "absolute",
               left: s.left,
@@ -940,6 +1110,7 @@ export default function HomeScreen() {
           body 는 아래에서 일반 흐름으로 렌더되므로 딤을 덮지 않아 가독성 유지. */}
       <Animated.View
         pointerEvents="none"
+        {...GPU_LAYER}
         style={[
           StyleSheet.absoluteFillObject,
           {
@@ -987,7 +1158,12 @@ export default function HomeScreen() {
         <Text style={[styles.title, { color: theme.title }]}>오늘의 운세</Text>
 
         <TouchableOpacity activeOpacity={1} onPress={handlePress}>
+          {/* 구슬은 계속 떠다닌다. 안에 SVG 표면이 20장 가까이 들어있어서
+              힌트 없이는 매 프레임 그걸 전부 다시 그린다 — 홈에서 터치가
+              굼떴던 가장 큰 원인. */}
           <Animated.View
+            renderToHardwareTextureAndroid={!revealing}
+            shouldRasterizeIOS={!revealing}
             style={{
               alignItems: "center",
               transform: [{ translateY: Animated.add(floatY, orbLiftY) }],
@@ -1110,91 +1286,7 @@ export default function HomeScreen() {
                     운세가 확정되기 전에는 레이어 자체를 렌더하지 않는다 — smokeOp
                     (Animated.Value)는 리렌더로 리셋되지 않으므로, 가시성 판정을
                     React 파생값으로 올려야 계정 전환 시 stale 프레임이 안 생긴다. */}
-                {fortune && (
-                  <View
-                    pointerEvents="none"
-                    style={{
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      width: 210,
-                      height: 210,
-                    }}
-                  >
-                    {BLOBS.map((cfg, i) => {
-                      const diameter = cfg.size * 2;
-                      const color = smokeColors[cfg.colorIdx];
-                      // cy 25(top) ~ 185(bottom) 을 delay 0.65 ~ 0 으로 매핑 — 아래일수록 먼저 등장
-                      const delay = ((185 - cfg.cy) / 160) * 0.65;
-                      // 다크 모드에선 블롭 채도 낮춤 — 어두운 배경에서 색이 너무 진해지는 현상 완화
-                      const maxBlobOpacity = darkMode ? 0.45 : 0.65;
-                      const opacity = smokeOp.interpolate({
-                        inputRange: [delay, delay + 0.3, 1],
-                        outputRange: [0, maxBlobOpacity, maxBlobOpacity],
-                        extrapolate: "clamp",
-                      });
-                      const scale = smokeOp.interpolate({
-                        inputRange: [delay, delay + 0.35, 1],
-                        outputRange: [0.55, 1, 1],
-                        extrapolate: "clamp",
-                      });
-                      const translateY = smokeOp.interpolate({
-                        inputRange: [delay, delay + 0.35, 1],
-                        outputRange: [12, 0, 0],
-                        extrapolate: "clamp",
-                      });
-                      return (
-                        <Animated.View
-                          key={i}
-                          pointerEvents="none"
-                          style={{
-                            position: "absolute",
-                            width: diameter,
-                            height: diameter,
-                            left: cfg.cx - cfg.size,
-                            top: cfg.cy - cfg.size,
-                            opacity,
-                            transform: [{ scale }, { translateY }],
-                          }}
-                        >
-                          <Svg width={diameter} height={diameter}>
-                            <Defs>
-                              <RadialGradient
-                                id={`sg${i}`}
-                                cx="50%"
-                                cy="50%"
-                                rx="50%"
-                                ry="50%"
-                              >
-                                <Stop
-                                  offset="0%"
-                                  stopColor={color}
-                                  stopOpacity="0.95"
-                                />
-                                <Stop
-                                  offset="50%"
-                                  stopColor={color}
-                                  stopOpacity="0.6"
-                                />
-                                <Stop
-                                  offset="100%"
-                                  stopColor={color}
-                                  stopOpacity="0"
-                                />
-                              </RadialGradient>
-                            </Defs>
-                            <Circle
-                              cx={cfg.size}
-                              cy={cfg.size}
-                              r={cfg.size}
-                              fill={`url(#sg${i})`}
-                            />
-                          </Svg>
-                        </Animated.View>
-                      );
-                    })}
-                  </View>
-                )}
+                {smokeBlobs}
 
                 {/* 연기 위에 다시 얹는 유리 표면 shine — 색이 들어와도 유리 질감 유지 */}
                 <Svg
@@ -1282,20 +1374,64 @@ export default function HomeScreen() {
         )}
       </View>
 
-      <TouchableOpacity
-        style={[styles.floatingBtn, { bottom: 110 + insets.bottom }]}
-        onPress={() => {
-          setChatMounted(true);
-          setShowChat(true);
-        }}
-        activeOpacity={0.85}
+      {/* 챗봇 진입 — 아이콘만 두면 마스코트 장식으로 읽힌다.
+          라벨을 항상 붙이고, 첫 방문에만 말풍선으로 한 번 더 알린다. */}
+      <View
+        // BottomNav 와 같은 기준으로 띄운다 (BottomNav: 20 + max(inset,12),
+        // 높이 약 52) — 어느 기기에서든 하단 바 위 20 간격이 유지된다.
+        style={[
+          styles.floatingWrap,
+          { bottom: 92 + Math.max(insets.bottom, 12) },
+        ]}
+        pointerEvents="box-none"
       >
-        <Image
-          source={require("@/assets/images/chatboticon.png")}
-          style={styles.floatingIcon}
-          resizeMode="contain"
-        />
-      </TouchableOpacity>
+        {showChatHint && (
+          <TouchableOpacity
+            style={[
+              styles.chatHint,
+              {
+                backgroundColor: darkMode
+                  ? "rgba(42,32,72,0.88)"
+                  : "rgba(255,255,255,0.92)",
+              },
+            ]}
+            onPress={openChat}
+            activeOpacity={0.85}
+          >
+            <Text style={[styles.chatHintText, { color: theme.title }]}>
+              꿈 해몽이 궁금하면 몽이에게 물어보세요
+            </Text>
+          </TouchableOpacity>
+        )}
+
+        <TouchableOpacity
+          style={styles.floatingBtn}
+          onPress={openChat}
+          activeOpacity={0.85}
+          accessibilityRole="button"
+          accessibilityLabel="AI 꿈해몽 챗봇 열기"
+        >
+          <Image
+            source={require("@/assets/images/chatboticon.png")}
+            style={styles.floatingIcon}
+            resizeMode="contain"
+          />
+          <View
+            style={[
+              styles.floatingLabel,
+              {
+                backgroundColor: darkMode
+                  ? "rgba(42,32,72,0.88)"
+                  : "rgba(255,255,255,0.92)",
+              },
+            ]}
+          >
+            <Text style={[styles.floatingLabelText, { color: theme.title }]}>
+              AI 꿈해몽
+            </Text>
+          </View>
+        </TouchableOpacity>
+      </View>
 
       {chatMounted && (
         <Suspense fallback={null}>
@@ -1341,7 +1477,9 @@ export default function HomeScreen() {
           else handleModalClose();
         }}
       >
-        {fortune && (
+        {/* 닫혀 있을 때도 시트 전체(카테고리 카드 5장 + 가이드)를 매 렌더마다
+            엘리먼트로 만들고 있었다. 열려 있을 때만 만든다. */}
+        {showModal && fortune && (
           <View style={styles.modalOverlay}>
             <TouchableOpacity
               style={StyleSheet.absoluteFillObject}
@@ -1351,7 +1489,12 @@ export default function HomeScreen() {
             <Animated.View
               style={[
                 styles.modalContainer,
-                { transform: [{ translateY: sheetY }] },
+                {
+                  transform: [{ translateY: sheetY }],
+                  // 시트가 화면 맨 아래에 붙는다 — 시스템 내비 영역만큼 더 띄워야
+                  // 맨 아래 "확인" 버튼이 안 잘린다.
+                  paddingBottom: 24 + Math.max(insets.bottom, 8),
+                },
               ]}
             >
               {/* 손잡이 "띠" 전체가 터치 대상 — pill(40×4)만 노리게 하면
@@ -1450,7 +1593,12 @@ export default function HomeScreen() {
                   activeOpacity={1}
                   onPress={() => setShowGuide(false)}
                 />
-                <View style={styles.guideModalContainer}>
+                <View
+                  style={[
+                    styles.guideModalContainer,
+                    { paddingBottom: 24 + Math.max(insets.bottom, 8) },
+                  ]}
+                >
                   {/* handle 의 marginBottom 은 운세 시트의 handleZone 이 대신하게
                       되면서 스타일에서 빠졌다. 가이드는 이번 변경 대상이 아니라
                       기존 간격을 인라인으로 유지한다. */}
@@ -1582,17 +1730,52 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#fff",
   },
-  floatingBtn: {
+  floatingWrap: {
     position: "absolute",
-    bottom: 110,
     right: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    alignItems: "flex-end",
+    gap: 8,
+  },
+  floatingBtn: {
     alignItems: "center",
     justifyContent: "center",
+    // 라벨 폭이 아이콘보다 넓어도 아이콘이 오른쪽 기준으로 정렬되게 한다.
+    alignSelf: "flex-end",
   },
   floatingIcon: { width: 70, height: 70 },
+  floatingLabel: {
+    marginTop: -6,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 999,
+    shadowColor: "#2A2048",
+    shadowOpacity: 0.16,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+  },
+  floatingLabelText: {
+    fontFamily: "OnglyphPDH",
+    fontSize: 13,
+    letterSpacing: 0.5,
+  },
+  chatHint: {
+    maxWidth: 220,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 16,
+    shadowColor: "#2A2048",
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 4,
+  },
+  chatHintText: {
+    fontFamily: "OnglyphPDH",
+    fontSize: 14,
+    lineHeight: 20,
+    letterSpacing: 0.3,
+  },
 
   modalOverlay: {
     flex: 1,

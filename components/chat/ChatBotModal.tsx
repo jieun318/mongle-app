@@ -12,7 +12,7 @@ import {
   Keyboard,
 } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useBottomSpace } from "@/lib/layout";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Svg, { Path } from "react-native-svg";
 import Constants from "expo-constants";
@@ -404,8 +404,8 @@ export default function ChatBotModal({
   const [reportTarget, setReportTarget] = useState<ChatMessage | null>(null);
   const [reportNotice, setReportNotice] = useState<string | null>(null);
   const scrollRef = useRef<ScrollView>(null);
-  const insets = useSafeAreaInsets();
-  // 키보드 표시 여부 — 입력바 하단 여백을 시스템 네비바(insets.bottom)에 맞추되,
+  const space = useBottomSpace();
+  // 키보드 표시 여부 — 입력바 하단 여백을 시스템 내비 영역(space.system)에 맞추되,
   // 키보드가 올라오면 KeyboardAvoidingView 가 이미 밀어 올리므로 여분 여백을 뺀다.
   const [kbShown, setKbShown] = useState(false);
   useEffect(() => {
@@ -942,7 +942,7 @@ export default function ChatBotModal({
             <View
               style={[
                 styles.inputBar,
-                { paddingBottom: kbShown ? 12 : 12 + insets.bottom },
+                { paddingBottom: kbShown ? 12 : 12 + space.system },
               ]}
             >
               <TextInput

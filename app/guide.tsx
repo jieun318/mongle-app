@@ -1,14 +1,19 @@
 import { ScrollView, View, Text, StyleSheet } from "react-native";
 import { Stack } from "expo-router";
+import { useBottomSpace } from "@/lib/layout";
 
 // 이용 안내 — 마이페이지 > 약관 및 정보 에서 접근. 기능별 사용법 안내.
 export default function GuideScreen() {
+  const space = useBottomSpace();
   return (
     <>
       <Stack.Screen options={{ title: "이용 안내", headerShown: false }} />
       <ScrollView
         style={styles.root}
-        contentContainerStyle={styles.container}
+        contentContainerStyle={[
+          styles.container,
+          { paddingBottom: 64 + space.system },
+        ]}
         showsVerticalScrollIndicator={false}
       >
         <Text style={styles.h1}>이용 안내</Text>
@@ -132,7 +137,7 @@ const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 20,
     paddingTop: 48,
-    paddingBottom: 64,
+    // paddingBottom 은 화면 고유 여백 + useBottomSpace().system 으로 렌더 시점에 지정.
     maxWidth: 760,
     width: "100%",
     alignSelf: "center",

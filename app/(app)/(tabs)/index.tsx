@@ -14,7 +14,7 @@ import {
   InteractionManager,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useBottomSpace } from "@/lib/layout";
 import { useRouter } from "expo-router";
 import {
   useState,
@@ -306,7 +306,7 @@ const SHEET_CLOSE_VELOCITY = 0.8;
 
 export default function HomeScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
+  const space = useBottomSpace();
   const { session } = useSession();
   const userId = session?.user?.id ?? null;
   // 운세·구슬 상태는 소유자(userId)와 함께 보관한다. 계정이 바뀌면 이펙트가
@@ -1377,12 +1377,8 @@ export default function HomeScreen() {
       {/* 챗봇 진입 — 아이콘만 두면 마스코트 장식으로 읽힌다.
           라벨을 항상 붙이고, 첫 방문에만 말풍선으로 한 번 더 알린다. */}
       <View
-        // BottomNav 와 같은 기준으로 띄운다 (BottomNav: 20 + max(inset,12),
-        // 높이 약 52) — 어느 기기에서든 하단 바 위 20 간격이 유지된다.
-        style={[
-          styles.floatingWrap,
-          { bottom: 92 + Math.max(insets.bottom, 12) },
-        ]}
+        // BottomNav 바로 위. 계산은 lib/layout 이 단일 소스.
+        style={[styles.floatingWrap, { bottom: space.aboveNav }]}
         pointerEvents="box-none"
       >
         {showChatHint && (
@@ -1493,7 +1489,7 @@ export default function HomeScreen() {
                   transform: [{ translateY: sheetY }],
                   // 시트가 화면 맨 아래에 붙는다 — 시스템 내비 영역만큼 더 띄워야
                   // 맨 아래 "확인" 버튼이 안 잘린다.
-                  paddingBottom: 24 + Math.max(insets.bottom, 8),
+                  paddingBottom: 24 + space.system,
                 },
               ]}
             >
@@ -1596,7 +1592,7 @@ export default function HomeScreen() {
                 <View
                   style={[
                     styles.guideModalContainer,
-                    { paddingBottom: 24 + Math.max(insets.bottom, 8) },
+                    { paddingBottom: 24 + space.system },
                   ]}
                 >
                   {/* handle 의 marginBottom 은 운세 시트의 handleZone 이 대신하게

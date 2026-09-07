@@ -10,7 +10,7 @@ import {
   InteractionManager,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useBottomSpace } from "@/lib/layout";
 import { useFocusEffect, useRouter } from "expo-router";
 import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import BottomNav from "@/components/ui/BottomNav";
@@ -52,8 +52,8 @@ function buildKeywordChips(recents: string[]): string[] {
 }
 
 export default function SearchScreen() {
+  const space = useBottomSpace();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const [query, setQuery] = useState("");
   const [showChat, setShowChat] = useState(false);
   // 챗봇을 한 번이라도 열었는지 — 열린 뒤엔 계속 마운트 유지(닫힘 애니 보존).
@@ -106,7 +106,7 @@ export default function SearchScreen() {
       <ScrollView
         contentContainerStyle={[
           styles.scroll,
-          { paddingBottom: 120 + insets.bottom },
+          { paddingBottom: space.withNav },
         ]}
         showsVerticalScrollIndicator={false}
       >
@@ -196,7 +196,7 @@ export default function SearchScreen() {
 const styles = StyleSheet.create({
   scroll: {
     paddingTop: 60,
-    // paddingBottom 은 인셋 반영해 인라인으로 지정 (120 + insets.bottom).
+    // paddingBottom 은 useBottomSpace().withNav 로 렌더 시점에 덮어쓴다.
     paddingHorizontal: GRID_PADDING,
     gap: 20,
   },

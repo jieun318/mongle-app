@@ -11,6 +11,7 @@ import {
 import { showNotice } from "@/lib/dialog";
 import { SettingsIcon, PencilIcon } from "@/components/ui/icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { useBottomSpace } from "@/lib/layout";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import BottomNav from "@/components/ui/BottomNav";
@@ -48,6 +49,7 @@ function formatJoinDate(iso: string | undefined): string {
 }
 
 export default function MypageScreen() {
+  const space = useBottomSpace();
   const router = useRouter();
   const [profile, setProfile] = useState<ProfileRecord | null>(null);
   const [email, setEmail] = useState<string | null>(null);
@@ -106,7 +108,7 @@ export default function MypageScreen() {
         </View>
       ) : (
         <ScrollView
-          contentContainerStyle={styles.scroll}
+          contentContainerStyle={[styles.scroll, { paddingBottom: space.withNav }]}
           showsVerticalScrollIndicator={false}
         >
           {/* 프로필 카드 */}
@@ -332,7 +334,8 @@ const styles = StyleSheet.create({
   },
 
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
-  scroll: { padding: 20, paddingTop: 12, paddingBottom: 120, gap: 18 },
+  // paddingBottom 은 useBottomSpace().withNav 로 렌더 시점에 덮어쓴다.
+  scroll: { padding: 20, paddingTop: 12, gap: 18 },
 
   profileCard: {
     flexDirection: "row",

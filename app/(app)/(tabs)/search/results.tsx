@@ -12,6 +12,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import BottomNav from "@/components/ui/BottomNav";
 import { SearchIcon } from "@/components/ui/icons";
+import { useBottomSpace } from "@/lib/layout";
 import ChatBotModal from "@/components/chat/ChatBotModal";
 import DreamDetailModal from "@/components/dream/DreamDetailModal";
 import DreamListItem from "@/components/dream/DreamListItem";
@@ -22,6 +23,7 @@ import {
 import { useSearchDreamItems } from "@/features/dream/dreamQueries";
 
 export default function SearchResultsScreen() {
+  const space = useBottomSpace();
   const { q } = useLocalSearchParams<{ q?: string }>();
   const router = useRouter();
 
@@ -57,7 +59,7 @@ export default function SearchResultsScreen() {
       </View>
 
       <ScrollView
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, { paddingBottom: space.withNav }]}
         showsVerticalScrollIndicator={false}
       >
         {dreams.length === 0 && (
@@ -158,7 +160,8 @@ const styles = StyleSheet.create({
   searchIcon: { width: 16, height: 16, opacity: 0.55 },
   searchInput: { flex: 1, fontSize: 13, color: "#6858B8", padding: 0 },
 
-  list: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 120, gap: 8 },
+  // paddingBottom 은 useBottomSpace().withNav 로 렌더 시점에 덮어쓴다.
+  list: { paddingHorizontal: 20, paddingTop: 16, gap: 8 },
 
   empty: { alignItems: "center", paddingTop: 60, gap: 8 },
   emptyEmoji: { fontSize: 48, opacity: 0.6 },

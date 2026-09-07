@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { useBottomSpace } from "@/lib/layout";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import {
@@ -34,6 +35,7 @@ function groupByMonth(weeks: PastWeek[]): MonthGroup[] {
 }
 
 export default function FortuneHistoryScreen() {
+  const space = useBottomSpace();
   const router = useRouter();
   const [weeks, setWeeks] = useState<PastWeek[]>([]);
   const [loading, setLoading] = useState(true);
@@ -73,7 +75,10 @@ export default function FortuneHistoryScreen() {
         </View>
       ) : (
         <ScrollView
-          contentContainerStyle={styles.scroll}
+          contentContainerStyle={[
+            styles.scroll,
+            { paddingBottom: 60 + space.system },
+          ]}
           showsVerticalScrollIndicator={false}
         >
           {months.length === 0 ? (
@@ -186,7 +191,8 @@ const styles = StyleSheet.create({
   },
 
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
-  scroll: { padding: 20, paddingTop: 12, paddingBottom: 60, gap: 20 },
+  // paddingBottom 은 화면 고유 여백 + useBottomSpace().system 으로 렌더 시점에 지정.
+  scroll: { padding: 20, paddingTop: 12, gap: 20 },
 
   empty: { alignItems: "center", paddingTop: 80, gap: 12 },
   emptyEmoji: { fontSize: 48, opacity: 0.7 },

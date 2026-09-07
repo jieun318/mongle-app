@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { useBottomSpace } from "@/lib/layout";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -24,6 +25,7 @@ import { useDreamItem } from "@/features/dream/dreamQueries";
 import DreamEmoji from "@/components/dream/DreamEmoji";
 
 export default function NewDreamScreen() {
+  const space = useBottomSpace();
   const router = useRouter();
   const { dreamItemId, initialTitle, editId } = useLocalSearchParams<{
     dreamItemId?: string;
@@ -146,7 +148,10 @@ export default function NewDreamScreen() {
           </View>
         ) : (
         <ScrollView
-          contentContainerStyle={styles.scroll}
+          contentContainerStyle={[
+            styles.scroll,
+            { paddingBottom: 60 + space.system },
+          ]}
           keyboardShouldPersistTaps="handled"
         >
           {sourceItem && !isEdit ? (
@@ -265,7 +270,8 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
 
-  scroll: { padding: 20, paddingTop: 16, paddingBottom: 60, gap: 18 },
+  // paddingBottom 은 화면 고유 여백 + useBottomSpace().system 으로 렌더 시점에 지정.
+  scroll: { padding: 20, paddingTop: 16, gap: 18 },
 
   sourceBanner: {
     flexDirection: "row",

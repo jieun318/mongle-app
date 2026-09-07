@@ -12,6 +12,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import BottomNav from "@/components/ui/BottomNav";
 import { SearchIcon } from "@/components/ui/icons";
+import { useBottomSpace } from "@/lib/layout";
 import DreamDetailModal from "@/components/dream/DreamDetailModal";
 import DreamListItem from "@/components/dream/DreamListItem";
 import {
@@ -23,6 +24,7 @@ import {
 import { useDreamItemsByCategory } from "@/features/dream/dreamQueries";
 
 export default function CategoryListScreen() {
+  const space = useBottomSpace();
   const { category } = useLocalSearchParams<{ category: string }>();
   const router = useRouter();
 
@@ -102,7 +104,7 @@ export default function CategoryListScreen() {
       </ScrollView>
 
       <ScrollView
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, { paddingBottom: space.withNav }]}
         showsVerticalScrollIndicator={false}
       >
         {isLoading && dreams.length === 0 && (
@@ -206,7 +208,8 @@ const styles = StyleSheet.create({
   },
   filterTagTextActive: { color: "#fff" },
 
-  list: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 120, gap: 8 },
+  // paddingBottom 은 useBottomSpace().withNav 로 렌더 시점에 덮어쓴다.
+  list: { paddingHorizontal: 20, paddingTop: 12, gap: 8 },
 
   empty: { alignItems: "center", paddingTop: 60, gap: 8 },
   emptyEmoji: { fontSize: 48, opacity: 0.6 },

@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useBottomSpace } from "@/lib/layout";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -51,6 +52,7 @@ import {
 export default function SettingsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const space = useBottomSpace();
   const [loading, setLoading] = useState(true);
   const [notify, setNotify] = useState(true);
   const [notifyReminder, setNotifyReminder] = useState(false);
@@ -324,7 +326,10 @@ export default function SettingsScreen() {
         </View>
       ) : (
         <ScrollView
-          contentContainerStyle={styles.scroll}
+          contentContainerStyle={[
+            styles.scroll,
+            { paddingBottom: 60 + space.system },
+          ]}
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.section}>
@@ -595,7 +600,8 @@ const styles = StyleSheet.create({
   },
 
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
-  scroll: { padding: 20, paddingTop: 12, paddingBottom: 60, gap: 14 },
+  // paddingBottom 은 화면 고유 여백 + useBottomSpace().system 으로 렌더 시점에 지정.
+  scroll: { padding: 20, paddingTop: 12, gap: 14 },
 
   section: {
     backgroundColor: "rgba(255,255,255,0.92)",

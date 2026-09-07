@@ -1,5 +1,6 @@
 import { ScrollView, View, Text, StyleSheet } from "react-native";
 import { Stack } from "expo-router";
+import { useBottomSpace } from "@/lib/layout";
 
 // 계정 및 데이터 삭제 안내 — Google Play 정책상 계정 생성 기능이 있는 앱은
 // 웹에서 접근 가능한 계정 삭제 요청 경로를 제공해야 한다.
@@ -7,6 +8,7 @@ import { Stack } from "expo-router";
 //   https://mongle-app.vercel.app/account-deletion
 // 삭제 범위는 supabase/schema.sql 의 delete_my_account() RPC 와 일치시켜야 한다.
 export default function AccountDeletionScreen() {
+  const space = useBottomSpace();
   return (
     <>
       <Stack.Screen
@@ -14,7 +16,10 @@ export default function AccountDeletionScreen() {
       />
       <ScrollView
         style={styles.root}
-        contentContainerStyle={styles.container}
+        contentContainerStyle={[
+          styles.container,
+          { paddingBottom: 64 + space.system },
+        ]}
         showsVerticalScrollIndicator={false}
       >
         <Text style={styles.h1}>계정 및 데이터 삭제 안내</Text>
@@ -200,7 +205,7 @@ const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 20,
     paddingTop: 48,
-    paddingBottom: 64,
+    // paddingBottom 은 화면 고유 여백 + useBottomSpace().system 으로 렌더 시점에 지정.
     maxWidth: 760,
     width: "100%",
     alignSelf: "center",

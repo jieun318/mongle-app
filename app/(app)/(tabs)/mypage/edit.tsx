@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useBottomSpace } from "@/lib/layout";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import * as ImagePicker from "expo-image-picker";
@@ -64,6 +65,7 @@ import {
 export default function EditProfileScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const space = useBottomSpace();
   const [loading, setLoading] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
 
@@ -188,7 +190,10 @@ export default function EditProfileScreen() {
           </View>
         ) : (
           <ScrollView
-            contentContainerStyle={styles.scroll}
+            contentContainerStyle={[
+              styles.scroll,
+              { paddingBottom: 60 + space.system },
+            ]}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
@@ -317,7 +322,8 @@ const styles = StyleSheet.create({
   },
 
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
-  scroll: { padding: 20, paddingTop: 12, paddingBottom: 60, gap: 14 },
+  // paddingBottom 은 화면 고유 여백 + useBottomSpace().system 으로 렌더 시점에 지정.
+  scroll: { padding: 20, paddingTop: 12, gap: 14 },
 
   section: {
     backgroundColor: "rgba(255,255,255,0.92)",

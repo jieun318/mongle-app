@@ -7,7 +7,7 @@ import {
   View,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useBottomSpace } from "@/lib/layout";
 import { DreamItem } from "@/features/dream/dreamData";
 import DreamEmoji from "@/components/dream/DreamEmoji";
 
@@ -27,7 +27,7 @@ export default function DreamDetailModal({
   // 시트가 화면 맨 아래에 붙는데(justifyContent: flex-end) 마지막 요소가
   // "닫기 / 꿈 기록하기" 버튼이라, 시스템 내비 영역만큼 아래 여백을 주지 않으면
   // 버튼이 내비바에 물려 잘린다. 인셋이 0으로 잡히는 기기(웹·일부 제스처 기기)에서도 최소 48은 남긴다.
-  const insets = useSafeAreaInsets();
+  const space = useBottomSpace();
 
   return (
     <Modal
@@ -50,7 +50,7 @@ export default function DreamDetailModal({
               showsVerticalScrollIndicator={false}
               contentContainerStyle={[
                 styles.scrollContent,
-                { paddingBottom: 24 + Math.max(insets.bottom, 24) },
+                { paddingBottom: 36 + space.system },
               ]}
             >
               <LinearGradient

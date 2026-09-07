@@ -14,6 +14,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useMemo, useRef, useState } from "react";
 import BottomNav from "@/components/ui/BottomNav";
 import { SearchIcon } from "@/components/ui/icons";
+import { useBottomSpace } from "@/lib/layout";
 import RecordedDreamCard from "@/components/dream/RecordedDreamCard";
 import RecordedDreamModal from "@/components/dream/RecordedDreamModal";
 import AiDreamCard from "@/components/dream/AiDreamCard";
@@ -44,6 +45,7 @@ const SOURCE_BY_TAB: Record<FilterTab, DreamSource | null> = {
 };
 
 export default function StorageScreen() {
+  const space = useBottomSpace();
   const router = useRouter();
 
   // 홈에서 미리 예열해둔 목록이 있으면 그걸로 시작 → 첫 진입 스피너 생략.
@@ -223,7 +225,7 @@ export default function StorageScreen() {
         </View>
       ) : (
         <ScrollView
-          contentContainerStyle={styles.list}
+          contentContainerStyle={[styles.list, { paddingBottom: space.withNav }]}
           showsVerticalScrollIndicator={false}
           onScrollBeginDrag={closeMenu}
           keyboardShouldPersistTaps="handled"
@@ -358,7 +360,8 @@ const styles = StyleSheet.create({
   statValue: { fontSize: 18, fontWeight: "700", color: "#3828A0" },
   statLabel: { fontSize: 11, color: "#9888CC" },
 
-  list: { paddingHorizontal: 20, paddingTop: 14, paddingBottom: 120, gap: 10 },
+  // paddingBottom 은 useBottomSpace().withNav 로 렌더 시점에 덮어쓴다.
+  list: { paddingHorizontal: 20, paddingTop: 14, gap: 10 },
 
   center: { flex: 1, alignItems: "center", justifyContent: "center", gap: 8 },
 

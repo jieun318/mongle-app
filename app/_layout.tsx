@@ -2,7 +2,7 @@ import { Stack } from "expo-router";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import { Platform, View } from "react-native";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { queryClient } from "@/lib/queryClient";
@@ -12,9 +12,6 @@ import { setupNotificationHandler } from "@/lib/notifications";
 
 // 네이티브 스플래시는 커스텀 스플래시 첫 레이아웃 시점에 직접 hide 한다.
 SplashScreen.preventAutoHideAsync().catch(() => {});
-
-// [측정용 임시 — STEP 2-2] JS 모듈 평가 시점 기준 콜드스타트 측정. 검증 후 제거.
-const __coldStartAt = Date.now();
 
 // 앱 foreground 에서도 알림이 표시되도록
 setupNotificationHandler();
@@ -58,14 +55,8 @@ export default function RootLayout() {
 
   // 커스텀 스플래시가 첫 레이아웃으로 그려진 직후 네이티브 스플래시를 hide.
   // 비차단이라 폰트 로드와 무관하게 즉시 인계 → 깜빡임 없음.
-  const firstPaintLogged = useRef(false);
   const onRootLayout = useCallback(() => {
     SplashScreen.hideAsync().catch(() => {});
-    // [측정용 임시 — STEP 2-2] 커스텀 스플래시 첫 paint 까지. 검증 후 제거.
-    if (!firstPaintLogged.current) {
-      firstPaintLogged.current = true;
-      console.log(`[coldstart] module→firstPaint ${Date.now() - __coldStartAt}ms`);
-    }
   }, []);
 
   return (
@@ -80,13 +71,7 @@ export default function RootLayout() {
           {!splashDone ? (
             <SplashAnimation
               isAppReady={isAppReady}
-              onFinish={() => {
-                // [측정용 임시 — STEP 2-2] 검증 후 이 로그 제거
-                console.log(
-                  `[coldstart] module→splashDone ${Date.now() - __coldStartAt}ms`,
-                );
-                setSplashDone(true);
-              }}
+              onFinish={() => setSplashDone(true)}
             />
           ) : null}
         </View>

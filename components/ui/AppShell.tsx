@@ -24,16 +24,26 @@ export default function AppShell({ children }: { children: ReactNode }) {
   // 하이드레이션 뒤에도 리사이즈 전까지 0 으로 남아, 넓은 창에서도 wide 가
   // false 로 굳는다(실측 확인). onLayout 은 웹에서 ResizeObserver 로 붙어
   // 첫 레이아웃과 창 크기 변경 모두에서 정확한 값을 준다.
-  const [available, setAvailable] = useState(0);
+  const [size, setSize] = useState({ w: 0, h: 0 });
   const onLayout = (e: LayoutChangeEvent) =>
-    setAvailable(e.nativeEvent.layout.width);
+    setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height });
 
-  const wide = available > SHELL_MAX_W;
-  const shellW = available > 0 ? Math.min(available, SHELL_MAX_W) : null;
+  const wide = size.w > SHELL_MAX_W;
+  const shellW = size.w > 0 ? Math.min(size.w, SHELL_MAX_W) : null;
+
+  // 폰 목업 — 위아래 여백을 남겨 아래 모서리가 화면 안에 보이게 한다.
+  // 창이 낮으면 여백을 줄여 잘리지 않게 한다.
+  const vMargin = size.h <= 760 ? 12 : 32;
+  const shellH = Math.max(320, size.h - vMargin * 2);
 
   return (
     <View style={[styles.outer, wide && styles.outerWide]} onLayout={onLayout}>
-      <View style={[styles.shell, wide && styles.shellEdge]}>
+      <View
+        style={[
+          styles.shell,
+          wide ? [styles.shellPhone, { height: shellH }] : styles.shellFill,
+        ]}
+      >
         <ShellWidthContext.Provider value={shellW}>
           {children}
         </ShellWidthContext.Provider>
@@ -48,25 +58,28 @@ const styles = StyleSheet.create({
   // 밝은 색(#E7E2F0)은 앱 낮 배경(#F5F3FA)과 대비가 없어 경계가 안 보이고,
   // 홈탭이 밤 배경(#15122A)으로 바뀌면 반대로 바깥이 튀었다.
   // 앱 밤 배경보다 살짝 밝게 두어 밤에도 셸이 구분된다.
-  outerWide: { backgroundColor: "#2A2440" },
+  // 넓은 창에서는 폰이 놓인 것처럼 세로 가운데 정렬한다.
+  outerWide: { backgroundColor: "#2A2440", justifyContent: "center" },
 
   shell: {
-    flex: 1,
     width: "100%",
     maxWidth: SHELL_MAX_W,
     alignSelf: "center",
   },
-  // 어두운 바깥 위에서 보이는 밝은 hairline + 모서리 라운드로 화면처럼 보이게.
-  // overflow:hidden 이 있어야 안쪽 그라디언트가 둥근 모서리에 맞춰 잘린다.
-  shellEdge: {
-    borderLeftWidth: StyleSheet.hairlineWidth,
-    borderRightWidth: StyleSheet.hairlineWidth,
-    borderColor: "rgba(255,255,255,0.08)",
-    borderRadius: 18,
+  // 폰(≤480)에서는 그냥 화면을 채운다.
+  shellFill: { flex: 1 },
+
+  // 폰 목업 프레임. 높이는 렌더 시점에 주입한다(flex:1 로 두면 뷰포트를 꽉 채워
+  // 아래 모서리가 잘린다). borderWidth 가 베젤 역할을 하고, overflow:hidden 이
+  // 있어야 안쪽 그라디언트·스크롤 내용이 둥근 모서리에 맞춰 잘린다.
+  shellPhone: {
+    borderRadius: 44,
+    borderWidth: 9,
+    borderColor: "#1B1730",
     overflow: "hidden",
     shadowColor: "#000",
-    shadowOpacity: 0.35,
-    shadowRadius: 24,
-    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.45,
+    shadowRadius: 40,
+    shadowOffset: { width: 0, height: 18 },
   },
 });

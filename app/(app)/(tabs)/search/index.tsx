@@ -9,7 +9,7 @@ import {
   InteractionManager,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { useBottomSpace, useShellWidth } from "@/lib/layout";
+import { useBottomSpace } from "@/lib/layout";
 import { useFocusEffect, useRouter } from "expo-router";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import BottomNav from "@/components/ui/BottomNav";
@@ -27,20 +27,19 @@ import { getRecentSearches, addRecentSearch } from "@/features/dream/recentSearc
 
 const GRID_PADDING = 20;
 const GRID_GAP = 10;
-// 폭 상한은 AppShell 이 (app)/(auth) 스택 전체에 한 번 건다. 이 화면은 셸 폭만
-// 받아 카드 크기를 계산한다 — 화면마다 개별로 폭을 걸면 본문만 좁아지고
-// 탭바·배경은 늘어난 채 남아 서로 어긋난다.
-
-/**
- * 카테고리 카드 한 변의 길이. 3열 고정이고 셸 폭에 따라 다시 계산된다.
- */
-function useCardSize(): number {
-  const shellW = useShellWidth();
-  return useMemo(() => {
-    // floor 하지 않으면 3*CARD_W + 2*GAP 가 컨테이너보다 1px 넘쳐 3번째 카드가
-    // 다음 줄로 밀린다(특정 화면 밀도에서 2열로 깨짐). 내림해서 한 줄 3열을 보장.
-    return Math.floor((shellW - GRID_PADDING * 2 - GRID_GAP * 2) / 3);
-  }, [shellW]);
+// 카드 폭은 셸 폭에서 역산하지 않고 그리드 컨테이너를 직접 잰다.
+//
+// 역산하면 프리렌더에서 틀린다 — 정적 익스포트는 폭을 모른 채 그려지므로 셸
+// 최대 폭(480)을 가정해 카드가 140px 로 박히는데, 실제 컨테이너가 350px 인
+// 폰에서는 3개(440px)가 안 들어가 2열로 떨어진다(실측 확인).
+// 컨테이너 onLayout 은 웹·네이티브 모두에서 실제 값을 주고 창 크기 변화도 따라간다.
+//
+// 측정 전(첫 렌더·프리렌더)에는 퍼센트 폭으로 그린다 — 컨테이너가 몇 px 이든
+// 3열이 유지되므로 프리렌더 HTML 도 깨지지 않는다.
+function cardSizeFor(gridW: number): number {
+  // floor 하지 않으면 3*CARD_W + 2*GAP 가 컨테이너보다 1px 넘쳐 3번째 카드가
+  // 다음 줄로 밀린다(특정 화면 밀도에서 2열로 깨짐). 내림해서 한 줄 3열을 보장.
+  return Math.floor((gridW - GRID_GAP * 2) / 3);
 }
 
 const MAX_CHIPS = 8;
@@ -63,7 +62,8 @@ function buildKeywordChips(recents: string[]): string[] {
 
 export default function SearchScreen() {
   const space = useBottomSpace();
-  const cardSize = useCardSize();
+  const [gridW, setGridW] = useState(0);
+  const cardSize = gridW > 0 ? cardSizeFor(gridW) : 0;
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [showChat, setShowChat] = useState(false);
@@ -159,13 +159,19 @@ export default function SearchScreen() {
           </View>
         </View>
 
-        <View style={styles.categoryGrid}>
+        <View
+          style={styles.categoryGrid}
+          onLayout={(e) => setGridW(e.nativeEvent.layout.width)}
+        >
           {CATEGORIES.map((cat) => (
             <TouchableOpacity
               key={cat.id}
               style={[
                 styles.categoryCard,
-                { backgroundColor: cat.bg, width: cardSize, height: cardSize },
+                cardSize > 0
+                  ? { width: cardSize, height: cardSize }
+                  : styles.categoryCardAuto,
+                { backgroundColor: cat.bg },
               ]}
               activeOpacity={0.85}
               onPress={() => goCategory(cat)}
@@ -261,8 +267,10 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: GRID_GAP,
   },
+  // 측정 전 폴백 — 31% x 3 + gap 20 이 어떤 컨테이너 폭에서도 3열에 들어간다.
+  categoryCardAuto: { width: "31%", aspectRatio: 1 },
   categoryCard: {
-    // width/height 는 useCardSize() 결과로 렌더 시점에 주입한다.
+    // width/height 는 컨테이너를 잰 값으로 렌더 시점에 주입한다.
     borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",

@@ -5,14 +5,14 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
-  Dimensions,
+  useWindowDimensions,
   Image,
   InteractionManager,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useBottomSpace } from "@/lib/layout";
 import { useFocusEffect, useRouter } from "expo-router";
-import { lazy, Suspense, useCallback, useEffect, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import BottomNav from "@/components/ui/BottomNav";
 import { SearchIcon } from "@/components/ui/icons";
 // 챗봇은 실제로 열 때만 로드 — 검색 탭 진입 시 무거운 챗 모듈을 지연시킨다.
@@ -26,12 +26,28 @@ import {
 } from "@/features/dream/dreamData";
 import { getRecentSearches, addRecentSearch } from "@/features/dream/recentSearches";
 
-const SCREEN_W = Dimensions.get("window").width;
 const GRID_PADDING = 20;
 const GRID_GAP = 10;
-// floor 하지 않으면 3*CARD_W + 2*GAP 가 컨테이너보다 1px 넘쳐 3번째 카드가
-// 다음 줄로 밀린다(특정 화면 밀도에서 2열로 깨짐). 내림해서 한 줄 3열을 보장.
-const CARD_W = Math.floor((SCREEN_W - GRID_PADDING * 2 - GRID_GAP * 2) / 3);
+// 웹(react-native-web)에서는 창 너비가 그대로 들어와 폰 기준으로 짠 레이아웃이
+// 통째로 늘어난다. 데스크톱 브라우저에서 카테고리 카드가 480px 짜리 정사각형이
+// 되던 원인. 본문 폭을 폰 크기에서 묶고 가운데 정렬한다.
+// 폰(≤480dp)에서는 상한에 걸리지 않으므로 기존 레이아웃 그대로다.
+const CONTENT_MAX_W = 480;
+
+/**
+ * 카테고리 카드 한 변의 길이. 3열 고정이고 창 크기에 따라 다시 계산된다.
+ * Dimensions.get 을 모듈 최상단에서 쓰면 앱 시작 시 한 번만 계산돼 회전·창
+ * 크기 변경에 반응하지 못한다 — useWindowDimensions 로 구독한다.
+ */
+function useCardSize(): number {
+  const { width } = useWindowDimensions();
+  return useMemo(() => {
+    const content = Math.min(width, CONTENT_MAX_W);
+    // floor 하지 않으면 3*CARD_W + 2*GAP 가 컨테이너보다 1px 넘쳐 3번째 카드가
+    // 다음 줄로 밀린다(특정 화면 밀도에서 2열로 깨짐). 내림해서 한 줄 3열을 보장.
+    return Math.floor((content - GRID_PADDING * 2 - GRID_GAP * 2) / 3);
+  }, [width]);
+}
 
 const MAX_CHIPS = 8;
 const normalizeKw = (s: string) => s.replace(/^#/, "").trim();
@@ -53,6 +69,7 @@ function buildKeywordChips(recents: string[]): string[] {
 
 export default function SearchScreen() {
   const space = useBottomSpace();
+  const cardSize = useCardSize();
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [showChat, setShowChat] = useState(false);
@@ -152,7 +169,10 @@ export default function SearchScreen() {
           {CATEGORIES.map((cat) => (
             <TouchableOpacity
               key={cat.id}
-              style={[styles.categoryCard, { backgroundColor: cat.bg }]}
+              style={[
+                styles.categoryCard,
+                { backgroundColor: cat.bg, width: cardSize, height: cardSize },
+              ]}
               activeOpacity={0.85}
               onPress={() => goCategory(cat)}
             >
@@ -195,6 +215,9 @@ export default function SearchScreen() {
 
 const styles = StyleSheet.create({
   scroll: {
+    width: "100%",
+    maxWidth: CONTENT_MAX_W,
+    alignSelf: "center",
     paddingTop: 60,
     // paddingBottom 은 useBottomSpace().withNav 로 렌더 시점에 덮어쓴다.
     paddingHorizontal: GRID_PADDING,
@@ -221,7 +244,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(180,160,230,0.2)",
   },
-  searchIcon: { width: 16, height: 16, opacity: 0.55 },
   searchInput: { flex: 1, fontSize: 13, color: "#6858B8", padding: 0 },
 
   section: { gap: 8 },
@@ -249,8 +271,7 @@ const styles = StyleSheet.create({
     gap: GRID_GAP,
   },
   categoryCard: {
-    width: CARD_W,
-    height: CARD_W,
+    // width/height 는 useCardSize() 결과로 렌더 시점에 주입한다.
     borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",

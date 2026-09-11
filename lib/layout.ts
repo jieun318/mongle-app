@@ -1,3 +1,4 @@
+import { createContext, useContext } from "react";
 import { useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -18,9 +19,27 @@ export const SHELL_MAX_W = 480;
  * 받아 셸 밖까지 계산해 버린다(해의 호, 구름 이동 범위, 날씨 파티클 등).
  * AppShell 과 같은 상수를 쓰므로 측정 없이 항상 셸 폭과 일치한다.
  */
+/**
+ * AppShell 이 onLayout 으로 잰 실제 셸 폭. 프로바이더 밖이면 null.
+ */
+export const ShellWidthContext = createContext<number | null>(null);
+
 export function useShellWidth(): number {
+  const measured = useContext(ShellWidthContext);
   const { width } = useWindowDimensions();
-  return Math.min(width, SHELL_MAX_W);
+
+  // 측정값이 있으면 그게 정답이다.
+  //
+  // useWindowDimensions 만으로는 안 된다 — Expo 정적 익스포트에서는 프리렌더가
+  // Node 에서 돌아 window 가 없고(0), 브라우저에서 하이드레이션된 뒤에도 리사이즈
+  // 이벤트가 오기 전까지 0 으로 남는다(실측 확인: innerWidth 1280 인데 훅은 0).
+  // 그래서 검색 카드 폭이 floor((0-60)/3) = -20px 로 HTML 에 박혔고, 브라우저가
+  // 음수를 무시해 카드가 내용 크기(~60px)로 쪼그라들어 한 줄에 8개가 들어갔다.
+  if (measured != null && measured > 0) return measured;
+
+  // 아직 레이아웃 전(첫 렌더)인 경우. 0 을 그대로 흘리면 위 증상이 재현되므로
+  // 셸 최대 폭으로 가정한다. 레이아웃 직후 측정값으로 교정된다.
+  return Math.min(width || SHELL_MAX_W, SHELL_MAX_W);
 }
 
 // 화면 아래쪽 여백을 한 곳에서 계산한다.

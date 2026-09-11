@@ -1,6 +1,6 @@
-import type { ReactNode } from "react";
-import { StyleSheet, useWindowDimensions, View } from "react-native";
-import { SHELL_MAX_W } from "@/lib/layout";
+import { useState, type ReactNode } from "react";
+import { StyleSheet, View, type LayoutChangeEvent } from "react-native";
+import { SHELL_MAX_W, ShellWidthContext } from "@/lib/layout";
 
 /**
  * 앱 전체를 폰 폭으로 묶고 가운데 정렬하는 셸.
@@ -19,20 +19,36 @@ import { SHELL_MAX_W } from "@/lib/layout";
  * 칼럼으로 찌그러지면 안 되므로 루트 레이아웃에는 절대 올리지 말 것.
  */
 export default function AppShell({ children }: { children: ReactNode }) {
-  const { width } = useWindowDimensions();
-  const wide = width > SHELL_MAX_W;
+  // 창 너비가 아니라 실제 레이아웃을 잰다.
+  // Expo 정적 익스포트에서는 useWindowDimensions 가 프리렌더에서 0 이고
+  // 하이드레이션 뒤에도 리사이즈 전까지 0 으로 남아, 넓은 창에서도 wide 가
+  // false 로 굳는다(실측 확인). onLayout 은 웹에서 ResizeObserver 로 붙어
+  // 첫 레이아웃과 창 크기 변경 모두에서 정확한 값을 준다.
+  const [available, setAvailable] = useState(0);
+  const onLayout = (e: LayoutChangeEvent) =>
+    setAvailable(e.nativeEvent.layout.width);
+
+  const wide = available > SHELL_MAX_W;
+  const shellW = available > 0 ? Math.min(available, SHELL_MAX_W) : null;
 
   return (
-    <View style={[styles.outer, wide && styles.outerWide]}>
-      <View style={[styles.shell, wide && styles.shellEdge]}>{children}</View>
+    <View style={[styles.outer, wide && styles.outerWide]} onLayout={onLayout}>
+      <View style={[styles.shell, wide && styles.shellEdge]}>
+        <ShellWidthContext.Provider value={shellW}>
+          {children}
+        </ShellWidthContext.Provider>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   outer: { flex: 1 },
-  // 셸 바깥 여백 — 앱 배경(#F5F3FA)보다 한 톤 낮춰 셸이 얹혀 보이게 한다.
-  outerWide: { backgroundColor: "#E7E2F0" },
+  // 셸 바깥 여백 — 어둡게 깔아 셸이 "켜진 화면"으로 읽히게 한다.
+  // 밝은 색(#E7E2F0)은 앱 낮 배경(#F5F3FA)과 대비가 없어 경계가 안 보이고,
+  // 홈탭이 밤 배경(#15122A)으로 바뀌면 반대로 바깥이 튀었다.
+  // 앱 밤 배경보다 살짝 밝게 두어 밤에도 셸이 구분된다.
+  outerWide: { backgroundColor: "#2A2440" },
 
   shell: {
     flex: 1,
@@ -40,15 +56,17 @@ const styles = StyleSheet.create({
     maxWidth: SHELL_MAX_W,
     alignSelf: "center",
   },
-  // 바깥색과 대비가 약해 경계가 안 보이므로 얇은 좌우 선 + 은은한 그림자를 준다.
-  // 경계가 인지되는 정도까지만 — 카드처럼 떠 보이면 과하다.
+  // 어두운 바깥 위에서 보이는 밝은 hairline + 모서리 라운드로 화면처럼 보이게.
+  // overflow:hidden 이 있어야 안쪽 그라디언트가 둥근 모서리에 맞춰 잘린다.
   shellEdge: {
     borderLeftWidth: StyleSheet.hairlineWidth,
     borderRightWidth: StyleSheet.hairlineWidth,
-    borderColor: "rgba(46,38,71,0.10)",
-    shadowColor: "#2E2647",
-    shadowOpacity: 0.07,
-    shadowRadius: 18,
+    borderColor: "rgba(255,255,255,0.08)",
+    borderRadius: 18,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOpacity: 0.35,
+    shadowRadius: 24,
     shadowOffset: { width: 0, height: 0 },
   },
 });

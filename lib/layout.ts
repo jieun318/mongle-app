@@ -1,4 +1,27 @@
+import { useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+/**
+ * 앱 셸의 최대 폭.
+ *
+ * 이 앱은 폰 기준으로 짠 레이아웃인데 웹(react-native-web)에서는 창 너비가
+ * 그대로 들어와 데스크톱에서 전체가 늘어난다. AppShell 이 이 폭으로 묶고
+ * 가운데 정렬해 "가운데 뜬 폰 앱"처럼 보이게 한다.
+ * 폰(≤480dp)에서는 상한에 걸리지 않으므로 레이아웃이 전혀 바뀌지 않는다.
+ */
+export const SHELL_MAX_W = 480;
+
+/**
+ * 셸 안에서 쓸 수 있는 실제 가로 폭.
+ *
+ * 셸 안의 화면이 useWindowDimensions() 를 그대로 쓰면 창 너비(예: 1512)를
+ * 받아 셸 밖까지 계산해 버린다(해의 호, 구름 이동 범위, 날씨 파티클 등).
+ * AppShell 과 같은 상수를 쓰므로 측정 없이 항상 셸 폭과 일치한다.
+ */
+export function useShellWidth(): number {
+  const { width } = useWindowDimensions();
+  return Math.min(width, SHELL_MAX_W);
+}
 
 // 화면 아래쪽 여백을 한 곳에서 계산한다.
 //

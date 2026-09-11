@@ -8,13 +8,12 @@ import {
   Animated,
   Easing,
   ScrollView,
-  useWindowDimensions,
   PanResponder,
   AppState,
   InteractionManager,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { useBottomSpace } from "@/lib/layout";
+import { useBottomSpace, useShellWidth } from "@/lib/layout";
 import { useRouter } from "expo-router";
 import {
   useState,
@@ -303,10 +302,10 @@ const SHEET_CLOSE_DISTANCE = 100;
 const SHEET_CLOSE_VELOCITY = 0.8;
 
 export default function HomeScreen() {
-  // 해의 호(arc)와 구름 이동 범위는 하늘 배경 전체를 가로지르므로 창 너비를
-  // 그대로 쓴다. Dimensions.get 을 모듈 최상단에서 쓰면 앱 시작 시 한 번만
-  // 계산돼 회전·창 크기 변경에 반응하지 못한다 — 훅으로 구독한다.
-  const { width: screenW } = useWindowDimensions();
+  // 해의 호(arc)와 구름 이동 범위는 하늘 배경 전체를 가로지른다. 기준은 창이
+  // 아니라 AppShell 로 묶인 셸 폭이다 — 창 너비를 쓰면 데스크톱에서 해가 셸
+  // 바깥까지 이동해 화면 안에서는 영영 보이지 않는다.
+  const shellW = useShellWidth();
   const router = useRouter();
   const space = useBottomSpace();
   const { session } = useSession();
@@ -438,7 +437,7 @@ export default function HomeScreen() {
   ).current;
 
   // 해 위치 — 호(arc) 위에서 (cx, cy) 절대 좌표로 추적 (auto 모드 시 시간 기반 갱신)
-  const sunCX = useRef(new Animated.Value(screenW * 0.5)).current;
+  const sunCX = useRef(new Animated.Value(shellW * 0.5)).current;
   const sunCY = useRef(new Animated.Value(50)).current; // 정오 높이
 
   // 4단계 그라디언트 레이어 opacity (낮 base 위에 노을→황혼→밤 순서로 깔림)
@@ -483,7 +482,7 @@ export default function HomeScreen() {
       // 첫 동기화는 스냅 (애니메이션 없이 즉시 정확한 위치로)
       transitionProgress.setValue(state.darkness);
       if (state.arcT !== null) {
-        const { cx, cy } = sunArcPosition(state.arcT, screenW);
+        const { cx, cy } = sunArcPosition(state.arcT, shellW);
         sunCX.setValue(cx);
         sunCY.setValue(cy);
       }
@@ -497,7 +496,7 @@ export default function HomeScreen() {
         useNativeDriver: true,
       }).start();
       if (state.arcT !== null) {
-        const { cx, cy } = sunArcPosition(state.arcT, screenW);
+        const { cx, cy } = sunArcPosition(state.arcT, shellW);
         Animated.parallel([
           Animated.timing(sunCX, {
             toValue: cx,
@@ -513,7 +512,7 @@ export default function HomeScreen() {
       }
     }
     setDarkMode(state.darkness > 0.5);
-  }, [sunTimes, screenW, sunCX, sunCY, transitionProgress]);
+  }, [sunTimes, shellW, sunCX, sunCY, transitionProgress]);
 
   // 매일 1회, 사용자별 운세 로드. userId 가 바뀌면(계정 전환) 다시 로드한다.
   useEffect(() => {
@@ -1057,7 +1056,7 @@ export default function HomeScreen() {
                   {
                     translateX: cloudAnims[i].interpolate({
                       inputRange: [0, 1],
-                      outputRange: [-c.size, screenW],
+                      outputRange: [-c.size, shellW],
                     }),
                   },
                 ],

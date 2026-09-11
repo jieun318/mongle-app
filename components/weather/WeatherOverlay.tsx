@@ -7,10 +7,11 @@ import {
   View,
 } from "react-native";
 import type { WeatherCondition } from "@/features/weather/weather";
+import { useShellWidth } from "@/lib/layout";
 
-// 이 오버레이는 absoluteFill 로 화면 전체를 덮으므로 파티클도 창 전체에 뿌려야
-// 한다. Dimensions.get 을 모듈 최상단에서 쓰면 앱 시작 시 한 번만 계산돼,
-// 창 크기가 바뀌면 비/눈이 예전 크기 영역에만 내린다 — 훅으로 구독한다.
+// 이 오버레이는 absoluteFill 로 화면을 덮는다. 가로 분포의 기준은 창이 아니라
+// AppShell 로 묶인 셸 폭이다 — 창 너비를 쓰면 데스크톱에서 파티클 대부분이 셸
+// 바깥에 떨어져 화면 안에는 드문드문 내린다. 세로는 셸이 묶지 않으므로 창 높이.
 
 // 결정적 의사난수 — 파티클 위치/속도를 인덱스로 흩뿌린다(Math.random 없이 안정적).
 function rand(seed: number): number {
@@ -140,7 +141,8 @@ export default function WeatherOverlay({
         ? "snow"
         : null;
 
-  const { width, height } = useWindowDimensions();
+  const width = useShellWidth();
+  const { height } = useWindowDimensions();
 
   const particles = useMemo(
     () => (kind ? makeParticles(kind === "rain" ? 45 : 18, kind, width) : []),

@@ -1,4 +1,5 @@
 import { Redirect, Stack } from "expo-router";
+import AppShell from "@/components/ui/AppShell";
 import { useSession } from "@/features/auth/auth";
 
 // (app) 의 stack — (tabs) 그룹은 4개 메인 탭이 모두 살아있는 상태로 유지되고,
@@ -15,10 +16,15 @@ export default function AppLayout() {
   // 로그인 화면이 한 번 스쳐 지나간다.
   if (!loading && !session) return <Redirect href="/(auth)/login" />;
 
+  // 앱 셸은 여기 한 번만 건다. 탭 4개·하위 스택·dream/new 가 모두 이 Stack
+  // 아래에 있어서 본문·탭바·배경·오버레이가 한 폭으로 묶인다.
+  // 루트 레이아웃에 걸면 /privacy 같은 웹 문서 페이지까지 480px 로 좁아진다.
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(tabs)" options={{ animation: "none" }} />
-      <Stack.Screen name="dream/new" />
-    </Stack>
+    <AppShell>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(tabs)" options={{ animation: "none" }} />
+        <Stack.Screen name="dream/new" />
+      </Stack>
+    </AppShell>
   );
 }

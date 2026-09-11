@@ -5,12 +5,11 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
-  useWindowDimensions,
   Image,
   InteractionManager,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { useBottomSpace } from "@/lib/layout";
+import { useBottomSpace, useShellWidth } from "@/lib/layout";
 import { useFocusEffect, useRouter } from "expo-router";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import BottomNav from "@/components/ui/BottomNav";
@@ -28,25 +27,20 @@ import { getRecentSearches, addRecentSearch } from "@/features/dream/recentSearc
 
 const GRID_PADDING = 20;
 const GRID_GAP = 10;
-// 웹(react-native-web)에서는 창 너비가 그대로 들어와 폰 기준으로 짠 레이아웃이
-// 통째로 늘어난다. 데스크톱 브라우저에서 카테고리 카드가 480px 짜리 정사각형이
-// 되던 원인. 본문 폭을 폰 크기에서 묶고 가운데 정렬한다.
-// 폰(≤480dp)에서는 상한에 걸리지 않으므로 기존 레이아웃 그대로다.
-const CONTENT_MAX_W = 480;
+// 폭 상한은 AppShell 이 (app)/(auth) 스택 전체에 한 번 건다. 이 화면은 셸 폭만
+// 받아 카드 크기를 계산한다 — 화면마다 개별로 폭을 걸면 본문만 좁아지고
+// 탭바·배경은 늘어난 채 남아 서로 어긋난다.
 
 /**
- * 카테고리 카드 한 변의 길이. 3열 고정이고 창 크기에 따라 다시 계산된다.
- * Dimensions.get 을 모듈 최상단에서 쓰면 앱 시작 시 한 번만 계산돼 회전·창
- * 크기 변경에 반응하지 못한다 — useWindowDimensions 로 구독한다.
+ * 카테고리 카드 한 변의 길이. 3열 고정이고 셸 폭에 따라 다시 계산된다.
  */
 function useCardSize(): number {
-  const { width } = useWindowDimensions();
+  const shellW = useShellWidth();
   return useMemo(() => {
-    const content = Math.min(width, CONTENT_MAX_W);
     // floor 하지 않으면 3*CARD_W + 2*GAP 가 컨테이너보다 1px 넘쳐 3번째 카드가
     // 다음 줄로 밀린다(특정 화면 밀도에서 2열로 깨짐). 내림해서 한 줄 3열을 보장.
-    return Math.floor((content - GRID_PADDING * 2 - GRID_GAP * 2) / 3);
-  }, [width]);
+    return Math.floor((shellW - GRID_PADDING * 2 - GRID_GAP * 2) / 3);
+  }, [shellW]);
 }
 
 const MAX_CHIPS = 8;
@@ -215,9 +209,6 @@ export default function SearchScreen() {
 
 const styles = StyleSheet.create({
   scroll: {
-    width: "100%",
-    maxWidth: CONTENT_MAX_W,
-    alignSelf: "center",
     paddingTop: 60,
     // paddingBottom 은 useBottomSpace().withNav 로 렌더 시점에 덮어쓴다.
     paddingHorizontal: GRID_PADDING,

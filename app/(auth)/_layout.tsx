@@ -1,4 +1,5 @@
 import { Redirect, Stack } from "expo-router";
+import AppShell from "@/components/ui/AppShell";
 import { useSession } from "@/features/auth/auth";
 
 // 로그인 성공 시 화면 전환은 여기서만 일어난다.
@@ -10,5 +11,10 @@ export default function AuthLayout() {
 
   if (!loading && session) return <Redirect href="/(app)" />;
 
-  return <Stack screenOptions={{ headerShown: false }} />;
+  // 로그인 → 홈 전환에서 폭이 튀지 않도록 (app) 과 같은 셸로 감싼다.
+  return (
+    <AppShell>
+      <Stack screenOptions={{ headerShown: false }} />
+    </AppShell>
+  );
 }

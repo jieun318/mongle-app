@@ -1,8 +1,16 @@
 import { useEffect, useMemo, useRef } from "react";
-import { Animated, Dimensions, Easing, StyleSheet, View } from "react-native";
+import {
+  Animated,
+  Easing,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import type { WeatherCondition } from "@/features/weather/weather";
 
-const { width: W, height: H } = Dimensions.get("window");
+// 이 오버레이는 absoluteFill 로 화면 전체를 덮으므로 파티클도 창 전체에 뿌려야
+// 한다. Dimensions.get 을 모듈 최상단에서 쓰면 앱 시작 시 한 번만 계산돼,
+// 창 크기가 바뀌면 비/눈이 예전 크기 영역에만 내린다 — 훅으로 구독한다.
 
 // 결정적 의사난수 — 파티클 위치/속도를 인덱스로 흩뿌린다(Math.random 없이 안정적).
 function rand(seed: number): number {
@@ -19,14 +27,18 @@ interface Particle {
   opacity: number;
 }
 
-function makeParticles(count: number, kind: "rain" | "snow"): Particle[] {
+function makeParticles(
+  count: number,
+  kind: "rain" | "snow",
+  width: number,
+): Particle[] {
   return Array.from({ length: count }, (_, i) => {
     const r1 = rand(i + 1);
     const r2 = rand(i + 7.3);
     const r3 = rand(i + 13.1);
     if (kind === "rain") {
       return {
-        x: r1 * W,
+        x: r1 * width,
         delay: r2 * 1200,
         duration: 650 + r3 * 450, // 빠르게
         size: 18 + r3 * 16, // 더 긴 빗줄기 (18~34)
@@ -35,7 +47,7 @@ function makeParticles(count: number, kind: "rain" | "snow"): Particle[] {
       };
     }
     return {
-      x: r1 * W,
+      x: r1 * width,
       delay: r2 * 4000,
       duration: 5000 + r3 * 4000, // 느리게 부유
       size: 4 + r3 * 5,
@@ -45,7 +57,15 @@ function makeParticles(count: number, kind: "rain" | "snow"): Particle[] {
   });
 }
 
-function Drop({ p, kind }: { p: Particle; kind: "rain" | "snow" }) {
+function Drop({
+  p,
+  kind,
+  height,
+}: {
+  p: Particle;
+  kind: "rain" | "snow";
+  height: number;
+}) {
   const t = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -64,7 +84,7 @@ function Drop({ p, kind }: { p: Particle; kind: "rain" | "snow" }) {
 
   const translateY = t.interpolate({
     inputRange: [0, 1],
-    outputRange: [-40, H + 40],
+    outputRange: [-40, height + 40],
   });
   // 눈은 좌우로 살랑이게, 비는 거의 직선.
   const translateX = t.interpolate({
@@ -120,9 +140,11 @@ export default function WeatherOverlay({
         ? "snow"
         : null;
 
+  const { width, height } = useWindowDimensions();
+
   const particles = useMemo(
-    () => (kind ? makeParticles(kind === "rain" ? 45 : 18, kind) : []),
-    [kind],
+    () => (kind ? makeParticles(kind === "rain" ? 45 : 18, kind, width) : []),
+    [kind, width],
   );
 
   if (!kind) return null;
@@ -130,7 +152,7 @@ export default function WeatherOverlay({
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
       {particles.map((p, i) => (
-        <Drop key={i} p={p} kind={kind} />
+        <Drop key={i} p={p} kind={kind} height={height} />
       ))}
     </View>
   );

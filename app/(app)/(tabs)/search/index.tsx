@@ -27,6 +27,8 @@ import { getRecentSearches, addRecentSearch } from "@/features/dream/recentSearc
 
 const GRID_PADDING = 20;
 const GRID_GAP = 10;
+/** 카드 한 변의 상한 — 480px 폭에서 3열일 때의 크기 */
+const CARD_MAX_W = 140;
 // 카드 폭은 셸 폭에서 역산하지 않고 그리드 컨테이너를 직접 잰다.
 //
 // 역산하면 프리렌더에서 틀린다 — 정적 익스포트는 폭을 모른 채 그려지므로 셸
@@ -38,8 +40,11 @@ const GRID_GAP = 10;
 // 3열이 유지되므로 프리렌더 HTML 도 깨지지 않는다.
 function cardSizeFor(gridW: number): number {
   // floor 하지 않으면 3*CARD_W + 2*GAP 가 컨테이너보다 1px 넘쳐 3번째 카드가
-  // 다음 줄로 밀린다(특정 화면 밀도에서 2열로 깨짐). 내림해서 한 줄 3열을 보장.
-  return Math.floor((gridW - GRID_GAP * 2) / 3);
+  // 다음 줄로 밀린다(특정 화면 밀도에서 2열로 깨짐). 내림해서 폰에서 3열을 보장.
+  const three = Math.floor((gridW - GRID_GAP * 2) / 3);
+  // 넓은 화면에서 카드가 같이 커지지 않도록 상한을 둔다(1920 창에서 620px 이 됐다).
+  // 열 수는 정하지 않는다 — flex-wrap 이 한 줄에 들어갈 만큼 채운다.
+  return Math.min(three, CARD_MAX_W);
 }
 
 const MAX_CHIPS = 8;
@@ -268,7 +273,7 @@ const styles = StyleSheet.create({
     gap: GRID_GAP,
   },
   // 측정 전 폴백 — 31% x 3 + gap 20 이 어떤 컨테이너 폭에서도 3열에 들어간다.
-  categoryCardAuto: { width: "31%", aspectRatio: 1 },
+  categoryCardAuto: { width: "31%", maxWidth: CARD_MAX_W, aspectRatio: 1 },
   categoryCard: {
     // width/height 는 컨테이너를 잰 값으로 렌더 시점에 주입한다.
     borderRadius: 16,

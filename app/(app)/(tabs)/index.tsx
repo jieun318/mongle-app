@@ -13,7 +13,7 @@ import {
   InteractionManager,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { useBottomSpace, useShellWidth } from "@/lib/layout";
+import { useBottomSpace } from "@/lib/layout";
 import { useRouter } from "expo-router";
 import {
   useState,
@@ -302,10 +302,11 @@ const SHEET_CLOSE_DISTANCE = 100;
 const SHEET_CLOSE_VELOCITY = 0.8;
 
 export default function HomeScreen() {
-  // 해의 호(arc)와 구름 이동 범위는 하늘 배경 전체를 가로지른다. 기준은 창이
-  // 아니라 AppShell 로 묶인 셸 폭이다 — 창 너비를 쓰면 데스크톱에서 해가 셸
-  // 바깥까지 이동해 화면 안에서는 영영 보이지 않는다.
-  const shellW = useShellWidth();
+  // 해의 호(arc)와 구름 이동 범위는 하늘 배경 전체를 가로지르므로 화면 폭을
+  // 기준으로 잡는다. useWindowDimensions 는 쓰지 않는다 — 정적 웹 빌드에서는
+  // 프리렌더는 물론 하이드레이션 뒤에도 리사이즈 전까지 0 이라(실측 확인)
+  // 해가 왼쪽 끝에 붙고 구름이 움직이지 않는다. 루트 컨테이너를 직접 잰다.
+  const [screenW, setScreenW] = useState(0);
   const router = useRouter();
   const space = useBottomSpace();
   const { session } = useSession();
@@ -437,7 +438,7 @@ export default function HomeScreen() {
   ).current;
 
   // 해 위치 — 호(arc) 위에서 (cx, cy) 절대 좌표로 추적 (auto 모드 시 시간 기반 갱신)
-  const sunCX = useRef(new Animated.Value(shellW * 0.5)).current;
+  const sunCX = useRef(new Animated.Value(0)).current;
   const sunCY = useRef(new Animated.Value(50)).current; // 정오 높이
 
   // 4단계 그라디언트 레이어 opacity (낮 base 위에 노을→황혼→밤 순서로 깔림)
@@ -482,7 +483,7 @@ export default function HomeScreen() {
       // 첫 동기화는 스냅 (애니메이션 없이 즉시 정확한 위치로)
       transitionProgress.setValue(state.darkness);
       if (state.arcT !== null) {
-        const { cx, cy } = sunArcPosition(state.arcT, shellW);
+        const { cx, cy } = sunArcPosition(state.arcT, screenW);
         sunCX.setValue(cx);
         sunCY.setValue(cy);
       }
@@ -496,7 +497,7 @@ export default function HomeScreen() {
         useNativeDriver: true,
       }).start();
       if (state.arcT !== null) {
-        const { cx, cy } = sunArcPosition(state.arcT, shellW);
+        const { cx, cy } = sunArcPosition(state.arcT, screenW);
         Animated.parallel([
           Animated.timing(sunCX, {
             toValue: cx,
@@ -512,7 +513,7 @@ export default function HomeScreen() {
       }
     }
     setDarkMode(state.darkness > 0.5);
-  }, [sunTimes, shellW, sunCX, sunCY, transitionProgress]);
+  }, [sunTimes, screenW, sunCX, sunCY, transitionProgress]);
 
   // 매일 1회, 사용자별 운세 로드. userId 가 바뀌면(계정 전환) 다시 로드한다.
   useEffect(() => {
@@ -961,7 +962,10 @@ export default function HomeScreen() {
   });
 
   return (
-    <View style={{ flex: 1 }}>
+    <View
+      style={{ flex: 1 }}
+      onLayout={(e) => setScreenW(e.nativeEvent.layout.width)}
+    >
       {/* 배경 그라디언트 4단계 — 낮(base) 위에 노을/황혼/밤 레이어가 opacity 로 보간 */}
       <LinearGradient
         colors={DAY_GRADIENT}
@@ -1056,7 +1060,7 @@ export default function HomeScreen() {
                   {
                     translateX: cloudAnims[i].interpolate({
                       inputRange: [0, 1],
-                      outputRange: [-c.size, shellW],
+                      outputRange: [-c.size, screenW || 1],
                     }),
                   },
                 ],

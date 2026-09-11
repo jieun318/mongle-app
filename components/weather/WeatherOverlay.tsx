@@ -1,17 +1,17 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
   Easing,
   StyleSheet,
-  useWindowDimensions,
   View,
+  type LayoutChangeEvent,
 } from "react-native";
 import type { WeatherCondition } from "@/features/weather/weather";
-import { useShellWidth } from "@/lib/layout";
 
-// 이 오버레이는 absoluteFill 로 화면을 덮는다. 가로 분포의 기준은 창이 아니라
-// AppShell 로 묶인 셸 폭이다 — 창 너비를 쓰면 데스크톱에서 파티클 대부분이 셸
-// 바깥에 떨어져 화면 안에는 드문드문 내린다. 세로는 셸이 묶지 않으므로 창 높이.
+// 파티클의 가로 분포와 낙하 종점은 이 오버레이가 실제로 덮는 영역에서 나와야
+// 한다. useWindowDimensions 는 쓸 수 없다 — 정적 웹 빌드에서는 프리렌더는 물론
+// 하이드레이션 뒤에도 리사이즈 전까지 0 이라(실측 확인) 높이가 0 이 되어 비·눈이
+// 아예 보이지 않았다. absoluteFill 컨테이너를 onLayout 으로 직접 잰다.
 
 // 결정적 의사난수 — 파티클 위치/속도를 인덱스로 흩뿌린다(Math.random 없이 안정적).
 function rand(seed: number): number {
@@ -141,21 +141,24 @@ export default function WeatherOverlay({
         ? "snow"
         : null;
 
-  const width = useShellWidth();
-  const { height } = useWindowDimensions();
+  const [size, setSize] = useState({ w: 0, h: 0 });
+  const onLayout = (e: LayoutChangeEvent) =>
+    setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height });
 
   const particles = useMemo(
-    () => (kind ? makeParticles(kind === "rain" ? 45 : 18, kind, width) : []),
-    [kind, width],
+    () => (kind && size.w > 0 ? makeParticles(kind === "rain" ? 45 : 18, kind, size.w) : []),
+    [kind, size.w],
   );
 
   if (!kind) return null;
 
+  // 재기 전에는 컨테이너만 그린다 — 크기를 모른 채 뿌리면 파티클이 x=0 에 몰린다.
   return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="none">
-      {particles.map((p, i) => (
-        <Drop key={i} p={p} kind={kind} height={height} />
-      ))}
+    <View style={StyleSheet.absoluteFill} pointerEvents="none" onLayout={onLayout}>
+      {size.h > 0 &&
+        particles.map((p, i) => (
+          <Drop key={i} p={p} kind={kind} height={size.h} />
+        ))}
     </View>
   );
 }

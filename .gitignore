@@ -65,3 +65,6 @@ assets/store/screenshots/raw/*
 
 # 배포용 비밀키 (Play 서비스 계정 JSON 등) — eas.json submit 참고
 /secrets/
+
+.vercel
+.env*

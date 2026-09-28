@@ -1493,7 +1493,8 @@ export default function HomeScreen() {
                 {
                   transform: [{ translateY: sheetY }],
                   // 시트가 화면 맨 아래에 붙는다 — 시스템 내비 영역만큼 더 띄워야
-                  // 맨 아래 "확인" 버튼이 안 잘린다.
+                  // 맨 아래 "확인" 버튼이 안 잘린다. 버튼은 ScrollView 밖에 둔다 —
+                  // 카테고리 카드까지 펼치면 내용이 maxHeight 를 넘어 스크롤 뒤로 밀린다.
                   paddingBottom: 24 + space.system,
                 },
               ]}
@@ -1577,14 +1578,14 @@ export default function HomeScreen() {
                 )}
 
                 <AdSlot slot="fortune_modal_bottom" />
-
-                <TouchableOpacity
-                  style={styles.closeBtn}
-                  onPress={handleModalClose}
-                >
-                  <Text style={styles.closeBtnText}>확인</Text>
-                </TouchableOpacity>
               </ScrollView>
+
+              <TouchableOpacity
+                style={styles.closeBtn}
+                onPress={handleModalClose}
+              >
+                <Text style={styles.closeBtnText}>확인</Text>
+              </TouchableOpacity>
             </Animated.View>
 
             {showGuide && (
@@ -1606,13 +1607,13 @@ export default function HomeScreen() {
                   <View style={[styles.handle, { marginBottom: 16 }]} />
                   <ScrollView showsVerticalScrollIndicator={false}>
                     <FortuneGradeGuide />
-                    <TouchableOpacity
-                      style={styles.closeBtn}
-                      onPress={() => setShowGuide(false)}
-                    >
-                      <Text style={styles.closeBtnText}>닫기</Text>
-                    </TouchableOpacity>
                   </ScrollView>
+                  <TouchableOpacity
+                    style={styles.closeBtn}
+                    onPress={() => setShowGuide(false)}
+                  >
+                    <Text style={styles.closeBtnText}>닫기</Text>
+                  </TouchableOpacity>
                 </View>
               </>
             )}
@@ -1920,7 +1921,8 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingVertical: 14,
     alignItems: "center",
-    marginBottom: 16,
+    // ScrollView 밖 고정 푸터라 위쪽 콘텐츠와 간격을 둔다. 아래 여백은 시트 paddingBottom 담당.
+    marginTop: 16,
   },
   closeBtnText: { fontSize: 15, fontWeight: "700", color: "#3D2B5E" },
 });

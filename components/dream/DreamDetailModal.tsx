@@ -24,9 +24,9 @@ export default function DreamDetailModal({
   onClose,
   onPressRecord,
 }: Props) {
-  // 시트가 화면 맨 아래에 붙는데(justifyContent: flex-end) 마지막 요소가
-  // "닫기 / 꿈 기록하기" 버튼이라, 시스템 내비 영역만큼 아래 여백을 주지 않으면
-  // 버튼이 내비바에 물려 잘린다. 인셋이 0으로 잡히는 기기(웹·일부 제스처 기기)에서도 최소 48은 남긴다.
+  // 시트가 화면 맨 아래에 붙으므로(justifyContent: flex-end) 하단 버튼 푸터에
+  // 시스템 내비 영역만큼 여백을 준다. 버튼을 ScrollView 밖에 두는 이유 — 해몽이
+  // 길고 태그·지수까지 있으면 내용이 maxHeight(88%)를 넘어 버튼이 스크롤 뒤로 밀려 잘린다.
   const space = useBottomSpace();
 
   return (
@@ -48,10 +48,7 @@ export default function DreamDetailModal({
             <View style={styles.handle} />
             <ScrollView
               showsVerticalScrollIndicator={false}
-              contentContainerStyle={[
-                styles.scrollContent,
-                { paddingBottom: 36 + space.system },
-              ]}
+              contentContainerStyle={styles.scrollContent}
             >
               <LinearGradient
                 colors={["#FFF0F8", "#F0E8FF"]}
@@ -110,28 +107,30 @@ export default function DreamDetailModal({
                   style={[styles.progressFill, { width: `${dream.luckIndex}%` }]}
                 />
               </View>
-
-              <View style={styles.buttons}>
-                <TouchableOpacity style={styles.btnClose} onPress={onClose}>
-                  <Text style={styles.btnCloseText}>닫기</Text>
-                </TouchableOpacity>
-                {onPressRecord ? (
-                  <TouchableOpacity
-                    style={styles.btnRecord}
-                    onPress={() => onPressRecord(dream)}
-                  >
-                    <LinearGradient
-                      colors={["#B898F0", "#8868D8"]}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                      style={styles.btnRecordGradient}
-                    >
-                      <Text style={styles.btnRecordText}>꿈 기록하기</Text>
-                    </LinearGradient>
-                  </TouchableOpacity>
-                ) : null}
-              </View>
             </ScrollView>
+
+            <View
+              style={[styles.buttons, { paddingBottom: 16 + space.system }]}
+            >
+              <TouchableOpacity style={styles.btnClose} onPress={onClose}>
+                <Text style={styles.btnCloseText}>닫기</Text>
+              </TouchableOpacity>
+              {onPressRecord ? (
+                <TouchableOpacity
+                  style={styles.btnRecord}
+                  onPress={() => onPressRecord(dream)}
+                >
+                  <LinearGradient
+                    colors={["#B898F0", "#8868D8"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.btnRecordGradient}
+                  >
+                    <Text style={styles.btnRecordText}>꿈 기록하기</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              ) : null}
+            </View>
           </View>
         </View>
       )}
@@ -162,7 +161,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 24,
-    // paddingBottom 은 시스템 내비 인셋에 맞춰 렌더 시점에 덮어쓴다.
+    paddingBottom: 8,
     gap: 12,
   },
   emojiWrap: { borderRadius: 20, paddingVertical: 20, alignItems: "center" },
@@ -201,7 +200,13 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   progressFill: { height: "100%", borderRadius: 4 },
-  buttons: { flexDirection: "row", gap: 10, marginTop: 8 },
+  // paddingBottom 은 16 + useBottomSpace().system 으로 렌더 시점에 지정.
+  buttons: {
+    flexDirection: "row",
+    gap: 10,
+    paddingHorizontal: 24,
+    paddingTop: 12,
+  },
   btnClose: {
     flex: 1,
     paddingVertical: 13,

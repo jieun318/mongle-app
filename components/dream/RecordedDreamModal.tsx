@@ -35,9 +35,9 @@ export default function RecordedDreamModal({
   const isAi = dream?.source === "ai";
   // 여기선 길몽/흉몽을 따로 거르지 않는다(기존 동작 유지) — 정규화만 한다.
   const moodTags = normalizeMoodTags(dream?.mood_tags);
-  // 시트가 화면 맨 아래에 붙어서(justifyContent: flex-end) 마지막 요소인
-  // 닫기 버튼이 시스템 내비바에 물려 잘렸다. 내비 영역만큼 아래 여백을 주되,
-  // 인셋이 0으로 잡히는 기기에서도 최소 48은 남긴다.
+  // 시트가 화면 맨 아래에 붙으므로(justifyContent: flex-end) 닫기 버튼 푸터에
+  // 시스템 내비 영역만큼 여백을 준다. 버튼을 ScrollView 밖에 두는 이유 — AI 대화나
+  // 해몽이 길면 내용이 maxHeight(88%)를 넘어 버튼이 스크롤 뒤로 밀려 잘린다.
   const space = useBottomSpace();
 
   return (
@@ -59,10 +59,7 @@ export default function RecordedDreamModal({
             <View style={styles.handle} />
             <ScrollView
               showsVerticalScrollIndicator={false}
-              contentContainerStyle={[
-                styles.scrollContent,
-                { paddingBottom: 36 + space.system },
-              ]}
+              contentContainerStyle={styles.scrollContent}
             >
               <LinearGradient
                 colors={["#FFF0F8", "#F0E8FF"]}
@@ -192,11 +189,13 @@ export default function RecordedDreamModal({
                   style={[styles.progressFill, { width: `${dream.luck_index}%` }]}
                 />
               </View>
+            </ScrollView>
 
+            <View style={[styles.footer, { paddingBottom: 16 + space.system }]}>
               <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
                 <Text style={styles.closeBtnText}>닫기</Text>
               </TouchableOpacity>
-            </ScrollView>
+            </View>
           </View>
         </View>
       )}
@@ -225,8 +224,9 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     marginBottom: 12,
   },
-  // paddingBottom 은 시스템 내비 인셋에 맞춰 렌더 시점에 덮어쓴다.
-  scrollContent: { paddingHorizontal: 24, gap: 12 },
+  scrollContent: { paddingHorizontal: 24, paddingBottom: 8, gap: 12 },
+  // paddingBottom 은 16 + useBottomSpace().system 으로 렌더 시점에 지정.
+  footer: { paddingHorizontal: 24, paddingTop: 12 },
   emojiWrap: { borderRadius: 20, paddingVertical: 24, alignItems: "center" },
   emoji: { fontSize: 64 },
   badgeRow: { flexDirection: "row", justifyContent: "center", gap: 6 },
@@ -288,7 +288,6 @@ const styles = StyleSheet.create({
   progressFill: { height: "100%", borderRadius: 4 },
 
   closeBtn: {
-    marginTop: 8,
     paddingVertical: 14,
     borderRadius: 14,
     borderWidth: 1.5,

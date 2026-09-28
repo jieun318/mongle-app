@@ -34,9 +34,9 @@ function splitParagraphs(text: string): string[] {
 const PREVIEW_TURNS = 3;
 
 export default function AiDreamModal({ dream, onClose }: Props) {
-  // 시트가 화면 맨 아래에 붙어서(justifyContent: flex-end) 마지막 요소인
-  // 닫기 버튼이 시스템 내비바에 물려 잘렸다. 내비 영역만큼 아래 여백을 주되,
-  // 인셋이 0으로 잡히는 기기에서도 최소 48은 남긴다.
+  // 시트가 화면 맨 아래에 붙으므로(justifyContent: flex-end) 닫기 버튼 푸터에
+  // 시스템 내비 영역만큼 여백을 준다. 버튼을 ScrollView 밖에 두는 이유 — 요약이나
+  // 대화 기록이 길면 내용이 maxHeight(90%)를 넘어 버튼이 스크롤 뒤로 밀려 잘린다.
   const space = useBottomSpace();
 
   const [showAll, setShowAll] = useState(false);
@@ -78,10 +78,7 @@ export default function AiDreamModal({ dream, onClose }: Props) {
             <View style={styles.handle} />
             <ScrollView
               showsVerticalScrollIndicator={false}
-              contentContainerStyle={[
-                styles.scrollContent,
-                { paddingBottom: 36 + space.system },
-              ]}
+              contentContainerStyle={styles.scrollContent}
             >
               {/* 꿈 내용을 대표하는 큰 이모지 비주얼 */}
               <View style={styles.heroEmojiWrap}>
@@ -196,11 +193,13 @@ export default function AiDreamModal({ dream, onClose }: Props) {
                   ) : null}
                 </>
               ) : null}
+            </ScrollView>
 
+            <View style={[styles.footer, { paddingBottom: 16 + space.system }]}>
               <TouchableOpacity style={styles.closeBtn} onPress={handleClose}>
                 <Text style={styles.closeBtnText}>닫기</Text>
               </TouchableOpacity>
-            </ScrollView>
+            </View>
           </View>
         </View>
       )}
@@ -231,9 +230,11 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 20,
-    // paddingBottom 은 시스템 내비 인셋에 맞춰 렌더 시점에 덮어쓴다.
+    paddingBottom: 8,
     gap: 12,
   },
+  // paddingBottom 은 16 + useBottomSpace().system 으로 렌더 시점에 지정.
+  footer: { paddingHorizontal: 20, paddingTop: 12 },
 
   heroEmojiWrap: {
     alignSelf: "center",
@@ -370,7 +371,6 @@ const styles = StyleSheet.create({
   },
 
   closeBtn: {
-    marginTop: 8,
     paddingVertical: 14,
     borderRadius: 16,
     borderWidth: 1.5,

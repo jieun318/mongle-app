@@ -3,16 +3,15 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  ScrollView,
   StyleSheet,
   Alert,
-  KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
   Image,
   Linking,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useBottomSpace } from "@/lib/layout";
 import { useRouter } from "expo-router";
@@ -173,10 +172,7 @@ export default function EditProfileScreen() {
 
   return (
     <LinearGradient colors={["#F5F3FA", "#F5F3FA"]} style={{ flex: 1 }}>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
+      <View style={{ flex: 1 }}>
         <View style={[styles.headerRow, { paddingTop: insets.top + 8 }]}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
             <Text style={styles.backIcon}>‹</Text>
@@ -189,7 +185,11 @@ export default function EditProfileScreen() {
             <ActivityIndicator color="#7868C8" />
           </View>
         ) : (
-          <ScrollView
+          // edge-to-edge(SDK 54)에선 Android adjustResize 가 창을 줄이지 않아
+          // RN KeyboardAvoidingView 로는 입력창이 키보드에 가려진다.
+          // KeyboardAwareScrollView 가 포커스된 입력을 키보드 위로 스크롤한다.
+          <KeyboardAwareScrollView
+            bottomOffset={24}
             contentContainerStyle={[
               styles.scroll,
               { paddingBottom: 60 + space.system },
@@ -298,9 +298,9 @@ export default function EditProfileScreen() {
                 </Text>
               </LinearGradient>
             </TouchableOpacity>
-          </ScrollView>
+          </KeyboardAwareScrollView>
         )}
-      </KeyboardAvoidingView>
+      </View>
     </LinearGradient>
   );
 }

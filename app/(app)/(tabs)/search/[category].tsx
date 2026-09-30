@@ -13,10 +13,8 @@ import { useMemo, useState } from "react";
 import BottomNav from "@/components/ui/BottomNav";
 import { SearchIcon } from "@/components/ui/icons";
 import { useBottomSpace } from "@/lib/layout";
-import DreamDetailModal from "@/components/dream/DreamDetailModal";
 import DreamListItem from "@/components/dream/DreamListItem";
 import {
-  DreamItem,
   filterDreams,
   getCategoryById,
   getFilterTags,
@@ -30,7 +28,6 @@ export default function CategoryListScreen() {
 
   const [query, setQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<string>("전체");
-  const [selectedDream, setSelectedDream] = useState<DreamItem | null>(null);
 
   const cat = category ? getCategoryById(category) : undefined;
   const filterTags = getFilterTags(category ?? "");
@@ -125,25 +122,17 @@ export default function CategoryListScreen() {
           <DreamListItem
             key={dream.id}
             dream={dream}
-            onPress={() => setSelectedDream(dream)}
+            onPress={() =>
+              router.push({
+                pathname: "/(app)/dream/result",
+                params: { itemId: dream.id },
+              })
+            }
           />
         ))}
       </ScrollView>
 
       <BottomNav active="search" />
-
-      <DreamDetailModal
-        dream={selectedDream}
-        category={cat?.label}
-        onClose={() => setSelectedDream(null)}
-        onPressRecord={(d) => {
-          setSelectedDream(null);
-          router.push({
-            pathname: "/(app)/dream/new",
-            params: { dreamItemId: d.id },
-          });
-        }}
-      />
     </LinearGradient>
   );
 }

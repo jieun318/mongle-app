@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { queryClient } from "@/lib/queryClient";
 import {
   CATEGORIES,
+  normalizeConditions,
   normalizeMoodTags,
   type DreamItem,
 } from "@/features/dream/dreamData";
@@ -41,6 +42,7 @@ export function mapDreamItemRow(row: DreamItemRow): DreamItem {
     luckIndex: row.luck_index ?? 0,
     isWarning: !!row.is_warning,
     moodTags: normalizeMoodTags(row.mood_tags),
+    conditions: normalizeConditions(row.conditions),
   };
 }
 
@@ -68,6 +70,15 @@ export function useDreamItem(id: string | undefined | null) {
       if (error) throw error;
       return data ? mapDreamItemRow(data as DreamItemRow) : null;
     },
+    // 목록(검색·카테고리)에서 들어오면 전체 캐시에 이미 있다 — 네트워크 없이 즉시 렌더.
+    initialData: () =>
+      id
+        ? queryClient
+            .getQueryData<DreamItem[]>(ALL_DREAM_ITEMS_KEY)
+            ?.find((i) => i.id === id)
+        : undefined,
+    initialDataUpdatedAt: () =>
+      queryClient.getQueryState(ALL_DREAM_ITEMS_KEY)?.dataUpdatedAt,
     enabled: !!id,
     staleTime: 60 * 60 * 1000, // 1h
   });

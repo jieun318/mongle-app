@@ -14,12 +14,7 @@ import BottomNav from "@/components/ui/BottomNav";
 import { SearchIcon } from "@/components/ui/icons";
 import { useBottomSpace } from "@/lib/layout";
 import ChatBotModal from "@/components/chat/ChatBotModal";
-import DreamDetailModal from "@/components/dream/DreamDetailModal";
 import DreamListItem from "@/components/dream/DreamListItem";
-import {
-  DreamItem,
-  getCategoryById,
-} from "@/features/dream/dreamData";
 import { useSearchDreamItems } from "@/features/dream/dreamQueries";
 
 export default function SearchResultsScreen() {
@@ -29,7 +24,6 @@ export default function SearchResultsScreen() {
 
   const initial = (q ?? "").toString();
   const [query, setQuery] = useState(initial);
-  const [selectedDream, setSelectedDream] = useState<DreamItem | null>(null);
   const [showChat, setShowChat] = useState(false);
 
   const { data: dreams = [], isFetching } = useSearchDreamItems(query);
@@ -96,7 +90,12 @@ export default function SearchResultsScreen() {
           <DreamListItem
             key={dream.id}
             dream={dream}
-            onPress={() => setSelectedDream(dream)}
+            onPress={() =>
+              router.push({
+                pathname: "/(app)/dream/result",
+                params: { itemId: dream.id },
+              })
+            }
           />
         ))}
       </ScrollView>
@@ -107,21 +106,6 @@ export default function SearchResultsScreen() {
         visible={showChat}
         onClose={() => setShowChat(false)}
         initialText={query}
-      />
-
-      <DreamDetailModal
-        dream={selectedDream}
-        category={
-          selectedDream ? getCategoryById(selectedDream.categoryId)?.label : undefined
-        }
-        onClose={() => setSelectedDream(null)}
-        onPressRecord={(d) => {
-          setSelectedDream(null);
-          router.push({
-            pathname: "/(app)/dream/new",
-            params: { dreamItemId: d.id },
-          });
-        }}
       />
     </LinearGradient>
   );

@@ -19,6 +19,7 @@ export default function AppLayout() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" options={{ animation: "none" }} />
       <Stack.Screen name="dream/new" />
+      <Stack.Screen name="dream/result" />
     </Stack>
   );
 }

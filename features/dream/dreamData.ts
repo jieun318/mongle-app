@@ -28,6 +28,30 @@ export interface DreamItem {
   luckIndex: number;
   isWarning?: boolean;
   moodTags?: DreamMoodTag[];
+  conditions?: DreamCondition[];
+}
+
+// 조건부 해몽 한 줄 — "이런 경우엔 이렇게 풀이된다".
+export interface DreamCondition {
+  when: string;
+  meaning: string;
+}
+
+// ── conditions 정규화 ─────────────────────────────────────
+//   jsonb 라 시드마다 모양이 다르다:
+//   1) [{if, then}]          — 0014 시드 270건 (then 은 풀이 문장)
+//   2) [{condition, type}]   — 크롤링 시드 (type 은 '길몽' / '흉몽')
+export function normalizeConditions(raw: unknown): DreamCondition[] {
+  if (!Array.isArray(raw)) return [];
+  const out: DreamCondition[] = [];
+  for (const c of raw) {
+    if (!c || typeof c !== "object") continue;
+    const o = c as Record<string, unknown>;
+    const when = String(o.if ?? o.condition ?? "").trim();
+    const meaning = String(o.then ?? o.type ?? "").trim();
+    if (when && meaning) out.push({ when, meaning });
+  }
+  return out;
 }
 
 // ── mood_tags 정규화 ──────────────────────────────────────

@@ -1,0 +1,97 @@
+{
+ "crawled-023": {
+  "is_lucky": "lucky",
+  "luck_index": 75,
+  "why": "원문 첫 결론 길몽"
+ },
+ "crawled-063": {
+  "is_lucky": "lucky",
+  "luck_index": 75,
+  "why": "원문 첫 결론 길몽"
+ },
+ "crawled-082": {
+  "is_lucky": "lucky",
+  "luck_index": 75,
+  "why": "원문 첫 결론 길몽"
+ },
+ "crawled-083": {
+  "is_lucky": "lucky",
+  "luck_index": 75,
+  "why": "원문 첫 결론 길몽"
+ },
+ "crawled-091": {
+  "is_lucky": "lucky",
+  "luck_index": 75,
+  "why": "원문 첫 결론 길몽"
+ },
+ "crawled-093": {
+  "is_lucky": "lucky",
+  "luck_index": 75,
+  "why": "원문 첫 결론 길몽"
+ },
+ "crawled-094": {
+  "is_lucky": "lucky",
+  "luck_index": 75,
+  "why": "원문 첫 결론 길몽"
+ },
+ "crawled-097": {
+  "is_lucky": "lucky",
+  "luck_index": 75,
+  "why": "원문 첫 결론 길몽"
+ },
+ "crawled-111": {
+  "is_lucky": "lucky",
+  "luck_index": 75,
+  "why": "원문 첫 결론 길몽"
+ },
+ "crawled-121": {
+  "is_lucky": "lucky",
+  "luck_index": 75,
+  "why": "원문 첫 결론 길몽"
+ },
+ "crawled-001": {
+  "is_lucky": "conditional",
+  "why": "원문이 조건에 따라 반반"
+ },
+ "crawled-003": {
+  "is_lucky": "conditional",
+  "why": "원문이 조건에 따라 반반"
+ },
+ "crawled-115": {
+  "is_lucky": "conditional",
+  "why": "원문이 조건에 따라 반반"
+ },
+ "crawled-117": {
+  "is_lucky": "conditional",
+  "why": "원문이 조건에 따라 반반"
+ },
+ "crawled-118": {
+  "is_lucky": "conditional",
+  "why": "원문이 조건에 따라 반반"
+ },
+ "crawled-119": {
+  "is_lucky": "conditional",
+  "why": "원문이 조건에 따라 반반"
+ },
+ "crawled-088": {
+  "is_lucky": "unlucky",
+  "luck_index": 30,
+  "why": "원문 첫 결론 흉몽 (본문 재작성 없음)"
+ },
+ "crawled-008": {
+  "is_lucky": "neutral",
+  "luck_index": 50,
+  "why": "원문이 부정적인 태몽 → 보통"
+ },
+ "crawled-110": {
+  "is_lucky": "neutral",
+  "luck_index": 50,
+  "why": "원문이 부정적인 태몽 → 보통"
+ },
+ "body-033": {
+  "tags": [
+   "길몽"
+  ],
+  "why": "요약 기준 길몽 (지시)"
+ }
+}

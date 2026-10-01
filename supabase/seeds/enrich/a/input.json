@@ -1,0 +1,2812 @@
+[
+ {
+  "no": 1,
+  "id": "animal-001",
+  "title": "돼지가 품에 안기는 꿈",
+  "category": "animal",
+  "badge": "길몽",
+  "tags": [
+   "길몽",
+   "재물",
+   "돼지"
+  ],
+  "tags_new": null,
+  "rewrite_preview": false,
+  "preview": "재물이 들어오는 대표적인 길몽",
+  "description": "품 안으로 돼지가 뛰어들거나 안기는 꿈은 한국 민속에서 재물이 들어오는 대표적인 길몽으로 꼽힌다. 예로부터 돼지는 넉넉함과 다산을 상징해 복권 구매나 사업 시작 등 재물과 관련된 결정을 앞둔 사람에게 좋은 징조로 해석되어 왔다. 다만 품에 안겼다가 다시 빠져나가면 들어온 재물이 곧 흩어질 수 있다는 뜻으로도 풀이된다.",
+  "conditions": [
+   {
+    "if": "돼지가 품에서 빠져나가 도망가면",
+    "then": "들어왔던 재물이 다시 빠져나갈 조짐으로 풀이된다"
+   }
+  ],
+  "note": null
+ },
+ {
+  "no": 2,
+  "id": "body-015",
+  "title": "몸이 작아지는 꿈",
+  "category": "body",
+  "badge": "흉몽",
+  "tags": [
+   "흉몽",
+   "경고"
+  ],
+  "tags_new": null,
+  "rewrite_preview": false,
+  "preview": "위축되거나 자신감을 잃을 수 있다는 경고",
+  "description": "자신의 몸이 점점 작아져 초라해지는 꿈은 현실에서 위축되거나 자신감을 잃을 수 있다는 경고로 전해진다. 몸집이 줄어드는 상징이 영향력이나 발언권이 약해지는 것과 연결되어 해석된다. 작아졌던 몸이 다시 원래대로 돌아왔다면 위축된 마음도 곧 회복된다는 뜻이다.",
+  "conditions": [
+   {
+    "if": "작아졌던 몸이 다시 원래대로 돌아오면",
+    "then": "위축된 마음도 곧 회복된다는 뜻으로 풀이된다"
+   }
+  ],
+  "note": null
+ },
+ {
+  "no": 3,
+  "id": "body-031",
+  "title": "머리카락을 양쪽으로 가르는 꿈",
+  "category": "body",
+  "badge": "흉몽",
+  "tags": [],
+  "tags_new": null,
+  "rewrite_preview": false,
+  "preview": "집안에 환자나 우환이 생기는 흉몽입니다.",
+  "description": "머리카락을 양쪽으로 가르는 꿈은 근심이 생기거나 집안에 환자나 우환이 생깁니다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 4,
+  "id": "body-032",
+  "title": "머리카락을 억지로 자르는 꿈",
+  "category": "body",
+  "badge": "흉몽",
+  "tags": [],
+  "tags_new": null,
+  "rewrite_preview": false,
+  "preview": "하는 일이 부진해지고 가족에게 불행한 일이 생기는 흉몽입니다.",
+  "description": "억지로 머리카락을 자르는 꿈은 하는 일이 부진해지고 가족에게 불행한 일이 생깁니다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 5,
+  "id": "body-033",
+  "title": "머리카락을 한데 묶는 꿈",
+  "category": "body",
+  "badge": "길몽",
+  "tags": [],
+  "tags_new": [
+   "길몽"
+  ],
+  "rewrite_preview": false,
+  "preview": "좋은 인연을 만나거나 귀인의 도움으로 교제가 성사되는 길몽입니다.",
+  "description": "머리카락을 묶는 꿈은 좋은 인연을 만나거나 귀인의 도움으로 교제가 성사되는 길몽입니다.",
+  "conditions": [],
+  "note": "판정을 길몽으로 수정. 길몽 결론으로 쓸 것"
+ },
+ {
+  "no": 6,
+  "id": "body-034",
+  "title": "머리카락을 자르는 꿈",
+  "category": "body",
+  "badge": "보통",
+  "tags": [],
+  "tags_new": null,
+  "rewrite_preview": false,
+  "preview": "스스로 자르면 걱정거리가 전부 해소되는 길몽입니다.",
+  "description": "스스로 머리카락을 자르면 걱정거리가 모두 해소되고 소원을 성취하는 길몽입니다.",
+  "conditions": [],
+  "note": "판정 미확정(태그 없음, 요약은 길몽). 길몽/흉몽 단어로 단정하지 말고 요약과 같은 긍정적 방향으로만 쓸 것"
+ },
+ {
+  "no": 7,
+  "id": "body-035",
+  "title": "머리카락이 갑자기 빠져 대머리가 되는 꿈",
+  "category": "body",
+  "badge": "흉몽",
+  "tags": [],
+  "tags_new": null,
+  "rewrite_preview": false,
+  "preview": "모함과 재산 손실, 가족 피해 등 큰 재난을 암시하는 흉몽입니다.",
+  "description": "갑작스러운 탈모 꿈은 모함과 재산 손실, 가족 피해 등 큰 재난이 닥칠 흉몽입니다.",
+  "conditions": [],
+  "note": "판정 미확정(태그 없음, 요약은 길몽). 길몽/흉몽 단어로 단정하지 말고 요약과 같은 긍정적 방향으로만 쓸 것"
+ },
+ {
+  "no": 8,
+  "id": "body-036",
+  "title": "머리카락이 길어진 꿈",
+  "category": "body",
+  "badge": "보통",
+  "tags": [],
+  "tags_new": null,
+  "rewrite_preview": false,
+  "preview": "귀인의 도움으로 사업이 발전하고 어려움을 극복하는 길몽입니다.",
+  "description": "귀인의 도움으로 직장이나 사업이 발전하고 어려운 상황을 극복하게 되는 길몽입니다.",
+  "conditions": [],
+  "note": "판정 미확정(태그 없음, 요약은 길몽). 길몽/흉몽 단어로 단정하지 말고 요약과 같은 긍정적 방향으로만 쓸 것"
+ },
+ {
+  "no": 9,
+  "id": "body-037",
+  "title": "머리카락이 곱고 윤기가 나는 꿈",
+  "category": "body",
+  "badge": "보통",
+  "tags": [],
+  "tags_new": null,
+  "rewrite_preview": false,
+  "preview": "공적을 인정받아 상이나 훈장을 받고 명예를 얻는 길몽입니다.",
+  "description": "머리카락이 윤기 나는 꿈은 공적을 인정받아 상이나 훈장을 받고 명예를 얻는 길몽입니다.",
+  "conditions": [],
+  "note": "판정 미확정(태그 없음, 요약은 길몽). 길몽/흉몽 단어로 단정하지 말고 요약과 같은 긍정적 방향으로만 쓸 것"
+ },
+ {
+  "no": 10,
+  "id": "body-038",
+  "title": "머리카락이 흰머리로 변하는 꿈",
+  "category": "body",
+  "badge": "보통",
+  "tags": [],
+  "tags_new": null,
+  "rewrite_preview": false,
+  "preview": "명예와 지위가 높아지고 수명이 길어지는 길몽입니다.",
+  "description": "흰머리로 변하는 꿈은 명예와 지위가 높아지고 근심이 해소되며 수명이 길어지는 길몽입니다.",
+  "conditions": [],
+  "note": "판정 미확정(태그 없음, 요약은 길몽). 길몽/흉몽 단어로 단정하지 말고 요약과 같은 긍정적 방향으로만 쓸 것"
+ },
+ {
+  "no": 11,
+  "id": "body-039",
+  "title": "바람에 머리카락이 어지럽게 날리는 꿈",
+  "category": "body",
+  "badge": "흉몽",
+  "tags": [],
+  "tags_new": null,
+  "rewrite_preview": false,
+  "preview": "가정에 좋지 않은 일이 생기고 심리 상태가 불안정해지는 흉몽입니다.",
+  "description": "가정에 좋지 않은 일이 생기거나 심리 상태가 방향을 잃고 불안정해지는 흉몽입니다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 12,
+  "id": "crawled-001",
+  "title": "땅이 갈라지는 꿈",
+  "category": "nature",
+  "badge": "흉몽",
+  "tags": [
+   "조건부",
+   "흉몽",
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "꿈에서 두렵고 무서운 감정을 느꼈다면 실제로 사고가 날 수 있는 흉몽으로 해석된다. 반대로",
+  "description": "꿈에서 두렵고 무서운 감정을 느꼈다면 실제로 사고가 날 수 있는 흉몽으로 해석된다. 반대로 무섭지 않았다면 본인에게 아주 큰 변화가 생길 수 있음을 암시한다.",
+  "conditions": [
+   {
+    "type": "흉몽",
+    "condition": "두렵고 무서운 감정을 느낀 경우"
+   },
+   {
+    "type": "길몽",
+    "condition": "무섭지 않았던 경우"
+   }
+  ],
+  "note": "조건부 항목. 판정 배지는 흉몽. 전체 결론이 흉몽와 반대가 되지 않게"
+ },
+ {
+  "no": 13,
+  "id": "crawled-002",
+  "title": "땅이 꺼지는 꿈",
+  "category": "nature",
+  "badge": "흉몽",
+  "tags": [
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "꿈 해몽상 땅은 재산과 생활터전, 집안의 여성(어머니·아내·할머니)을 뜻한다. 땅이 꺼지는",
+  "description": "꿈 해몽상 땅은 재산과 생활터전, 집안의 여성(어머니·아내·할머니)을 뜻한다. 땅이 꺼지는 꿈은 재산상의 손실이 발생하거나 집안의 여성에게 안 좋은 일이 생긴다고 해석된다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 14,
+  "id": "crawled-003",
+  "title": "이빨이 몽땅 빠지는 꿈",
+  "category": "body",
+  "badge": "흉몽",
+  "tags": [
+   "조건부",
+   "길몽",
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "이빨은 본인의 가족을 상징한다. 꿈의 분위기에 따라 길몽과 흉몽으로 나뉜다. 가족 내 오랜",
+  "description": "이빨은 본인의 가족을 상징한다. 꿈의 분위기에 따라 길몽과 흉몽으로 나뉜다. 가족 내 오랜 걱정거리가 해결되는 변화를 암시하기도 하고, 반대로 가족이나 주변 사람에게 불행이 닥칠 징조이기도 하다.",
+  "conditions": [
+   {
+    "type": "길몽",
+    "condition": "꿈 분위기가 편안하고 후련한 경우"
+   },
+   {
+    "type": "흉몽",
+    "condition": "꿈 분위기가 불안하고 고통스러운 경우"
+   }
+  ],
+  "note": "조건부 항목. 판정 배지는 흉몽. 전체 결론이 흉몽와 반대가 되지 않게"
+ },
+ {
+  "no": 15,
+  "id": "crawled-004",
+  "title": "땅사는 꿈",
+  "category": "daily",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "땅을 사는 것은 새로운 일을 시작한다는 의미로 받아들여진다. 지금까지 경험하지 못한 분야에",
+  "description": "땅을 사는 것은 새로운 일을 시작한다는 의미로 받아들여진다. 지금까지 경험하지 못한 분야에 뛰어들게 되면 좋은 성과를 얻을 수 있는 길몽이다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 16,
+  "id": "crawled-005",
+  "title": "지렁이가 땅속으로 숨어버리는 꿈",
+  "category": "animal",
+  "badge": "흉몽",
+  "tags": [
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "지렁이가 땅속으로 숨어버리는 꿈을 꾸게 되면 사업장이나 집안에 사고나 우환이 생겨 근심 걱",
+  "description": "지렁이가 땅속으로 숨어버리는 꿈을 꾸게 되면 사업장이나 집안에 사고나 우환이 생겨 근심 걱정이 있음을 뜻한다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 17,
+  "id": "crawled-006",
+  "title": "지진이 일어나거나 땅이 몹시 흔들리는 꿈",
+  "category": "nature",
+  "badge": "흉몽",
+  "tags": [
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "큰 규모의 총파업·분규·혁명이 발발하는 것을 상징한다. 개인적으로는 변동이 있거나 사소한 ",
+  "description": "큰 규모의 총파업·분규·혁명이 발발하는 것을 상징한다. 개인적으로는 변동이 있거나 사소한 일로 소송사건에 휘말릴 수 있다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 18,
+  "id": "crawled-007",
+  "title": "금붕어가 땅에 떨어져 어항에 집어넣는 꿈",
+  "category": "pregnancy",
+  "badge": "길몽",
+  "tags": [
+   "태몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "금붕어가 땅에 떨어져 어항에 집어넣는 꿈은 예술적 능력이 뛰어난 아이를 출산하게 된다는 태",
+  "description": "금붕어가 땅에 떨어져 어항에 집어넣는 꿈은 예술적 능력이 뛰어난 아이를 출산하게 된다는 태몽이다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 19,
+  "id": "crawled-008",
+  "title": "용이 땅에 있는 꿈",
+  "category": "pregnancy",
+  "badge": "길몽",
+  "tags": [
+   "태몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "용이 땅에 있는 꿈은 아이의 인물이 뛰어나나 세력을 얻지는 못한다는 태몽이다. 승천하지 못",
+  "description": "용이 땅에 있는 꿈은 아이의 인물이 뛰어나나 세력을 얻지는 못한다는 태몽이다. 승천하지 못한 용처럼 평범하게 살 아이를 상징한다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 20,
+  "id": "crawled-009",
+  "title": "연못을 만들기 위해 땅을 파는 꿈",
+  "category": "nature",
+  "badge": "흉몽",
+  "tags": [
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "연못을 만들기 위해 땅을 파는 꿈은 후회할 일이 생긴다는 것을 암시한다.",
+  "description": "연못을 만들기 위해 땅을 파는 꿈은 후회할 일이 생긴다는 것을 암시한다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 21,
+  "id": "crawled-010",
+  "title": "자신이 죽인 시체를 땅에 묻는 꿈",
+  "category": "daily",
+  "badge": "보통",
+  "tags": [
+   "보통"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "어떤 일을 깨끗이 처리하거나 비밀에 부쳐야 할 처지에 놓인다는 것을 상징한다.",
+  "description": "어떤 일을 깨끗이 처리하거나 비밀에 부쳐야 할 처지에 놓인다는 것을 상징한다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 22,
+  "id": "crawled-011",
+  "title": "땅속에서 헤엄치는 꿈",
+  "category": "nature",
+  "badge": "흉몽",
+  "tags": [
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "부정한 일을 하거나 정부와 적대되는 일을 하게 된다는 것을 상징한다.",
+  "description": "부정한 일을 하거나 정부와 적대되는 일을 하게 된다는 것을 상징한다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 23,
+  "id": "crawled-012",
+  "title": "번개와 같은 광선이 하늘에서 땅으로 뻗쳐 오는 꿈",
+  "category": "nature",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "추진 중인 일이 많은 사람들을 감동시키게 된다는 것을 암시한다.",
+  "description": "추진 중인 일이 많은 사람들을 감동시키게 된다는 것을 암시한다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 24,
+  "id": "crawled-013",
+  "title": "무수한 별이 하늘에서 쏟아져 땅에 쌓이는 꿈",
+  "category": "nature",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "연구 자료를 수집할 일이 생기거나 창작품을 발표하게 된다는 것을 암시한다.",
+  "description": "연구 자료를 수집할 일이 생기거나 창작품을 발표하게 된다는 것을 암시한다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 25,
+  "id": "crawled-014",
+  "title": "동전을 땅에서 몇 개 줍는 꿈",
+  "category": "daily",
+  "badge": "흉몽",
+  "tags": [
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "상대방과 작은 일로 싸움을 하게 된다. 돈을 조금 가지고 있으면 걱정거리가 생긴다.",
+  "description": "상대방과 작은 일로 싸움을 하게 된다. 돈을 조금 가지고 있으면 걱정거리가 생긴다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 26,
+  "id": "crawled-015",
+  "title": "화장실에 갔으나 마땅한 곳이 없어 들어가지 못하는 꿈",
+  "category": "daily",
+  "badge": "흉몽",
+  "tags": [
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "자기가 원하던 일이 뜻대로 이루어지지 않는다는 것을 암시한다.",
+  "description": "자기가 원하던 일이 뜻대로 이루어지지 않는다는 것을 암시한다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 27,
+  "id": "crawled-016",
+  "title": "땅을 파서 몸을 묻는 꿈",
+  "category": "lucky",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "재산이 불어나고 저축이 많아진다는 것을 상징하는 길몽이다.",
+  "description": "재산이 불어나고 저축이 많아진다는 것을 상징하는 길몽이다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 28,
+  "id": "crawled-017",
+  "title": "갈라진 땅속으로 몸이 빠지는 꿈",
+  "category": "unlucky",
+  "badge": "흉몽",
+  "tags": [
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "자신이나 주변에서 불길한 일이 일어날 징조이다.",
+  "description": "자신이나 주변에서 불길한 일이 일어날 징조이다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 29,
+  "id": "crawled-018",
+  "title": "자신을 묻기 위해 땅을 파는 꿈",
+  "category": "lucky",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "집을 새로 장만하거나 새 직장을 구한다. 땅을 파서 자신을 묻었다면 재산이 크게 늘어날 징",
+  "description": "집을 새로 장만하거나 새 직장을 구한다. 땅을 파서 자신을 묻었다면 재산이 크게 늘어날 징조다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 30,
+  "id": "crawled-019",
+  "title": "땅속에 파묻히는 꿈",
+  "category": "unlucky",
+  "badge": "흉몽",
+  "tags": [
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "땅에 파묻히는 것은 재물과 돈이 파묻힌다는 암시다. 파묻혀서 질식하는 꿈은 곤란과 불안을 ",
+  "description": "땅에 파묻히는 것은 재물과 돈이 파묻힌다는 암시다. 파묻혀서 질식하는 꿈은 곤란과 불안을 나타낸다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 31,
+  "id": "crawled-020",
+  "title": "땅바닥에 앉아 있는 꿈",
+  "category": "lucky",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "생활환경이 안정될 조짐으로 좋은 꿈이다. 또는 술대접을 받을 일이 생긴다.",
+  "description": "생활환경이 안정될 조짐으로 좋은 꿈이다. 또는 술대접을 받을 일이 생긴다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 32,
+  "id": "crawled-021",
+  "title": "몸이 땅속으로 빨려 들어가는 꿈",
+  "category": "lucky",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "부동산, 권력, 명성 등을 얻고 재복이 따른다는 길몽이다.",
+  "description": "부동산, 권력, 명성 등을 얻고 재복이 따른다는 길몽이다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 33,
+  "id": "crawled-022",
+  "title": "다 익어 땅에 떨어진 감을 주워 먹는 꿈",
+  "category": "unlucky",
+  "badge": "흉몽",
+  "tags": [
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "여러 사람들로부터 무시당하거나 남의 것을 모방하다 망신을 당한다.",
+  "description": "여러 사람들로부터 무시당하거나 남의 것을 모방하다 망신을 당한다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 34,
+  "id": "crawled-023",
+  "title": "땅을 팔아 돈을 버는 꿈",
+  "category": "lucky",
+  "badge": "흉몽",
+  "tags": [
+   "조건부",
+   "길몽",
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "실업자는 일자리를 얻고 직장인은 중요한 부서로 이동할 암시다. 단, 노약자라면 건강이 악화",
+  "description": "실업자는 일자리를 얻고 직장인은 중요한 부서로 이동할 암시다. 단, 노약자라면 건강이 악화될 암시이기도 하다.",
+  "conditions": [
+   {
+    "type": "길몽",
+    "condition": "일반인인 경우"
+   },
+   {
+    "type": "흉몽",
+    "condition": "노약자인 경우"
+   }
+  ],
+  "note": "조건부 항목. 판정 배지는 흉몽. 전체 결론이 흉몽와 반대가 되지 않게"
+ },
+ {
+  "no": 35,
+  "id": "crawled-024",
+  "title": "땅속에 묻힌 옥새를 파내는 꿈",
+  "category": "lucky",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "사업을 추진하며 주도적인 위치에서 일하거나 세력을 넓힌다는 것을 상징한다.",
+  "description": "사업을 추진하며 주도적인 위치에서 일하거나 세력을 넓힌다는 것을 상징한다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 36,
+  "id": "crawled-025",
+  "title": "맨땅에서 미끄러져 넘어지는 꿈",
+  "category": "unlucky",
+  "badge": "흉몽",
+  "tags": [
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "직위 하향, 신분 몰락을 가져오거나 시험·연애 등에 실패를 거듭한다.",
+  "description": "직위 하향, 신분 몰락을 가져오거나 시험·연애 등에 실패를 거듭한다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 37,
+  "id": "crawled-026",
+  "title": "하늘과 땅이 합쳐지는 꿈",
+  "category": "lucky",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "뜻한 바대로 소원이 성취되고 모든 일에 장애 없이 잘 풀린다.",
+  "description": "뜻한 바대로 소원이 성취되고 모든 일에 장애 없이 잘 풀린다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 38,
+  "id": "crawled-027",
+  "title": "땅에 엎드려 있는 꿈",
+  "category": "unlucky",
+  "badge": "흉몽",
+  "tags": [
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "우울한 일이 생기거나 근심거리가 있음을 예시한다.",
+  "description": "우울한 일이 생기거나 근심거리가 있음을 예시한다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 39,
+  "id": "crawled-028",
+  "title": "땅에 구덩이를 파고 위장하는 꿈",
+  "category": "unlucky",
+  "badge": "흉몽",
+  "tags": [
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "주위의 간교함 때문에 사업이 점점 부실해지거나 신분 또는 자존심이 실추된다.",
+  "description": "주위의 간교함 때문에 사업이 점점 부실해지거나 신분 또는 자존심이 실추된다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 40,
+  "id": "crawled-029",
+  "title": "땅이 갈라진 틈을 내려다보는 꿈",
+  "category": "lucky",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "전에 없던 일이 활기를 띠고 성과를 거둔다. 땅이 갈라진 깊은 곳까지 내려다보았다면 학문 ",
+  "description": "전에 없던 일이 활기를 띠고 성과를 거둔다. 땅이 갈라진 깊은 곳까지 내려다보았다면 학문 등에 깊이 몰두하게 된다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 41,
+  "id": "crawled-030",
+  "title": "땅굴 속을 쑤셨더니 큰 구렁이가 나오는 꿈",
+  "category": "lucky",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "시험에 합격하거나 소망하던 취직이 이루어진다는 길몽이다.",
+  "description": "시험에 합격하거나 소망하던 취직이 이루어진다는 길몽이다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 42,
+  "id": "crawled-031",
+  "title": "땅 위를 낮게 엎드려 나는 꿈",
+  "category": "unlucky",
+  "badge": "흉몽",
+  "tags": [
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "생각지도 못한 불안, 공포, 질병 등이 발생하여 한동안 지속된다.",
+  "description": "생각지도 못한 불안, 공포, 질병 등이 발생하여 한동안 지속된다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 43,
+  "id": "crawled-032",
+  "title": "벼락이 땅에 떨어져 불이 붙는 꿈",
+  "category": "nature",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "새로운 사업에 투자하여 좋은 성과를 거둔다는 것을 암시한다.",
+  "description": "새로운 사업에 투자하여 좋은 성과를 거둔다는 것을 암시한다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 44,
+  "id": "crawled-033",
+  "title": "땅거미가 나무에 기어오르는 꿈",
+  "category": "animal",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "승진, 합격, 당선 등 경사스러운 일이 생기며 사업이 순조롭게 풀린다.",
+  "description": "승진, 합격, 당선 등 경사스러운 일이 생기며 사업이 순조롭게 풀린다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 45,
+  "id": "crawled-034",
+  "title": "집터였던 땅이 들판으로 변하는 꿈",
+  "category": "unlucky",
+  "badge": "흉몽",
+  "tags": [
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "일가친척, 친지 등 가까운 사람들이 뿔뿔이 헤어진다는 것을 암시한다.",
+  "description": "일가친척, 친지 등 가까운 사람들이 뿔뿔이 헤어진다는 것을 암시한다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 46,
+  "id": "crawled-035",
+  "title": "갈라진 땅바닥에서 구더기가 나오는 꿈",
+  "category": "lucky",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "생산과 유통 분야에 많은 투자를 하여 소기업이 대기업으로 번창하게 된다.",
+  "description": "생산과 유통 분야에 많은 투자를 하여 소기업이 대기업으로 번창하게 된다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 47,
+  "id": "crawled-036",
+  "title": "땅거미 집에 죽은 곤충이 얽혀 있는 꿈",
+  "category": "unlucky",
+  "badge": "흉몽",
+  "tags": [
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "집안이나 가까운 친지에게 송사가 있거나 고질병으로 고생한다.",
+  "description": "집안이나 가까운 친지에게 송사가 있거나 고질병으로 고생한다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 48,
+  "id": "crawled-037",
+  "title": "땅 위에 누워 있는 꿈",
+  "category": "unlucky",
+  "badge": "흉몽",
+  "tags": [
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "근심 걱정이 끊이지 않을 흉몽이다.",
+  "description": "근심 걱정이 끊이지 않을 흉몽이다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 49,
+  "id": "crawled-038",
+  "title": "지도를 땅에 떨어뜨리는 꿈",
+  "category": "unlucky",
+  "badge": "흉몽",
+  "tags": [
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "무리하게 일을 추진하다가 실패할 징조다.",
+  "description": "무리하게 일을 추진하다가 실패할 징조다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 50,
+  "id": "crawled-039",
+  "title": "대통령의 옥새를 땅속에서 캐내는 꿈",
+  "category": "lucky",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "모든 일에 크게 성공하며 운수 대통할 길몽이다.",
+  "description": "모든 일에 크게 성공하며 운수 대통할 길몽이다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 51,
+  "id": "crawled-040",
+  "title": "거친 땅에 우뚝 선 꿈",
+  "category": "unlucky",
+  "badge": "흉몽",
+  "tags": [
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "곤란한 처지에 놓인다. 곤경과 질병 혹은 정신적인 불안함을 상징한다.",
+  "description": "곤란한 처지에 놓인다. 곤경과 질병 혹은 정신적인 불안함을 상징한다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 52,
+  "id": "crawled-041",
+  "title": "상대방이 권총을 버리거나 땅에 떨어뜨리는 꿈",
+  "category": "lucky",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "생사가 걸린 일에서 해방되거나 경쟁에서 승리한다.",
+  "description": "생사가 걸린 일에서 해방되거나 경쟁에서 승리한다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 53,
+  "id": "crawled-042",
+  "title": "누군가 쌀을 몽땅 가져다 주는 꿈",
+  "category": "lucky",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "누군가의 도움을 받아 큰 재물을 모으게 된다.",
+  "description": "누군가의 도움을 받아 큰 재물을 모으게 된다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 54,
+  "id": "crawled-043",
+  "title": "하늘과 땅이 서로 맞붙는 꿈",
+  "category": "pregnancy",
+  "badge": "길몽",
+  "tags": [
+   "태몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "귀공자를 잉태하게 될 징조다.",
+  "description": "귀공자를 잉태하게 될 징조다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 55,
+  "id": "crawled-044",
+  "title": "땅속에 지옥이 보이는 꿈",
+  "category": "mystic",
+  "badge": "보통",
+  "tags": [
+   "보통"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "지난 과거를 돌이켜보는 거울이 된다. 참회와 반성을 하여 옳은 사람이 된다는 상징이다.",
+  "description": "지난 과거를 돌이켜보는 거울이 된다. 참회와 반성을 하여 옳은 사람이 된다는 상징이다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 56,
+  "id": "crawled-045",
+  "title": "땅의 색깔이 푸른 꿈",
+  "category": "lucky",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "푸른 잔디밭의 꿈을 꾸면 길몽으로, 오랜 노력의 대가가 있으며 모든 것이 순조로워진다.",
+  "description": "푸른 잔디밭의 꿈을 꾸면 길몽으로, 오랜 노력의 대가가 있으며 모든 것이 순조로워진다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 57,
+  "id": "crawled-046",
+  "title": "몸이 저절로 땅속으로 빠져 들어간 꿈",
+  "category": "lucky",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "토지를 많이 확보하거나 어떤 단체에서 세력권을 쥐게 된다.",
+  "description": "토지를 많이 확보하거나 어떤 단체에서 세력권을 쥐게 된다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 58,
+  "id": "crawled-047",
+  "title": "분꽃이 땅에 떨어지는 꿈",
+  "category": "unlucky",
+  "badge": "흉몽",
+  "tags": [
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "오랫동안 화려한 인기를 누리다가 하루아침에 몰락한다는 것을 암시한다.",
+  "description": "오랫동안 화려한 인기를 누리다가 하루아침에 몰락한다는 것을 암시한다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 59,
+  "id": "crawled-048",
+  "title": "땅이 높고 낮고 하여 울퉁불퉁한 꿈",
+  "category": "unlucky",
+  "badge": "흉몽",
+  "tags": [
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "뜻밖에 놀랄 일이 생겨 심신이 불편해진다.",
+  "description": "뜻밖에 놀랄 일이 생겨 심신이 불편해진다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 60,
+  "id": "crawled-049",
+  "title": "땅바닥에 자신의 이름 석자가 쓰여져 있는 꿈",
+  "category": "lucky",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "사회의 공인으로 입신출세한다.",
+  "description": "사회의 공인으로 입신출세한다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 61,
+  "id": "crawled-050",
+  "title": "땅속을 걸어다니거나 헤엄쳐 가는 꿈",
+  "category": "lucky",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "탐색, 연구, 지하활동 또는 회사나 관청 내부에서 성공을 거둔다.",
+  "description": "탐색, 연구, 지하활동 또는 회사나 관청 내부에서 성공을 거둔다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 62,
+  "id": "crawled-051",
+  "title": "지진이 나서 땅이 갈라진 틈새로 떨어지거나 빠진 꿈",
+  "category": "unlucky",
+  "badge": "흉몽",
+  "tags": [
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "구설수에 오르거나 시비·다툼에 휘말릴 징조이다. 자신의 신변에 엄청난 재앙이 다가온다는 조",
+  "description": "구설수에 오르거나 시비·다툼에 휘말릴 징조이다. 자신의 신변에 엄청난 재앙이 다가온다는 조짐으로 각별한 주의가 필요하다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 63,
+  "id": "crawled-052",
+  "title": "굵은 쇠기둥이 땅에 높이 서 있는 꿈",
+  "category": "lucky",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "신분이 높아지고 입신출세하게 된다. 입학, 승진, 당선, 합격, 승리, 성공 등이 있다.",
+  "description": "신분이 높아지고 입신출세하게 된다. 입학, 승진, 당선, 합격, 승리, 성공 등이 있다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 64,
+  "id": "crawled-053",
+  "title": "물고기를 땅바닥에 떨어뜨려 물고기가 팔딱거리는 꿈",
+  "category": "unlucky",
+  "badge": "흉몽",
+  "tags": [
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "질병을 앓거나 궂은 일이 생기는 등 재난이나 손실이 닥쳐서 곤란을 겪게 된다.",
+  "description": "질병을 앓거나 궂은 일이 생기는 등 재난이나 손실이 닥쳐서 곤란을 겪게 된다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 65,
+  "id": "crawled-054",
+  "title": "땅속에 사는 용이 집안으로 들어오는 꿈",
+  "category": "pregnancy",
+  "badge": "길몽",
+  "tags": [
+   "태몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "당대의 정신과 물질적 부를 가져다주고 집안이 불같이 일어난다. 태몽일 경우 큰 인물을 낳는",
+  "description": "당대의 정신과 물질적 부를 가져다주고 집안이 불같이 일어난다. 태몽일 경우 큰 인물을 낳는다는 상징이다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 66,
+  "id": "crawled-055",
+  "title": "태양이 땅에 떨어져 구르는 꿈",
+  "category": "lucky",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "자신의 업적이나 일의 결과가 세상에 알려지고, 많은 사람들에게 큰 영향을 미치게 될 징조이",
+  "description": "자신의 업적이나 일의 결과가 세상에 알려지고, 많은 사람들에게 큰 영향을 미치게 될 징조이다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 67,
+  "id": "crawled-056",
+  "title": "땅이 발에 닿지 않은 만큼 기분 좋게 달려가는 꿈",
+  "category": "lucky",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "순풍에 돛이 달린 배처럼 모든 일이 순조롭게 이루어진다.",
+  "description": "순풍에 돛이 달린 배처럼 모든 일이 순조롭게 이루어진다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 68,
+  "id": "crawled-057",
+  "title": "칼이나 연장을 땅에 박아 땅이 갈라지는 꿈",
+  "category": "lucky",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "자신의 권력이나 주장, 학설이 세상에 공인되고 많은 사람들에게 영향을 끼치게 된다는 것을 ",
+  "description": "자신의 권력이나 주장, 학설이 세상에 공인되고 많은 사람들에게 영향을 끼치게 된다는 것을 상징한다. 강한 추진력으로 목표를 달성하고 주도권을 쥐게 될 것을 암시한다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 69,
+  "id": "crawled-058",
+  "title": "돼지와 사람이 함께 어울려 노는 꿈",
+  "category": "animal",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "자신이 추진하던 사업이나 일이 잘 이루어져 엄청나게 많은 돈을 벌게 된다.",
+  "description": "자신이 추진하던 사업이나 일이 잘 이루어져 엄청나게 많은 돈을 벌게 된다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 70,
+  "id": "crawled-059",
+  "title": "돼지를 죽이려 하는데 갑자기 돼지가 사람으로 변모하는 꿈",
+  "category": "animal",
+  "badge": "흉몽",
+  "tags": [
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "자신의 경쟁 상대가 자신보다 더 우세할 것이며 그로 인해 좌절하게 된다.",
+  "description": "자신의 경쟁 상대가 자신보다 더 우세할 것이며 그로 인해 좌절하게 된다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 71,
+  "id": "crawled-060",
+  "title": "돼지 새끼가 어미의 젖을 빨아먹는 꿈",
+  "category": "animal",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "횡재수가 있다. 집안에 경사스런 일이 생기고 재물과 돈이 많이 들어온다.",
+  "description": "횡재수가 있다. 집안에 경사스런 일이 생기고 재물과 돈이 많이 들어온다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 72,
+  "id": "crawled-061",
+  "title": "돼지가 쥐로 변해 쥐구멍으로 도망치는 꿈",
+  "category": "animal",
+  "badge": "흉몽",
+  "tags": [
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "사업이나 장사가 처음엔 잘 되는 것 같은데 나중에는 별 볼일 없게 된다.",
+  "description": "사업이나 장사가 처음엔 잘 되는 것 같은데 나중에는 별 볼일 없게 된다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 73,
+  "id": "crawled-062",
+  "title": "아기돼지 꿈",
+  "category": "animal",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "아기돼지를 안아 올리는 꿈은 예상하지 못한 곳에서 좋은 소식이 들린다. 아기돼지와 함께 노",
+  "description": "아기돼지를 안아 올리는 꿈은 예상하지 못한 곳에서 좋은 소식이 들린다. 아기돼지와 함께 노는 꿈은 진행하는 일이 잘 이루어지며, 아기돼지를 낳는 꿈은 노력에 비해 큰 성과를 얻는다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 74,
+  "id": "crawled-063",
+  "title": "돼지를 잡거나 가져오는 꿈",
+  "category": "animal",
+  "badge": "흉몽",
+  "tags": [
+   "조건부",
+   "길몽",
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "다산과 풍요의 상징인 돼지를 잡아오는 꿈은 사업 융성이나 재물의 번창을 상징한다. 단, 쫓",
+  "description": "다산과 풍요의 상징인 돼지를 잡아오는 꿈은 사업 융성이나 재물의 번창을 상징한다. 단, 쫓아낸다거나 돼지가 사라지는 꿈은 들어오려던 재물을 잃는 것으로 실현된다.",
+  "conditions": [
+   {
+    "type": "길몽",
+    "condition": "돼지를 잡아온 경우"
+   },
+   {
+    "type": "흉몽",
+    "condition": "쫓아내거나 돼지가 사라진 경우"
+   }
+  ],
+  "note": "조건부 항목. 판정 배지는 흉몽. 전체 결론이 흉몽와 반대가 되지 않게"
+ },
+ {
+  "no": 75,
+  "id": "crawled-064",
+  "title": "돼지 한 마리가 갑자기 여러 마리로 불어나는 꿈",
+  "category": "animal",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "자신의 작업이나 창작품, 연구 성과 등이 좋은 결실을 맺거나 이익을 얻는다.",
+  "description": "자신의 작업이나 창작품, 연구 성과 등이 좋은 결실을 맺거나 이익을 얻는다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 76,
+  "id": "crawled-065",
+  "title": "여러 마리의 새끼돼지를 품안에 끌어안는 꿈",
+  "category": "animal",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "재물복이 많은 자식을 두게 된다.",
+  "description": "재물복이 많은 자식을 두게 된다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 77,
+  "id": "crawled-066",
+  "title": "돼지를 통째로 삶거나 바비큐하여 잘라 먹는 꿈",
+  "category": "animal",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "단체나 조직에서 우두머리가 된다. 또는 한동안 어려웠던 일이 순조롭게 잘 해결되면서 활기를",
+  "description": "단체나 조직에서 우두머리가 된다. 또는 한동안 어려웠던 일이 순조롭게 잘 해결되면서 활기를 찾는다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 78,
+  "id": "crawled-067",
+  "title": "돼지가 따라오거나 집 안으로 끌어들이는 꿈",
+  "category": "animal",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "높은 지위에 오르는 등 크게 성공한다. 복권 당첨이나 결혼, 계약 성사, 사업 번창으로 복",
+  "description": "높은 지위에 오르는 등 크게 성공한다. 복권 당첨이나 결혼, 계약 성사, 사업 번창으로 복록을 누리게 된다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 79,
+  "id": "crawled-068",
+  "title": "돼지우리에 돼지가 가득 차 있고 돼지 새끼가 우글거리는 꿈",
+  "category": "animal",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "작가나 교육자, 사업가가 되어 이름을 날리게 된다.",
+  "description": "작가나 교육자, 사업가가 되어 이름을 날리게 된다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 80,
+  "id": "crawled-069",
+  "title": "산돼지가 떼를 지어 부엌으로 들어오는 꿈",
+  "category": "animal",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "높은 직위에 오르거나 학문에 종사하게 된다.",
+  "description": "높은 직위에 오르거나 학문에 종사하게 된다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 81,
+  "id": "crawled-070",
+  "title": "가족이 뱀에 물리는 꿈",
+  "category": "animal",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "물린 가족에게 연애운이 들어오거나 아이를 갖게 된다는 꿈이다. 해당 사항이 없을 경우에는 ",
+  "description": "물린 가족에게 연애운이 들어오거나 아이를 갖게 된다는 꿈이다. 해당 사항이 없을 경우에는 돈과 재물을 얻게 된다고 해석된다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 82,
+  "id": "crawled-071",
+  "title": "뱀한테 손 물리는 꿈",
+  "category": "animal",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "재물운이 따르고 본인에게 도움을 줄 귀인이나 조력자를 만나게 된다는 길몽이다.",
+  "description": "재물운이 따르고 본인에게 도움을 줄 귀인이나 조력자를 만나게 된다는 길몽이다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 83,
+  "id": "crawled-072",
+  "title": "뱀이 많이 나오는 꿈",
+  "category": "animal",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "살아있는 뱀이 많이 나왔다면 재물운이 들어오고 좋은 조력자가 다가오며 좋은 일이 생긴다는 ",
+  "description": "살아있는 뱀이 많이 나왔다면 재물운이 들어오고 좋은 조력자가 다가오며 좋은 일이 생긴다는 길몽이다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 84,
+  "id": "crawled-073",
+  "title": "큰뱀 옆에 작은 뱀이 있는 꿈",
+  "category": "animal",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "장차 권력과 세력을 잡게 된다는 의미다.",
+  "description": "장차 권력과 세력을 잡게 된다는 의미다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 85,
+  "id": "crawled-074",
+  "title": "큰뱀에게 물리는 꿈",
+  "category": "animal",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "배우자나 동지를 만나게 되는 꿈이다.",
+  "description": "배우자나 동지를 만나게 되는 꿈이다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 86,
+  "id": "crawled-075",
+  "title": "뱀이 무는 꿈",
+  "category": "animal",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "연애운과 관련이 있다. 현재 가까운 사람과 연인 관계로 발전할 수 있으며, 이미 애인이 있",
+  "description": "연애운과 관련이 있다. 현재 가까운 사람과 연인 관계로 발전할 수 있으며, 이미 애인이 있는 경우에는 결혼을 하게 될 수도 있다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 87,
+  "id": "crawled-076",
+  "title": "불나는 꿈",
+  "category": "nature",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "불이 나는 꿈은 강력한 에너지와 변화, 재물운, 성취를 상징하는 경우가 많다. 불이 활활 ",
+  "description": "불이 나는 꿈은 강력한 에너지와 변화, 재물운, 성취를 상징하는 경우가 많다. 불이 활활 타오를수록 재산이 크게 빠르게 증가하는 길몽으로 풀이된다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 88,
+  "id": "crawled-077",
+  "title": "몸에 불이 붙는 꿈",
+  "category": "nature",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "불은 금전적 운이 들어오는 것으로 해석된다. 몸에 불이 붙었다는 것은 본인 자체가 유명해지",
+  "description": "불은 금전적 운이 들어오는 것으로 해석된다. 몸에 불이 붙었다는 것은 본인 자체가 유명해지고 명예가 높아진다는 의미다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 89,
+  "id": "crawled-078",
+  "title": "회사에 불나는 꿈",
+  "category": "nature",
+  "badge": "길몽",
+  "tags": [
+   "조건부",
+   "길몽",
+   "보통"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "건물이 화려하게 불탈수록 커리어가 탄탄해지고 사업이 번창한다. 그러나 본인이 회사에 가기 ",
+  "description": "건물이 화려하게 불탈수록 커리어가 탄탄해지고 사업이 번창한다. 그러나 본인이 회사에 가기 싫다는 속마음이 반영된 심리몽일 가능성도 높다.",
+  "conditions": [
+   {
+    "type": "길몽",
+    "condition": "화려하게 불타는 경우"
+   },
+   {
+    "type": "보통",
+    "condition": "심리몽으로 느껴지는 경우"
+   }
+  ],
+  "note": "조건부 항목. 판정 배지는 길몽. 전체 결론이 길몽와 반대가 되지 않게"
+ },
+ {
+  "no": 90,
+  "id": "crawled-079",
+  "title": "건물에 불나는 꿈",
+  "category": "nature",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "불나는 꿈은 대체로 좋은 꿈이다. 불이 크게 날수록 집안에 금전운이 크게 들어온다. 불이 ",
+  "description": "불나는 꿈은 대체로 좋은 꿈이다. 불이 크게 날수록 집안에 금전운이 크게 들어온다. 불이 나서 본인이 울었다면 크게 울수록 더 좋은 꿈이다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 91,
+  "id": "crawled-080",
+  "title": "소화기로 불 끄는 꿈",
+  "category": "nature",
+  "badge": "흉몽",
+  "tags": [
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "불은 명예와 부를 상징하는데 이를 소화기로 끄는 꿈은 흉몽이다. 하고 있는 일이 실패하거나",
+  "description": "불은 명예와 부를 상징하는데 이를 소화기로 끄는 꿈은 흉몽이다. 하고 있는 일이 실패하거나 큰 고비를 마주하게 된다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 92,
+  "id": "crawled-081",
+  "title": "불나서 대피하는 꿈",
+  "category": "nature",
+  "badge": "흉몽",
+  "tags": [
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "불을 보고 도망가거나 대피하는 것은 행운을 피하는 것과 같다. 기회가 찾아왔을 때 잡지 못",
+  "description": "불을 보고 도망가거나 대피하는 것은 행운을 피하는 것과 같다. 기회가 찾아왔을 때 잡지 못하고 좌절한다는 뜻으로 풀이된다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 93,
+  "id": "crawled-082",
+  "title": "뱀에 물리는 꿈",
+  "category": "animal",
+  "badge": "흉몽",
+  "tags": [
+   "조건부",
+   "길몽",
+   "흉몽",
+   "태몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "뱀에 물리는 꿈은 강력한 에너지의 유입과 인생의 전환점을 상징하는 대표적인 길몽이다. 재물",
+  "description": "뱀에 물리는 꿈은 강력한 에너지의 유입과 인생의 전환점을 상징하는 대표적인 길몽이다. 재물운 상승, 새로운 인연, 태몽과 깊은 연관이 있으며 뱀의 크기와 물린 부위에 따라 의미가 달라진다. 단, 물린 후 죽거나 극심한 고통을 느끼는 경우는 흉몽으로 해석된다.",
+  "conditions": [
+   {
+    "type": "길몽",
+    "condition": "뱀에 물린 후 고통 없이 피가 나는 경우"
+   },
+   {
+    "type": "흉몽",
+    "condition": "물린 후 죽거나 극심한 고통을 느끼는 경우"
+   },
+   {
+    "type": "태몽",
+    "condition": "임산부가 꾸는 경우"
+   },
+   {
+    "type": "흉몽",
+    "condition": "검은 뱀에 물리는 경우"
+   }
+  ],
+  "note": "조건부 항목. 판정 배지는 흉몽. 전체 결론이 흉몽와 반대가 되지 않게"
+ },
+ {
+  "no": 94,
+  "id": "crawled-083",
+  "title": "뱀 나오는 꿈",
+  "category": "animal",
+  "badge": "흉몽",
+  "tags": [
+   "조건부",
+   "길몽",
+   "흉몽",
+   "태몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "꿈에서 뱀은 지혜, 재생, 변화를 상징하며 해석이 가장 다양하고 복합적인 상징 중 하나다.",
+  "description": "꿈에서 뱀은 지혜, 재생, 변화를 상징하며 해석이 가장 다양하고 복합적인 상징 중 하나다. 살아있는 뱀이 많이 나왔다면 재물운과 좋은 조력자를 의미하는 길몽이며, 태몽으로는 지혜로운 아이를 상징한다. 뱀이 갑자기 사라지거나 검은색 뱀인 경우는 흉몽으로 해석될 수 있다.",
+  "conditions": [
+   {
+    "type": "길몽",
+    "condition": "살아있는 뱀이 크고 많이 나오는 경우"
+   },
+   {
+    "type": "흉몽",
+    "condition": "검은 뱀이 나오는 경우"
+   },
+   {
+    "type": "흉몽",
+    "condition": "뱀이 나타났다 갑자기 사라지는 경우"
+   },
+   {
+    "type": "태몽",
+    "condition": "태몽으로 해석되는 경우"
+   }
+  ],
+  "note": "조건부 항목. 판정 배지는 흉몽. 전체 결론이 흉몽와 반대가 되지 않게"
+ },
+ {
+  "no": 95,
+  "id": "crawled-084",
+  "title": "큰 뱀 죽이는 꿈",
+  "category": "animal",
+  "badge": "길몽",
+  "tags": [
+   "조건부",
+   "길몽",
+   "태몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "큰 뱀을 죽이는 꿈은 직장 내 큰 프로젝트 성공이나 취업 성공을 의미하는 길몽이다. 뱀이 ",
+  "description": "큰 뱀을 죽이는 꿈은 직장 내 큰 프로젝트 성공이나 취업 성공을 의미하는 길몽이다. 뱀이 클수록 운이 더 크다고 해석된다. 하얗고 예쁜 뱀이 나오는 꿈은 예쁜 딸을 낳는다는 태몽으로도 해석된다.",
+  "conditions": [
+   {
+    "type": "길몽",
+    "condition": "큰 뱀을 죽이는 경우"
+   },
+   {
+    "type": "태몽",
+    "condition": "하얗고 예쁜 뱀이 나오는 경우"
+   }
+  ],
+  "note": "조건부 항목. 판정 배지는 길몽. 전체 결론이 길몽와 반대가 되지 않게"
+ },
+ {
+  "no": 96,
+  "id": "crawled-085",
+  "title": "검은뱀 나오는 꿈",
+  "category": "animal",
+  "badge": "흉몽",
+  "tags": [
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "뱀 꿈에서 색은 해석에 매우 중요하게 작용한다. 검은 뱀은 안좋은 의미로 해석되며 죽음과 ",
+  "description": "뱀 꿈에서 색은 해석에 매우 중요하게 작용한다. 검은 뱀은 안좋은 의미로 해석되며 죽음과 건강에 관련되어 있을 확률이 높다. 건강에 유의해야 하는 경고몽이다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 97,
+  "id": "crawled-086",
+  "title": "뱀 머리 자르는 꿈",
+  "category": "animal",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "뱀 머리를 자르는 꿈은 길몽에 해당한다. 해몽상 뱀은 지혜를 상징하므로 뱀의 머리를 자르는",
+  "description": "뱀 머리를 자르는 꿈은 길몽에 해당한다. 해몽상 뱀은 지혜를 상징하므로 뱀의 머리를 자르는 꿈은 본인의 방해물을 지혜롭게 풀어나간다는 의미다. 여성의 경우 영리한 여자아이를 낳게 될 태몽으로도 해석된다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 98,
+  "id": "crawled-087",
+  "title": "뱀에게 쫓기는 꿈",
+  "category": "animal",
+  "badge": "흉몽",
+  "tags": [
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "뱀에게 쫓기는 꿈은 신경 쓰일 만한 일이 다가온다는 뜻이다. 라이벌이 생기거나 불청객이 찾",
+  "description": "뱀에게 쫓기는 꿈은 신경 쓰일 만한 일이 다가온다는 뜻이다. 라이벌이 생기거나 불청객이 찾아온다는 의미로 해석할 수 있으며, 뱀 색이 검정색일 경우 더 좋지 않은 운을 나타낸다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 99,
+  "id": "crawled-088",
+  "title": "뱀이 감고 있는 꿈",
+  "category": "animal",
+  "badge": "흉몽",
+  "tags": [
+   "조건부",
+   "흉몽",
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "뱀이 본인을 감고 있는 꿈은 하고 있는 일이 꼬이고 잘 풀리지 않게 된다는 흉몽이다. 누군",
+  "description": "뱀이 본인을 감고 있는 꿈은 하고 있는 일이 꼬이고 잘 풀리지 않게 된다는 흉몽이다. 누군가에 의해 곤경에 빠지거나 생각지도 못한 사건에 휘말릴 수 있다. 단, 속박을 풀고 뱀을 죽였다면 어려움을 극복한다는 뜻이다.",
+  "conditions": [
+   {
+    "type": "흉몽",
+    "condition": "뱀에 감긴 채로 있는 경우"
+   },
+   {
+    "type": "길몽",
+    "condition": "속박을 풀고 뱀을 죽이는 경우"
+   }
+  ],
+  "note": "조건부 항목. 판정 배지는 흉몽. 전체 결론이 흉몽와 반대가 되지 않게"
+ },
+ {
+  "no": 100,
+  "id": "crawled-089",
+  "title": "뱀이 몸을 감는 꿈",
+  "category": "animal",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "뱀이 몸을 감는 꿈은 의도하지 않게 돈이 생기는 꿈이다. 다른 사람에게 존경을 받을 수도 ",
+  "description": "뱀이 몸을 감는 꿈은 의도하지 않게 돈이 생기는 꿈이다. 다른 사람에게 존경을 받을 수도 있음을 의미한다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 101,
+  "id": "crawled-090",
+  "title": "집에 뱀이 나오는 꿈",
+  "category": "animal",
+  "badge": "길몽",
+  "tags": [
+   "조건부",
+   "길몽",
+   "태몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "집에 뱀이 나오는 꿈은 대부분 길몽으로 해석된다. 뱀이 집으로 들어온다면 귀인이 찾아오거나",
+  "description": "집에 뱀이 나오는 꿈은 대부분 길몽으로 해석된다. 뱀이 집으로 들어온다면 귀인이 찾아오거나 본인에게 큰 도움이 될 사람이 나타난다는 것을 의미한다. 임산부일 경우 태몽일 가능성이 높다.",
+  "conditions": [
+   {
+    "type": "길몽",
+    "condition": "일반적인 경우"
+   },
+   {
+    "type": "태몽",
+    "condition": "임산부가 꾸는 경우"
+   }
+  ],
+  "note": "조건부 항목. 판정 배지는 길몽. 전체 결론이 길몽와 반대가 되지 않게"
+ },
+ {
+  "no": 102,
+  "id": "crawled-091",
+  "title": "뱀 잡는 꿈",
+  "category": "animal",
+  "badge": "흉몽",
+  "tags": [
+   "조건부",
+   "길몽",
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "뱀을 잡는 것은 돈을 잡는 것과 같이 재물운을 의미하는 전형적인 길몽이다. 황금색이나 갈색",
+  "description": "뱀을 잡는 것은 돈을 잡는 것과 같이 재물운을 의미하는 전형적인 길몽이다. 황금색이나 갈색 뱀을 잡으면 큰 재운을 가져오지만, 잡았다가 놓치거나 뱀이 도망가면 재물이 나가게 된다.",
+  "conditions": [
+   {
+    "type": "길몽",
+    "condition": "뱀을 잡는 데 성공한 경우"
+   },
+   {
+    "type": "흉몽",
+    "condition": "뱀을 놓치거나 도망가는 경우"
+   }
+  ],
+  "note": "조건부 항목. 판정 배지는 흉몽. 전체 결론이 흉몽와 반대가 되지 않게"
+ },
+ {
+  "no": 103,
+  "id": "crawled-092",
+  "title": "뱀을 잡아먹는 꿈",
+  "category": "animal",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "뱀은 근심, 걱정거리를 뜻하기도 하는데 이러한 뱀을 잡아먹었다면 자신의 능력으로 막혔던 모",
+  "description": "뱀은 근심, 걱정거리를 뜻하기도 하는데 이러한 뱀을 잡아먹었다면 자신의 능력으로 막혔던 모든 일이 해결된다는 뜻이다. 또한 여자아이의 태몽 의미도 갖고 있다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 104,
+  "id": "crawled-093",
+  "title": "죽은 뱀 꿈",
+  "category": "animal",
+  "badge": "흉몽",
+  "tags": [
+   "조건부",
+   "흉몽",
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "죽은 뱀을 보는 꿈은 태몽으로는 매우 좋지 않지만 일반적으로는 돈을 얻게 될 일이 생긴다는",
+  "description": "죽은 뱀을 보는 꿈은 태몽으로는 매우 좋지 않지만 일반적으로는 돈을 얻게 될 일이 생긴다는 의미다. 생명력의 쇠퇴나 기력 감소, 건강운 하락을 뜻하기도 한다.",
+  "conditions": [
+   {
+    "type": "흉몽",
+    "condition": "태몽으로 꾸는 경우"
+   },
+   {
+    "type": "길몽",
+    "condition": "일반 꿈으로 꾸는 경우"
+   }
+  ],
+  "note": "조건부 항목. 판정 배지는 흉몽. 전체 결론이 흉몽와 반대가 되지 않게"
+ },
+ {
+  "no": 105,
+  "id": "crawled-094",
+  "title": "뱀이 달려드는 꿈",
+  "category": "animal",
+  "badge": "흉몽",
+  "tags": [
+   "조건부",
+   "길몽",
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "뱀이 달려드는 꿈은 길몽으로 분류되며 성공이 달려오는 것과 같다. 눈앞에서 피하지 않았다면",
+  "description": "뱀이 달려드는 꿈은 길몽으로 분류되며 성공이 달려오는 것과 같다. 눈앞에서 피하지 않았다면 길몽이지만, 뱀을 따돌렸다면 다잡은 운을 놓쳤다고 해석된다.",
+  "conditions": [
+   {
+    "type": "길몽",
+    "condition": "달려드는 뱀을 피하지 않은 경우"
+   },
+   {
+    "type": "흉몽",
+    "condition": "달려드는 뱀을 피하거나 따돌린 경우"
+   }
+  ],
+  "note": "조건부 항목. 판정 배지는 흉몽. 전체 결론이 흉몽와 반대가 되지 않게"
+ },
+ {
+  "no": 106,
+  "id": "crawled-095",
+  "title": "돼지가 무는 꿈",
+  "category": "animal",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "돼지가 나오는 꿈은 대부분이 재물운이 들어오는 길몽이다. 돼지가 손을 무는 꿈은 투자자나 ",
+  "description": "돼지가 나오는 꿈은 대부분이 재물운이 들어오는 길몽이다. 돼지가 손을 무는 꿈은 투자자나 조력자가 나타나 사업이 크게 번창한다는 의미로 해석된다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 107,
+  "id": "crawled-096",
+  "title": "멧돼지 죽이는 꿈",
+  "category": "animal",
+  "badge": "길몽",
+  "tags": [
+   "조건부",
+   "길몽",
+   "태몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "산속에서 멧돼지를 죽이는 꿈은 길몽으로 행운과 금전적 이득을 의미한다. 대학입학 또는 직장",
+  "description": "산속에서 멧돼지를 죽이는 꿈은 길몽으로 행운과 금전적 이득을 의미한다. 대학입학 또는 직장 승진의 운이 들어온다고 해석되기도 한다. 태몽으로는 호기심 넘치고 용맹하며 명성을 떨칠 사내아이를 낳는다는 의미다.",
+  "conditions": [
+   {
+    "type": "길몽",
+    "condition": "일반 꿈인 경우"
+   },
+   {
+    "type": "태몽",
+    "condition": "태몽인 경우"
+   }
+  ],
+  "note": "조건부 항목. 판정 배지는 길몽. 전체 결론이 길몽와 반대가 되지 않게"
+ },
+ {
+  "no": 108,
+  "id": "crawled-097",
+  "title": "멧돼지가 달려드는 꿈",
+  "category": "animal",
+  "badge": "흉몽",
+  "tags": [
+   "조건부",
+   "길몽",
+   "흉몽",
+   "태몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "멧돼지가 달려드는 꿈은 길몽으로 행운과 금전적 이득을 의미한다. 태몽으로는 호기심 넘치고 ",
+  "description": "멧돼지가 달려드는 꿈은 길몽으로 행운과 금전적 이득을 의미한다. 태몽으로는 호기심 넘치고 용맹하며 명성을 떨칠 사내아이를 낳는다는 의미다. 단, 멧돼지를 피해 도망가고 무서워했다면 금전적 손실을 의미한다.",
+  "conditions": [
+   {
+    "type": "길몽",
+    "condition": "멧돼지가 달려드는데 안기거나 잡는 경우"
+   },
+   {
+    "type": "흉몽",
+    "condition": "멧돼지를 피해 도망가는 경우"
+   },
+   {
+    "type": "태몽",
+    "condition": "임산부가 꾸는 경우"
+   }
+  ],
+  "note": "조건부 항목. 판정 배지는 흉몽. 전체 결론이 흉몽와 반대가 되지 않게"
+ },
+ {
+  "no": 109,
+  "id": "crawled-098",
+  "title": "멧돼지한테 쫓기는 꿈",
+  "category": "animal",
+  "badge": "길몽",
+  "tags": [
+   "태몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "멧돼지한테 쫓기는 꿈은 태몽으로 해석된다. 관직이 높고 명성을 떨칠 사내아이를 낳는다는 태",
+  "description": "멧돼지한테 쫓기는 꿈은 태몽으로 해석된다. 관직이 높고 명성을 떨칠 사내아이를 낳는다는 태몽으로 풀이된다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 110,
+  "id": "crawled-099",
+  "title": "돼지 잡는 꿈",
+  "category": "animal",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "돼지 잡는 꿈은 길몽 중의 길몽으로 재물이나 이권이 들어오는 꿈이다. 이 꿈을 꾸고 난 후",
+  "description": "돼지 잡는 꿈은 길몽 중의 길몽으로 재물이나 이권이 들어오는 꿈이다. 이 꿈을 꾸고 난 후 이권을 획득하는 등으로 실현되는 경우가 많다고 한다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 111,
+  "id": "crawled-100",
+  "title": "돼지우리에 똥이 수북하게 쌓인 꿈",
+  "category": "animal",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "사업이 번창하고 돈을 많이 벌게 된다. 부동산에 투자를 해도 대성공을 거둘 운세다.",
+  "description": "사업이 번창하고 돈을 많이 벌게 된다. 부동산에 투자를 해도 대성공을 거둘 운세다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 112,
+  "id": "crawled-101",
+  "title": "돼지를 칼로 찌르거나 죽이는 꿈",
+  "category": "animal",
+  "badge": "흉몽",
+  "tags": [
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "좋지 않은 꿈이다. 어떤 일을 시작하는데 시작은 괜찮았음에도 결과는 만족스럽지 않다.",
+  "description": "좋지 않은 꿈이다. 어떤 일을 시작하는데 시작은 괜찮았음에도 결과는 만족스럽지 않다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 113,
+  "id": "crawled-102",
+  "title": "돼지를 본 꿈",
+  "category": "animal",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "돼지를 보는 꿈은 꿈 중에 가장 좋은 꿈으로 특히 복권 당첨 등에 확률이 가장 높을 만큼 ",
+  "description": "돼지를 보는 꿈은 꿈 중에 가장 좋은 꿈으로 특히 복권 당첨 등에 확률이 가장 높을 만큼 좋은 꿈이다. 주식이나 채권 등에 투자하면 기대 이상의 수익을 올릴 수 있으며 모든 일에 운수 대통한다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 114,
+  "id": "crawled-103",
+  "title": "돼지가 금은보화를 토해내는 꿈",
+  "category": "animal",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "운수 대길할 꿈으로 어떠한 일에 투자를 하던 대성공을 거둘 꿈이다. 그로 인해 많은 돈을 ",
+  "description": "운수 대길할 꿈으로 어떠한 일에 투자를 하던 대성공을 거둘 꿈이다. 그로 인해 많은 돈을 벌게 된다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 115,
+  "id": "crawled-104",
+  "title": "돼지에게 도망치는 꿈",
+  "category": "animal",
+  "badge": "흉몽",
+  "tags": [
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "돼지에게 도망치는 꿈은 재물과 관련된 일로 구설수에 오를 가능성이 있다. 재물을 탐하기보다",
+  "description": "돼지에게 도망치는 꿈은 재물과 관련된 일로 구설수에 오를 가능성이 있다. 재물을 탐하기보다 인덕을 추구하는 것이 좋다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 116,
+  "id": "crawled-105",
+  "title": "용이 승천하는 꿈",
+  "category": "animal",
+  "badge": "길몽",
+  "tags": [
+   "조건부",
+   "길몽",
+   "태몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "용이 승천하는 꿈은 본인이 최고위직을 누리거나 한 기관이나 단체를 이끄는 리더가 된다는 길",
+  "description": "용이 승천하는 꿈은 본인이 최고위직을 누리거나 한 기관이나 단체를 이끄는 리더가 된다는 길몽이다. 태몽으로 해석하는 경우에는 훌륭한 지도자가 될 아이가 태어난다는 암시이기도 하다. 본인이 용이 되어 승천하는 꿈이라면 권력을 얻는 더 좋은 길몽이다.",
+  "conditions": [
+   {
+    "type": "길몽",
+    "condition": "용이 승천하는 것을 보는 경우"
+   },
+   {
+    "type": "길몽",
+    "condition": "본인이 용이 되어 승천하는 경우"
+   },
+   {
+    "type": "태몽",
+    "condition": "임산부가 꾸는 경우"
+   }
+  ],
+  "note": "조건부 항목. 판정 배지는 길몽. 전체 결론이 길몽와 반대가 되지 않게"
+ },
+ {
+  "no": 117,
+  "id": "crawled-106",
+  "title": "용에게 자신의 귀를 물리는 꿈",
+  "category": "animal",
+  "badge": "흉몽",
+  "tags": [
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "용에게 귀를 물리는 꿈을 꾸게 되면 귀와 관련된 병을 앓거나 청각장애를 겪게 될지 모르니 ",
+  "description": "용에게 귀를 물리는 꿈을 꾸게 되면 귀와 관련된 병을 앓거나 청각장애를 겪게 될지 모르니 유의해야 한다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 118,
+  "id": "crawled-107",
+  "title": "용의 그림을 바라보는 꿈",
+  "category": "animal",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "용을 대상으로 한 예술품을 만지거나 보면 훌륭한 사람, 유명한 사람 그리고 서적과 관련된 ",
+  "description": "용을 대상으로 한 예술품을 만지거나 보면 훌륭한 사람, 유명한 사람 그리고 서적과 관련된 일을 하게 된다. 용의 문신을 하거나 문신한 사람을 보면 유명해지거나 희귀한 자료를 대하게 된다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 119,
+  "id": "crawled-108",
+  "title": "자신이 용에게 물려 죽는 꿈",
+  "category": "animal",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "자신이 용에게 물려 죽는 꿈을 꾸게 되면 계획한 일이나 평소에 소망하던 일이 성사된다.",
+  "description": "자신이 용에게 물려 죽는 꿈을 꾸게 되면 계획한 일이나 평소에 소망하던 일이 성사된다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 120,
+  "id": "crawled-109",
+  "title": "용에게 물려 피투성이로 도망치는 꿈",
+  "category": "animal",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "용에게 물려 피투성이가 된 채 도망쳐 나오는 꿈을 꾸게 되면 복권 당첨, 부동산 매매 등으",
+  "description": "용에게 물려 피투성이가 된 채 도망쳐 나오는 꿈을 꾸게 되면 복권 당첨, 부동산 매매 등으로 엄청난 갑부가 된다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 121,
+  "id": "crawled-110",
+  "title": "용이 손가락을 무는 꿈",
+  "category": "pregnancy",
+  "badge": "길몽",
+  "tags": [
+   "태몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "용이 손가락을 무는 꿈은 아들을 낳으나 그 아들이 문제를 일으키게 된다.",
+  "description": "용이 손가락을 무는 꿈은 아들을 낳으나 그 아들이 문제를 일으키게 된다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 122,
+  "id": "crawled-111",
+  "title": "집에 불나는 꿈",
+  "category": "nature",
+  "badge": "흉몽",
+  "tags": [
+   "조건부",
+   "길몽",
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "꿈속에서 집에 불이 나는 것은 강력한 번창, 재물의 유입, 에너지의 폭발을 의미하는 최고의",
+  "description": "꿈속에서 집에 불이 나는 것은 강력한 번창, 재물의 유입, 에너지의 폭발을 의미하는 최고의 길몽이다. 불길이 거세고 높이 치솟을수록 운의 크기도 커진다. 단, 불을 끄거나 재가 된 경우는 흉몽으로 해석된다.",
+  "conditions": [
+   {
+    "type": "길몽",
+    "condition": "불이 활활 타오르는 경우"
+   },
+   {
+    "type": "흉몽",
+    "condition": "불을 끄거나 재가 되는 경우"
+   }
+  ],
+  "note": "조건부 항목. 판정 배지는 흉몽. 전체 결론이 흉몽와 반대가 되지 않게"
+ },
+ {
+  "no": 123,
+  "id": "crawled-112",
+  "title": "자동차 불나는 꿈",
+  "category": "nature",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "꿈 해몽상 자동차는 본인의 열정과 추진력 또는 자기 자신을 상징한다. 자동차에 불이 나는 ",
+  "description": "꿈 해몽상 자동차는 본인의 열정과 추진력 또는 자기 자신을 상징한다. 자동차에 불이 나는 꿈은 본인의 꿈이 이뤄진다는 아주 좋은 길몽으로, 하고 있는 일에서 큰 성과를 거두며 목표를 이룬다는 뜻이다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 124,
+  "id": "crawled-113",
+  "title": "불나서 불끄는 꿈",
+  "category": "nature",
+  "badge": "흉몽",
+  "tags": [
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "불이 나는 꿈은 길몽이지만 이러한 불을 본인이 직접 끄는 행위는 흉몽에 해당한다. 본인에게",
+  "description": "불이 나는 꿈은 길몽이지만 이러한 불을 본인이 직접 끄는 행위는 흉몽에 해당한다. 본인에게 들어온 금전운을 본인의 손으로 아쉽게 놓치게 되거나, 하고 있는 사업이 쇠퇴한다는 뜻으로 해석된다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 125,
+  "id": "crawled-114",
+  "title": "머리에 불이 붙는 꿈",
+  "category": "nature",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "불이 붙는 꿈은 금전적 운이 들어오고 명예가 높아지는 아주 좋은 길몽이다. 특히 머리에 불",
+  "description": "불이 붙는 꿈은 금전적 운이 들어오고 명예가 높아지는 아주 좋은 길몽이다. 특히 머리에 불이 붙는 꿈은 본인의 지식으로 성공한다는 의미이며, 추진하는 일에서 좋은 아이디어가 나온다는 뜻이다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 126,
+  "id": "crawled-115",
+  "title": "옷에 불붙는 꿈",
+  "category": "nature",
+  "badge": "흉몽",
+  "tags": [
+   "조건부",
+   "길몽",
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "옷에 불이 붙는 꿈은 꿈속에서 느끼는 감정에 따라 다르게 해석된다. 전혀 뜨겁지 않았다면 ",
+  "description": "옷에 불이 붙는 꿈은 꿈속에서 느끼는 감정에 따라 다르게 해석된다. 전혀 뜨겁지 않았다면 하고 있는 일이 큰 성과를 얻는 길몽이지만, 뜨겁고 고통스러웠다면 안 좋은 일이 생길 수 있다는 흉몽이다.",
+  "conditions": [
+   {
+    "type": "길몽",
+    "condition": "불이 붙어도 뜨겁지 않은 경우"
+   },
+   {
+    "type": "흉몽",
+    "condition": "뜨겁고 고통스러운 경우"
+   }
+  ],
+  "note": "조건부 항목. 판정 배지는 흉몽. 전체 결론이 흉몽와 반대가 되지 않게"
+ },
+ {
+  "no": 127,
+  "id": "crawled-116",
+  "title": "까만 밤에 불꽃놀이 하는 꿈",
+  "category": "nature",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "까만 밤에 불꽃놀이 하는 꿈은 자신이 하는 일이 잘 풀리게 되고 인정을 받게 된다. 이 일",
+  "description": "까만 밤에 불꽃놀이 하는 꿈은 자신이 하는 일이 잘 풀리게 되고 인정을 받게 된다. 이 일은 많은 사람의 관심을 받게 된다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 128,
+  "id": "crawled-117",
+  "title": "물에 빠지는 꿈",
+  "category": "nature",
+  "badge": "흉몽",
+  "tags": [
+   "조건부",
+   "길몽",
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "물에 빠지는 꿈은 물의 상태에 따라 해석이 달라진다. 맑고 깨끗한 물에 빠지는 꿈은 좋은 ",
+  "description": "물에 빠지는 꿈은 물의 상태에 따라 해석이 달라진다. 맑고 깨끗한 물에 빠지는 꿈은 좋은 직장이나 귀인을 만나게 될 길몽이다. 똥물이나 흙탕물에 빠지는 꿈은 건강상 문제나 불행을 의미하는 흉몽이다.",
+  "conditions": [
+   {
+    "type": "길몽",
+    "condition": "맑고 깨끗한 물에 빠지는 경우"
+   },
+   {
+    "type": "흉몽",
+    "condition": "흙탕물이나 더러운 물에 빠지는 경우"
+   }
+  ],
+  "note": "조건부 항목. 판정 배지는 흉몽. 전체 결론이 흉몽와 반대가 되지 않게"
+ },
+ {
+  "no": 129,
+  "id": "crawled-118",
+  "title": "집안에 물이 차는 꿈",
+  "category": "nature",
+  "badge": "흉몽",
+  "tags": [
+   "조건부",
+   "길몽",
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "집안에 물이 들어오는 꿈은 물의 색이 가장 중요하다. 깨끗한 물이 집안으로 들어오면 재물운",
+  "description": "집안에 물이 들어오는 꿈은 물의 색이 가장 중요하다. 깨끗한 물이 집안으로 들어오면 재물운이 들어오고 집안이 화목해진다. 흙탕물이나 더러운 물이면 집안에 우환이 들이닥치고 건강이 악화된다.",
+  "conditions": [
+   {
+    "type": "길몽",
+    "condition": "깨끗한 물이 차는 경우"
+   },
+   {
+    "type": "흉몽",
+    "condition": "더러운 물이나 흙탕물이 차는 경우"
+   }
+  ],
+  "note": "조건부 항목. 판정 배지는 흉몽. 전체 결론이 흉몽와 반대가 되지 않게"
+ },
+ {
+  "no": 130,
+  "id": "crawled-119",
+  "title": "물이 불어나는 꿈",
+  "category": "nature",
+  "badge": "흉몽",
+  "tags": [
+   "조건부",
+   "길몽",
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "물은 물의 상태가 매우 중요하다. 맑은 물이 불어났다면 금전운이 들어오고 명예가 드높아진다",
+  "description": "물은 물의 상태가 매우 중요하다. 맑은 물이 불어났다면 금전운이 들어오고 명예가 드높아진다. 더러운 흙탕물이 불어났다면 쌓아 올린 모든 것이 쓸려내려간다는 의미다.",
+  "conditions": [
+   {
+    "type": "길몽",
+    "condition": "맑은 물이 불어나는 경우"
+   },
+   {
+    "type": "흉몽",
+    "condition": "흙탕물이 불어나는 경우"
+   }
+  ],
+  "note": "조건부 항목. 판정 배지는 흉몽. 전체 결론이 흉몽와 반대가 되지 않게"
+ },
+ {
+  "no": 131,
+  "id": "crawled-120",
+  "title": "물고기 많이 잡는 꿈",
+  "category": "nature",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "물고기는 재물, 명예 등을 상징하는 아주 좋은 동물이다. 물고기를 많이 잡는 꿈은 재산이 ",
+  "description": "물고기는 재물, 명예 등을 상징하는 아주 좋은 동물이다. 물고기를 많이 잡는 꿈은 재산이 늘어나고 새로운 조력자를 만날 수 있다는 뜻으로 해석된다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 132,
+  "id": "crawled-121",
+  "title": "호랑이 나오는 꿈",
+  "category": "animal",
+  "badge": "흉몽",
+  "tags": [
+   "조건부",
+   "길몽",
+   "흉몽",
+   "태몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "호랑이가 나오는 꿈은 기본적으로 길몽에 해당한다. 호랑이는 권력과 돈, 명예 등을 상징하며",
+  "description": "호랑이가 나오는 꿈은 기본적으로 길몽에 해당한다. 호랑이는 권력과 돈, 명예 등을 상징하며 호랑이가 크고 윤기 날수록 그 운이 크다. 지저분하고 병든 호랑이를 만난 경우 운이 저하되고 기회를 놓친다는 뜻이다.",
+  "conditions": [
+   {
+    "type": "길몽",
+    "condition": "크고 용맹한 호랑이가 나오는 경우"
+   },
+   {
+    "type": "흉몽",
+    "condition": "지저분하고 병든 호랑이인 경우"
+   },
+   {
+    "type": "태몽",
+    "condition": "임산부가 꾸는 경우"
+   }
+  ],
+  "note": "조건부 항목. 판정 배지는 흉몽. 전체 결론이 흉몽와 반대가 되지 않게"
+ },
+ {
+  "no": 133,
+  "id": "crawled-122",
+  "title": "호랑이 만지는 꿈",
+  "category": "animal",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "꿈 해몽상 호랑이는 권력, 명예 그리고 금전을 상징한다. 호랑이를 만지는 꿈은 권력과 명예",
+  "description": "꿈 해몽상 호랑이는 권력, 명예 그리고 금전을 상징한다. 호랑이를 만지는 꿈은 권력과 명예, 금전적 운이 들어온다는 의미로, 하고 있는 일이 크게 성공하며 운수 대통할 것을 암시한다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 134,
+  "id": "crawled-123",
+  "title": "물건이 갑자기 용으로 변하는 꿈",
+  "category": "animal",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "용은 입신출세와 명예, 신적인 힘 등 강한 운명적 계시성을 나타낸다. 별 볼일 없던 삶이 ",
+  "description": "용은 입신출세와 명예, 신적인 힘 등 강한 운명적 계시성을 나타낸다. 별 볼일 없던 삶이 생기를 찾고 재물이 들어와 기쁜 일이 생길 것을 암시한다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 135,
+  "id": "crawled-124",
+  "title": "용이 죽어 있는 꿈",
+  "category": "animal",
+  "badge": "흉몽",
+  "tags": [
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "용은 명예, 권력, 재물의 상징이다. 용이 죽어 있는 꿈은 재물이 빠져나가거나 사업이 쇠퇴",
+  "description": "용은 명예, 권력, 재물의 상징이다. 용이 죽어 있는 꿈은 재물이 빠져나가거나 사업이 쇠퇴할 수 있음을 경고한다. 태몽으로 꾸었다면 각별히 건강에 유의하는 것이 좋다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 136,
+  "id": "crawled-125",
+  "title": "용이 몸에 와서 감기는 꿈",
+  "category": "animal",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "큰 인물이 될 아기를 낳을 태몽이거나 미혼 여자는 나중에 출세할 사람과 결혼할 것을 암시한",
+  "description": "큰 인물이 될 아기를 낳을 태몽이거나 미혼 여자는 나중에 출세할 사람과 결혼할 것을 암시한다. 그렇지 않으면 예상하기 어려운 많은 재물이나 큰 세력을 갖게 된다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 137,
+  "id": "crawled-126",
+  "title": "용을 꼭 껴안는 꿈",
+  "category": "animal",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "용은 입신출세와 명예, 신적인 힘 등 강한 운명적 계시성을 나타낸다. 평소에 가까이 하기 ",
+  "description": "용은 입신출세와 명예, 신적인 힘 등 강한 운명적 계시성을 나타낸다. 평소에 가까이 하기 어려운 훌륭한 사람과 함께 일하게 되거나 자신의 능력을 크게 발휘할 기회를 얻게 됨을 의미한다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 138,
+  "id": "crawled-127",
+  "title": "용을 타고 하늘을 나는 꿈",
+  "category": "animal",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "관직의 높은 자리에 올라 많은 사람들을 좌지우지할 출세몽이다. 태몽이라면 그렇게 훌륭한 인",
+  "description": "관직의 높은 자리에 올라 많은 사람들을 좌지우지할 출세몽이다. 태몽이라면 그렇게 훌륭한 인물이 태어날 것을 예지한다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 139,
+  "id": "crawled-128",
+  "title": "용 두 마리가 서로 엉기어 하늘로 오르는 꿈",
+  "category": "animal",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "멋진 동반자나 동업자를 만나 일이 성공할 것을 의미한다. 마음 맞는 동업자와 함께하면 더 ",
+  "description": "멋진 동반자나 동업자를 만나 일이 성공할 것을 의미한다. 마음 맞는 동업자와 함께하면 더 큰 성공을 거두리라는 것을 암시하므로 혼자보다 도움을 받는 것이 유리하다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 140,
+  "id": "crawled-129",
+  "title": "하늘을 날던 용이 집 안으로 날아 들어오는 꿈",
+  "category": "animal",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "용은 입신출세와 명예, 신적인 힘 등 강한 운명적 계시성을 나타낸다. 집안에 영광스런 일이",
+  "description": "용은 입신출세와 명예, 신적인 힘 등 강한 운명적 계시성을 나타낸다. 집안에 영광스런 일이 생기고 가문이 흥하며 명예가 드높아질 것을 암시한다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 141,
+  "id": "crawled-130",
+  "title": "하늘에서 용이 떨어져 죽는 꿈",
+  "category": "animal",
+  "badge": "흉몽",
+  "tags": [
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "기세 좋게 잘 나가던 권력이나 사업이 몰락의 길을 걷게 됨을 의미한다. 나라의 최고지도자나",
+  "description": "기세 좋게 잘 나가던 권력이나 사업이 몰락의 길을 걷게 됨을 의미한다. 나라의 최고지도자나 사업체의 총수가 큰 위기를 맞이할 수 있다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 142,
+  "id": "crawled-131",
+  "title": "용이 하늘을 날며 큰 소리를 내는 꿈",
+  "category": "animal",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "용은 입신출세와 명예, 신적인 힘 등 강한 운명적 계시성을 나타낸다. 하는 일에서 큰 성공",
+  "description": "용은 입신출세와 명예, 신적인 힘 등 강한 운명적 계시성을 나타낸다. 하는 일에서 큰 성공을 거두어 이름을 떨치고 많은 사람들이 존경하며 부러워하는 대상이 됨을 의미한다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 143,
+  "id": "crawled-132",
+  "title": "용이 자신을 죽이는 꿈",
+  "category": "animal",
+  "badge": "흉몽",
+  "tags": [
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "예상치 못했던 치명적인 재난에 직면하게 되거나 어떤 범죄의 피해자가 되어 권력과 재산을 잃",
+  "description": "예상치 못했던 치명적인 재난에 직면하게 되거나 어떤 범죄의 피해자가 되어 권력과 재산을 잃게 됨을 의미한다. 권력이나 세도가의 희생물이 될 가능성도 있다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 144,
+  "id": "crawled-133",
+  "title": "연못 속에서 잠자는 용을 보는 꿈",
+  "category": "animal",
+  "badge": "보통",
+  "tags": [
+   "보통"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "아직 자신의 뜻과 능력을 펼 때가 이르지 않았음을 암시한다. 지금은 노력하면서 때가 오기를",
+  "description": "아직 자신의 뜻과 능력을 펼 때가 이르지 않았음을 암시한다. 지금은 노력하면서 때가 오기를 기다리는 것이 좋겠다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 145,
+  "id": "crawled-134",
+  "title": "용이 나무에 걸려 있는 꿈",
+  "category": "animal",
+  "badge": "흉몽",
+  "tags": [
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "자신이 하기에 역부족인 일을 맡게 될 것을 암시한다. 현재의 자신을 돌아보고 지나치게 욕심",
+  "description": "자신이 하기에 역부족인 일을 맡게 될 것을 암시한다. 현재의 자신을 돌아보고 지나치게 욕심내지 않는 것이 좋으며, 주위 사람들의 아부나 감언에 현혹되지 않도록 조심해야 한다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 146,
+  "id": "crawled-135",
+  "title": "용이 입에서 불을 뿜어 뜨거워하는 꿈",
+  "category": "animal",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "용은 입신출세와 명예, 신적인 힘 등 강한 운명적 계시성을 나타낸다. 권세있는 사람의 도움",
+  "description": "용은 입신출세와 명예, 신적인 힘 등 강한 운명적 계시성을 나타낸다. 권세있는 사람의 도움으로 하고자 하는 일을 무사히 해결함을 의미한다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 147,
+  "id": "crawled-136",
+  "title": "용의 꼬리가 산봉우리를 자르는 꿈",
+  "category": "animal",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "용으로 상징되는 큰 인물의 사상이나 논문, 정신적 영향력이 기존의 사상이나 학문, 관행을 ",
+  "description": "용으로 상징되는 큰 인물의 사상이나 논문, 정신적 영향력이 기존의 사상이나 학문, 관행을 허물거나 큰 타격을 주게 될 것임을 암시한다. 산을 무너뜨리는 꿈이라면 기존 사상이 완전히 새로운 학설에 굴복하게 됨을 의미한다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 148,
+  "id": "crawled-137",
+  "title": "용의 얼굴에 침을 뱉는 꿈",
+  "category": "animal",
+  "badge": "흉몽",
+  "tags": [
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "매우 귀한 것을 더럽히거나 함부로 한다는 뜻으로 하루 종일 시비, 싸움, 소송 등으로 인한",
+  "description": "매우 귀한 것을 더럽히거나 함부로 한다는 뜻으로 하루 종일 시비, 싸움, 소송 등으로 인한 시끄러운 일에 얽매일 수 있음을 암시한다. 경망한 짓으로 망신을 당할 수 있으니 몸가짐에 각별한 주의를 기울여야 한다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 149,
+  "id": "crawled-138",
+  "title": "임금님이 앉던 용상에 앉은 꿈",
+  "category": "lucky",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "용상은 최고의 권리나 지위, 명예, 행운을 상징한다. 명예와 신분이 상승될 길조이며, 고시",
+  "description": "용상은 최고의 권리나 지위, 명예, 행운을 상징한다. 명예와 신분이 상승될 길조이며, 고시 합격, 수석 졸업, 국회의원·대통령 등 국가적으로 인정받는 요직에 오를 조짐이다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 150,
+  "id": "crawled-139",
+  "title": "용상에서 내려오는 꿈",
+  "category": "lucky",
+  "badge": "흉몽",
+  "tags": [
+   "조건부",
+   "보통",
+   "흉몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": true,
+  "preview": "용상은 최고의 권리나 지위, 명예, 행운을 상징한다. 그 자리에서 내려오는 것은 지위에서 ",
+  "description": "용상은 최고의 권리나 지위, 명예, 행운을 상징한다. 그 자리에서 내려오는 것은 지위에서 물러나거나 명예가 퇴색되고 행운이 사라지게 됨을 암시한다.",
+  "conditions": [
+   {
+    "type": "보통",
+    "condition": "스스로 내려오는 꿈"
+   },
+   {
+    "type": "흉몽",
+    "condition": "누군가에게 끌려서 내려오는 꿈"
+   }
+  ],
+  "note": "조건부 항목. 판정 배지는 흉몽. 전체 결론이 흉몽와 반대가 되지 않게"
+ },
+ {
+  "no": 151,
+  "id": "daily-001",
+  "title": "집을 수리하는 꿈",
+  "category": "daily",
+  "badge": "길몽",
+  "tags": [
+   "길몽"
+  ],
+  "tags_new": null,
+  "rewrite_preview": false,
+  "preview": "생활에 좋은 변화가 찾아오는 길몽",
+  "description": "낡은 집을 새롭게 고치고 수리하는 꿈은 생활에 좋은 변화가 찾아오는 길몽으로 전해진다. 집이 곧 삶의 터전을 상징한다는 점에서, 그것을 손질하고 가꾸는 행위가 앞으로의 안정과 발전으로 이어진다고 풀이된다. 수리가 깔끔하게 마무리되었다면 그 변화가 만족스러운 결과로 이어진다는 뜻이다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 152,
+  "id": "daily-011",
+  "title": "금비녀가 유난히 빛나는 꿈",
+  "category": "daily",
+  "badge": "흉몽",
+  "tags": [
+   "흉몽",
+   "경고"
+  ],
+  "tags_new": null,
+  "rewrite_preview": false,
+  "preview": "소중한 것을 잃을 수 있다는 경고",
+  "description": "금비녀가 눈부시게 빛나는 것을 보는 꿈은 화려함 뒤에 소중한 것을 잃을 수 있다는 경고를 함께 담고 있다고 전해진다. 지나치게 반짝이는 것에 마음을 빼앗기다 정작 중요한 것을 놓칠 수 있다는 의미로 풀이된다. 이 꿈을 꾸었다면 눈앞의 화려함보다 가까운 사람과의 관계를 먼저 챙기는 것이 좋다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 153,
+  "id": "daily-021",
+  "title": "기차나 버스를 놓치는 꿈",
+  "category": "daily",
+  "badge": "흉몽",
+  "tags": [
+   "흉몽",
+   "경고"
+  ],
+  "tags_new": null,
+  "rewrite_preview": false,
+  "preview": "좋은 기회를 놓칠 수 있다는 경고",
+  "description": "타야 할 기차나 버스를 아깝게 놓치는 꿈은 눈앞에 온 좋은 기회를 놓칠 수 있다는 경고로 전해진다. 정해진 시간에 늦어 발만 동동 구르는 상황이 현실에서의 아쉬운 타이밍과 연결되어 해석된다. 이 꿈을 꾸었다면 중요한 약속이나 결정을 미루지 말고 서두르는 것이 좋다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 154,
+  "id": "daily-030",
+  "title": "다른 사람의 옷을 입는 꿈",
+  "category": "daily",
+  "badge": "흉몽",
+  "tags": [
+   "흉몽",
+   "경고"
+  ],
+  "tags_new": null,
+  "rewrite_preview": false,
+  "preview": "근심거리가 생길 수 있다는 경고",
+  "description": "자신의 옷이 아닌 다른 사람의 옷을 입고 있는 꿈은 뜻하지 않은 근심거리가 생길 수 있다는 경고로 전해진다. 자기 것이 아닌 옷이 몸에 맞지 않는 것처럼, 자신에게 맞지 않는 책임이나 상황을 떠안게 될 수 있다는 뜻으로 풀이된다. 옷이 잘 맞고 편안했다면 오히려 새로운 역할에 잘 적응하게 된다는 뜻으로 해석되기도 한다.",
+  "conditions": [
+   {
+    "if": "옷이 잘 맞고 편안했다면",
+    "then": "오히려 새로운 역할에 잘 적응하게 된다는 뜻으로 해석되기도 한다"
+   }
+  ],
+  "note": null
+ },
+ {
+  "no": 155,
+  "id": "nature-007",
+  "title": "무지개가 뜨는 꿈",
+  "category": "nature",
+  "badge": "길몽",
+  "tags": [
+   "길몽",
+   "경사"
+  ],
+  "tags_new": null,
+  "rewrite_preview": false,
+  "preview": "경사스러운 일이 찾아오는 길몽",
+  "description": "비 갠 뒤 선명한 무지개가 하늘에 걸리는 꿈은 집안에 경사스러운 일이 찾아오는 길몽으로 널리 알려져 있다. 무지개는 하늘과 땅을 잇는 다리처럼 여겨져 좋은 소식이나 인연이 이어짐을 상징한다고 풀이된다. 무지개를 타고 오르는 꿈이라면 출세나 명예를 얻는 뜻으로 더욱 좋게 해석된다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 156,
+  "id": "nature-025",
+  "title": "우물가에 뽕나무가 자라는 꿈",
+  "category": "nature",
+  "badge": "흉몽",
+  "tags": [
+   "흉몽",
+   "경고"
+  ],
+  "tags_new": null,
+  "rewrite_preview": false,
+  "preview": "근심스러운 일이 생길 수 있다는 경고",
+  "description": "우물 위에 뽕나무가 자라는 것을 보는 꿈은 뜻하지 않은 근심스러운 일이 생길 수 있다는 경고로 전해진다. 맑아야 할 우물가에 낯선 나무가 자란다는 것이 상황이 어긋나고 있음을 상징한다고 풀이된다. 이 꿈을 꾸었다면 평소보다 주의를 기울여 작은 문제도 미리 살피는 것이 좋다.",
+  "conditions": [],
+  "note": null
+ },
+ {
+  "no": 157,
+  "id": "unlucky-025",
+  "title": "검은 그림자가 뒤따라오는 꿈",
+  "category": "unlucky",
+  "badge": "흉몽",
+  "tags": [
+   "흉몽",
+   "경고"
+  ],
+  "tags_new": null,
+  "rewrite_preview": false,
+  "preview": "막연한 불안감을 조심하라는 경고",
+  "description": "정체를 알 수 없는 검은 그림자가 계속 뒤따라오는 꿈은 마음속에 자리한 막연한 불안감을 조심하라는 경고로 전해진다. 실체는 없지만 떨쳐지지 않는 그림자가 해결되지 않은 걱정거리를 상징한다고 풀이된다. 뒤돌아서 그림자의 정체를 확인했다면 막연했던 불안의 원인을 찾아내게 된다는 뜻이다.",
+  "conditions": [
+   {
+    "if": "뒤돌아서 그림자의 정체를 확인하면",
+    "then": "막연했던 불안의 원인을 찾아내게 된다는 뜻으로 풀이된다"
+   }
+  ],
+  "note": null
+ }
+]

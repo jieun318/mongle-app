@@ -1521,7 +1521,10 @@ export default function HomeScreen() {
                   <Text style={styles.questionBtnText}>?</Text>
                 </TouchableOpacity>
               </View>
-              <ScrollView showsVerticalScrollIndicator={false}>
+              <ScrollView
+                style={styles.sheetScroll}
+                showsVerticalScrollIndicator={false}
+              >
                 <View style={styles.modalCookieWrap}>
                   <Text style={styles.modalDate}>{fortune.date}</Text>
                   <GradeBadgeCard
@@ -1605,7 +1608,10 @@ export default function HomeScreen() {
                       되면서 스타일에서 빠졌다. 가이드는 이번 변경 대상이 아니라
                       기존 간격을 인라인으로 유지한다. */}
                   <View style={[styles.handle, { marginBottom: 16 }]} />
-                  <ScrollView showsVerticalScrollIndicator={false}>
+                  <ScrollView
+                    style={styles.sheetScroll}
+                    showsVerticalScrollIndicator={false}
+                  >
                     <FortuneGradeGuide />
                   </ScrollView>
                   <TouchableOpacity
@@ -1916,6 +1922,10 @@ const styles = StyleSheet.create({
   },
   tipLabel: { fontSize: 13, fontWeight: "700", color: "#5C4A7A" },
   tipText: { fontSize: 13, color: "#5C4A7A", lineHeight: 20 },
+  // 운세 시트·가이드 시트 공용. 네이티브 ScrollView 는 flexShrink 기본값이 0 이라
+  // 내용이 시트 maxHeight 를 넘으면 아래 고정 버튼(확인/닫기)을 시트 밖으로 밀어낸다.
+  // 웹(RNW)은 기본이 1 이라 웹에서는 재현되지 않는다.
+  sheetScroll: { flexShrink: 1 },
   closeBtn: {
     backgroundColor: "#C4B0E8",
     borderRadius: 16,

@@ -58,6 +58,7 @@ export default function RecordedDreamModal({
           <View style={styles.card}>
             <View style={styles.handle} />
             <ScrollView
+              style={styles.scroll}
               showsVerticalScrollIndicator={false}
               contentContainerStyle={styles.scrollContent}
             >
@@ -224,6 +225,11 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     marginBottom: 12,
   },
+  // 네이티브 ScrollView 는 flexShrink 기본값이 0 이라, 내용이 시트 maxHeight 를
+  // 넘으면 자기 높이를 고집하고 아래 고정 푸터를 시트 밖으로 밀어낸다(버튼이
+  // 본문 위에 겹쳐 잘려 보임). 줄어들게 해야 푸터 자리가 남는다. 웹(RNW)은
+  // 기본이 1 이라 웹에서는 재현되지 않는다.
+  scroll: { flexShrink: 1 },
   scrollContent: { paddingHorizontal: 24, paddingBottom: 8, gap: 12 },
   // paddingBottom 은 16 + useBottomSpace().system 으로 렌더 시점에 지정.
   footer: { paddingHorizontal: 24, paddingTop: 12 },

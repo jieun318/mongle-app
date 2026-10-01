@@ -8,18 +8,19 @@ import { LUCK_BAD_MAX, LUCK_GOOD_MIN } from "../../lib/luck";
 // api/chat.ts 가 본 답변 스트림과 병렬로 만들고, 스트림이 끝난 뒤 <<META>> 센티널로 붙인다
 // (await 하지 않으므로 첫 토큰 지연에 영향 없음).
 // summary/badge/keywords/actions 는 결과 화면용. 예전 앱은 모르는 필드를 무시한다.
+// 개수·길이 상한은 설명에만 두고 스키마(.max)에는 걸지 않는다. 모델이 키워드를 4개 주는 식으로
+// 하나만 넘어도 검증이 실패해 메타 전체가 사라졌다(→ 결과 카드 버튼·보관함 메타 없음, 측정 시
+// 8회 중 2회). 대신 생성 직후 tidyMeta 가 개수를 자르고 범위를 맞춘다.
 const dreamMetaSchema = z.object({
   title: z
     .string()
     .min(1)
-    .max(20)
     .describe(
       "꿈 내용을 6자 이내로 요약한 제목. 예: '계주 1등 꿈', '좀비 쫓기는 꿈', '하늘 나는 꿈'",
     ),
   emoji: z
     .string()
     .min(1)
-    .max(16)
     .describe(
       `꿈 내용과 가장 잘 어울리는 이모지 1개. 달리기 꿈이면 🏃, 무서운 꿈이면 😨, 하늘 나는 꿈이면 🕊️. 절대 🌙 기본값 쓰지 말 것 — 꿈에 등장한 구체적인 대상·행동을 반드시 짚어내야 함.
 분위기(공포/슬픔)보다 실제 등장한 대상/행동(좀비/달리기/물 등)을 더 우선.
@@ -66,8 +67,6 @@ const dreamMetaSchema = z.object({
   luckIndex: z
     .number()
     .int()
-    .min(0)
-    .max(100)
     .describe(
       `0~100 사이 길운 지수. 한국 꿈 해석 관습 반영. badge 와 반드시 맞출 것.
 - 길몽 ${LUCK_GOOD_MIN}~95: 전통적으로 길몽으로 알려진 꿈(돼지, 용, 똥, 불이 활활 타는 집, 뱀에 물림, 임신·태몽, 돈·보물 등).
@@ -86,22 +85,19 @@ const dreamMetaSchema = z.object({
   summary: z
     .string()
     .min(1)
-    .max(40)
     .describe(
       `해몽 결과를 한 줄로. 15~40자, "~꿈" / "~길몽" / "~흉몽" 처럼 결론으로 끝맺음. 호칭·이모지·질문 금지.
 예: "막혔던 일이 풀리고 재물이 들어오는 길몽", "마음의 부담을 정리하라는 신호의 꿈"`,
     ),
   keywords: z
-    .array(z.string().min(1).max(8))
+    .array(z.string().min(1))
     .min(1)
-    .max(3)
     .describe(
       "꿈속에 실제로 등장한 상징 1~3개. 한국어 짧은 명사, # 없이. moodTags(감정)와 겹치지 말 것. 예: 구렁이, 계주, 할머니, 옥상",
     ),
   actions: z
-    .array(z.string().min(1).max(40))
+    .array(z.string().min(1))
     .min(1)
-    .max(2)
     .describe(
       `"오늘 해볼 것" 실천 제안 1~2개. 각 40자 이내, "~해 보세요" 로 끝맺음. 꿈 내용과 이어지는 가볍고 구체적인 행동.
 진단·치료·투자·복권 권유 금지, 단정 금지. 예: "미뤄 둔 연락 하나를 오늘 먼저 해 보세요"`,
@@ -112,16 +108,14 @@ const dreamMetaSchema = z.object({
       'badge 가 "흉몽"일 때만 true. 심리 해석 중심의 "보통" 꿈(쫓기기·떨어지기·시험 등)이나 길몽이면 false.',
     ),
   moodTags: z
-    .array(z.string().min(1).max(8))
+    .array(z.string().min(1))
     .min(1)
-    .max(4)
     .describe(
       "꿈의 무드/주제 한국어 짧은 단어 1~4개. # 기호 없이. 예: 공포, 불안, 추격, 가족, 성공, 변화, 일상, 생활/행동, 학업, 연애, 이별.",
     ),
   interpretation: z
     .string()
     .min(1)
-    .max(400)
     .describe(
       `꿈에 대한 해몽 본문 요약. 2~3문장. 보관함 카드/상세에서 단독으로 보여지므로:
 - 챗봇 대화 스타일의 공감 멘트("그런 꿈을 꾸셨군요" 등) 금지
@@ -133,7 +127,6 @@ const dreamMetaSchema = z.object({
   feeling: z
     .string()
     .min(1)
-    .max(120)
     .describe(
       `해몽 결과 화면 "지금 나의 마음" 칸. 꿈을 꾼 사람이 요즘 느끼고 있을 법한 감정 상태를 1~2문장으로.
 - 꿈의 의미·상징 해석 금지(그건 interpretation 몫). 길몽/흉몽, 재물·운 같은 말 쓰지 말 것.
@@ -143,6 +136,20 @@ const dreamMetaSchema = z.object({
     ),
 });
 export type DreamMeta = z.infer<typeof dreamMetaSchema>;
+
+const clampArr = (a: string[] | undefined, n: number) =>
+  (a ?? []).map((x) => x.trim().replace(/^#/, "")).filter(Boolean).slice(0, n);
+
+function tidyMeta(m: DreamMeta): DreamMeta {
+  const luckIndex = Math.max(0, Math.min(100, Math.round(m.luckIndex)));
+  return {
+    ...m,
+    luckIndex,
+    keywords: clampArr(m.keywords, 3),
+    actions: clampArr(m.actions, 2),
+    moodTags: clampArr(m.moodTags, 4),
+  };
+}
 
 // 본 답변 생성과 병렬 실행. 실패해도 본 답변은 정상 동작하도록 try/catch 로 격리.
 export async function extractDreamMeta(
@@ -172,7 +179,7 @@ export async function extractDreamMeta(
         google: { thinkingConfig: { thinkingBudget: 0 } },
       },
     });
-    return object;
+    return tidyMeta(object);
   } catch (err) {
     console.error("[chat api] meta extract error:", err);
     return null;

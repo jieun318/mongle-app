@@ -26,16 +26,31 @@ import { supabase } from "@/lib/supabase";
 // iOS 에서 애플 버튼이 다시 노출된다. (안드로이드는 플래그와 무관하게 항상 숨김)
 const APPLE_LOGIN_ENABLED = false;
 
-// 개발용 우회 로그인 — __DEV__ 에서만 노출.
+// 개발용 우회 로그인 — 개발 빌드(__DEV__)에만 존재한다.
 // Supabase 익명 로그인(signInAnonymously)으로 진짜 authenticated 세션을 만들어
 // 챗봇/프로필/운세 등 RLS 보호 기능까지 그대로 동작하게 한다.
-// (사전 조건: Supabase Dashboard → Authentication → Anonymous Sign-ins 토글 ON)
-const DEV_USER_KEY = "auth.devUser";
-const DEV_USER = {
-  id: "dev-user-001",
-  name: "테스트유저",
-  email: "dev@mongle.com",
-};
+// (사전 조건: Supabase Dashboard → Authentication → Anonymous Sign-ins 토글 ON —
+//  운영 프로젝트는 꺼져 있어 운영 Supabase 에선 어차피 실패한다)
+//
+// 버튼만 __DEV__ 로 숨기면 운영 Android 번들(Hermes)에 핸들러 본문·상수가 그대로 남았다
+// (버튼 없이 도달할 수는 없지만 코드가 실린다). 로직 전체를 __DEV__ 삼항 안에 두면
+// 운영 빌드에서 __DEV__ 가 상수 false 로 접혀 함수째 번들에서 빠진다.
+const devLogin: (() => Promise<void>) | null = __DEV__
+  ? async () => {
+      const DEV_USER = { id: "dev-user-001", name: "테스트유저", email: "dev@mongle.com" };
+      try {
+        // raw_user_meta_data.nickname 을 같이 넘기면 handle_new_user 트리거가
+        // profiles.nickname 을 "테스트유저"로 채워준다 (없으면 기본 '몽글이').
+        const { error } = await supabase.auth.signInAnonymously({
+          options: { data: { nickname: DEV_USER.name } },
+        });
+        if (error) throw error;
+        await AsyncStorage.setItem("auth.devUser", JSON.stringify(DEV_USER));
+      } catch (e) {
+        showNotice("개발 로그인 실패", e instanceof Error ? e.message : String(e));
+      }
+    }
+  : null;
 
 export default function LoginForm() {
   const router = useRouter();
@@ -92,24 +107,6 @@ export default function LoginForm() {
   };
 
   const showApple = APPLE_LOGIN_ENABLED && Platform.OS === "ios";
-
-  const handleDevLogin = async () => {
-    if (busy) return;
-    try {
-      // raw_user_meta_data.nickname 을 같이 넘기면 handle_new_user 트리거가
-      // profiles.nickname 을 "테스트유저"로 채워준다 (없으면 기본 '몽글이').
-      const { error } = await supabase.auth.signInAnonymously({
-        options: { data: { nickname: DEV_USER.name } },
-      });
-      if (error) throw error;
-      await AsyncStorage.setItem(DEV_USER_KEY, JSON.stringify(DEV_USER));
-    } catch (e) {
-      showNotice(
-        "개발 로그인 실패",
-        e instanceof Error ? e.message : String(e),
-      );
-    }
-  };
 
   return (
     <View style={styles.container}>
@@ -229,9 +226,11 @@ export default function LoginForm() {
           </TouchableOpacity>
         )}
 
-        {__DEV__ && (
+        {__DEV__ && devLogin && (
           <TouchableOpacity
-            onPress={handleDevLogin}
+            onPress={() => {
+              if (!busy) devLogin();
+            }}
             disabled={busy}
             activeOpacity={0.6}
             style={styles.devBtn}

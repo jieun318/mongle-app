@@ -122,6 +122,17 @@ export default async function handler(req: Request): Promise<Response> {
       );
     }
 
+    // 익명 세션(개발 빌드의 "개발용 우회 로그인")은 운영 API 에서 받지 않는다.
+    // 운영 Supabase 는 익명 로그인이 꺼져 있지만, 실수로 켜지면 공개 anon 키만으로
+    // 누구나 세션을 만들어 AI 호출 비용을 쓸 수 있다 — 그에 대비한 2차 방어.
+    if (user.is_anonymous && process.env.VERCEL_ENV === "production") {
+      console.warn("[chat api] anonymous session rejected in production");
+      return Response.json(
+        { error: "로그인이 필요해요" },
+        { status: 403, headers: cors },
+      );
+    }
+
     // 2) 입력 검증
     const raw = await req.json().catch(() => null);
     const parsed = bodySchema.safeParse(raw);

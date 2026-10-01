@@ -220,6 +220,10 @@ export default function SearchScreen() {
 
 const styles = StyleSheet.create({
   scroll: {
+    // 네이티브에서 세로 ScrollView 의 콘텐츠 컨테이너는 폭이 확정되지 않을 수
+    // 있다. 그러면 아래 그리드가 콘텐츠 크기만큼 늘어나(실측 1064px) flexWrap
+    // 이 걸려 있어도 줄바꿈이 일어나지 않고 카드가 한 줄로 쭉 나간다.
+    width: "100%",
     paddingTop: 60,
     // paddingBottom 은 useBottomSpace().withNav 로 렌더 시점에 덮어쓴다.
     paddingHorizontal: GRID_PADDING,
@@ -268,6 +272,9 @@ const styles = StyleSheet.create({
   trendTagText: { fontFamily: "OnglyphPDH", fontSize: 13, color: "#7868B8" },
 
   categoryGrid: {
+    // 부모 폭을 넘어 늘어나지 않도록 명시한다 — 이 값이 카드 폭 계산의 기준이라
+    // 늘어나면 (그리드 폭 → 카드 폭 → 그리드 폭) 으로 되먹임이 생긴다.
+    width: "100%",
     flexDirection: "row",
     flexWrap: "wrap",
     gap: GRID_GAP,

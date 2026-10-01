@@ -42,12 +42,31 @@ const CHIP_COLOR = "#7868C8";
 // tags 중 길흉 분류값 — 배지로 따로 보여주므로 칩에서는 뺀다.
 const CLASSIFICATION_TAGS = new Set(["길몽", "흉몽", "보통", "조건부"]);
 
+// 길몽·흉몽 태그가 함께 붙은 조건부 항목(크롤링 시드 17건)은 태그만으로는 길흉을
+// 알 수 없다. 예전처럼 흉몽을 먼저 보면 "뱀에 물리는 꿈"처럼 원문이 대표적인
+// 길몽이라는 항목까지 흉몽이 된다. 원본 분류값(is_lucky) → 점수 순으로 정한다.
+function badgeByLuck(item: DreamItem): DreamBadge {
+  if (item.isLucky === "lucky") return "길몽";
+  if (item.isLucky === "unlucky") return "흉몽";
+  if (item.isLucky === "conditional" || item.isLucky === "neutral") return "보통";
+  if (item.luckIndex >= 70) return "길몽";
+  if (item.luckIndex <= 35) return "흉몽";
+  return "보통";
+}
+
 // 사전의 tags 는 '길몽' / '흉몽' / '태몽' / '조건부' 등이 섞여 있다.
-// 태몽은 길몽으로 보고(칩으로 '태몽'은 따로 남는다), 조건부는 조건 목록이
-// 본문에 붙으므로 '보통'으로 둔다.
+// - 길몽·흉몽이 함께 있으면 badgeByLuck
+// - 하나만 있으면 그 태그
+// - 둘 다 없으면: is_lucky 'neutral'(원문이 부정적인 태몽 등, 명시적으로 지정한 항목)은
+//   보통, 태몽은 길몽(칩으로 '태몽'은 따로 남는다), 경고 표시면 흉몽, 나머지는 보통.
 function badgeOf(item: DreamItem): DreamBadge {
-  if (item.tags.includes("흉몽")) return "흉몽";
-  if (item.tags.includes("길몽") || item.tags.includes("태몽")) return "길몽";
+  const good = item.tags.includes("길몽");
+  const bad = item.tags.includes("흉몽");
+  if (good && bad) return badgeByLuck(item);
+  if (bad) return "흉몽";
+  if (good) return "길몽";
+  if (item.isLucky === "neutral") return "보통";
+  if (item.tags.includes("태몽")) return "길몽";
   if (item.isWarning) return "흉몽";
   return "보통";
 }

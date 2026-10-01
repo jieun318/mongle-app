@@ -23,6 +23,7 @@ export interface DreamItemRow {
   luck_index: number | null;
   is_warning: boolean | null;
   mood_tags: unknown; // jsonb — string[] | DreamMoodTag[]
+  is_lucky?: string | null;
   conditions?: unknown;
   source_url?: string | null;
   created_at?: string;
@@ -41,6 +42,7 @@ export function mapDreamItemRow(row: DreamItemRow): DreamItem {
     bookmarkCount: row.bookmark_count ?? 0,
     luckIndex: row.luck_index ?? 0,
     isWarning: !!row.is_warning,
+    isLucky: row.is_lucky ?? null,
     moodTags: normalizeMoodTags(row.mood_tags),
     conditions: normalizeConditions(row.conditions),
   };

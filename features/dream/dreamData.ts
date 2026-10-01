@@ -27,6 +27,9 @@ export interface DreamItem {
   bookmarkCount: number;
   luckIndex: number;
   isWarning?: boolean;
+  // 원본 데이터의 길흉 분류값: 'lucky' | 'unlucky' | 'conditional' | 'neutral' | null.
+  // tags 에 길몽·흉몽이 함께 있을 때 배지를 정하는 기준으로 쓴다(dreamResult.badgeOf).
+  isLucky?: string | null;
   moodTags?: DreamMoodTag[];
   conditions?: DreamCondition[];
 }

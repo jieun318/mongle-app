@@ -29,6 +29,20 @@ export interface DreamMeta {
   isWarning: boolean;
   moodTags: string[];
   interpretation: string;
+  // 해몽 결과 화면용(api/_lib/dreamMeta.ts). 예전 서버 응답·예전에 저장된 세션엔 없다.
+  badge?: "길몽" | "흉몽" | "보통";
+  summary?: string;
+  // "지금 나의 마음" — 꿈꾼 사람의 감정 상태(해석 아님). interpretation 과 겹치지 않게 따로 받는다.
+  feeling?: string;
+  keywords?: string[];
+  actions?: string[];
+}
+
+/** 마지막으로 보관함에 저장한 구간 — messages[from, to) 가 dreams 의 dreamId 한 행이다. */
+export interface SavedSegment {
+  dreamId: string;
+  from: number;
+  to: number;
 }
 
 export interface ChatSession {
@@ -43,6 +57,12 @@ export interface ChatSession {
   // 저장되지 않는다. 그래서 "어디까지 저장했는지"를 인덱스로 들고 다니며
   // 그 뒤에 생긴 메시지만 새 꿈으로 저장한다.
   savedCount: number;
+  // meta 가 어느 답변(해몽 말풍선)의 것인지. 결과 카드 버튼·결과 화면이 이 답변을 찾는다.
+  metaMsgId?: string | null;
+  lastSave?: SavedSegment | null;
+  // 결과 카드로 저장한 뒤 "대화 이어가기" 중인지. true 면 이후 메시지는 같은 꿈의 후속이라
+  // 서버에 lastSave.from 부터의 맥락을 보내고, 저장은 새 행 대신 lastSave.dreamId 를 갱신한다.
+  continuing?: boolean;
 }
 
 function isValidMessage(v: unknown): v is StoredChatMessage {
@@ -85,11 +105,26 @@ export async function loadChatSession(): Promise<ChatSession | null> {
         ? parsed.savedCount
         : 0;
 
+    const ls = parsed.lastSave;
+    const lastSave =
+      ls &&
+      typeof ls.dreamId === "string" &&
+      typeof ls.from === "number" &&
+      typeof ls.to === "number" &&
+      ls.from >= 0 &&
+      ls.to <= messages.length &&
+      ls.from < ls.to
+        ? ls
+        : null;
+
     return {
       updatedAt,
       messages,
       meta: (parsed.meta as DreamMeta | null) ?? null,
       savedCount,
+      metaMsgId: typeof parsed.metaMsgId === "string" ? parsed.metaMsgId : null,
+      lastSave,
+      continuing: !!parsed.continuing && !!lastSave,
     };
   } catch (err) {
     // 저장 포맷이 깨졌거나 스토리지 오류 — 대화 복원 실패로 앱을 막을 이유는 없다.

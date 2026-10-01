@@ -4,6 +4,9 @@ import {
   type DreamItem,
   type DreamMoodTag,
 } from "@/features/dream/dreamData";
+import { badgeFromLuckIndex } from "@/lib/luck";
+import type { DreamMeta } from "@/features/chat/chatSession";
+import { splitAnswer } from "@/features/chat/answer";
 
 // 꿈 해몽 결과 화면(app/(app)/dream/result.tsx)이 그리는 단일 모양.
 // 꿈 사전 항목과 AI 챗 해몽이 서로 다른 데이터를 갖고 있어서, 화면은 이 타입만
@@ -28,6 +31,9 @@ export interface DreamResult {
   luckIndex: number;
   // 사전 항목이면 "꿈 기록하기"가 이 id 로 기록 화면을 연다.
   dreamItemId?: string;
+  // 채팅 해몽에서만: "지금 나의 마음" — 감정 칩 + 차분한 2~3문장(메타 interpretation).
+  moods?: DreamMoodTag[];
+  feeling?: string;
 }
 
 export const BADGE_STYLE: Record<DreamBadge, { bg: string; color: string; emoji: string }> = {
@@ -49,9 +55,7 @@ function badgeByLuck(item: DreamItem): DreamBadge {
   if (item.isLucky === "lucky") return "길몽";
   if (item.isLucky === "unlucky") return "흉몽";
   if (item.isLucky === "conditional" || item.isLucky === "neutral") return "보통";
-  if (item.luckIndex >= 70) return "길몽";
-  if (item.luckIndex <= 35) return "흉몽";
-  return "보통";
+  return badgeFromLuckIndex(item.luckIndex);
 }
 
 // 사전의 tags 는 '길몽' / '흉몽' / '태몽' / '조건부' 등이 섞여 있다.
@@ -156,5 +160,70 @@ export function fromDreamItem(item: DreamItem): DreamResult {
     actions: [],
     luckIndex: item.luckIndex,
     dreamItemId: item.id,
+  };
+}
+
+// ── 채팅 해몽 ─────────────────────────────────────────────
+// meta = 서버가 첫 턴 답변과 함께 내려준 메타, answer = 그 해몽 답변(요약 <<MORE>> 전체 해석).
+// 예전 서버 응답이면 summary/badge/keywords/actions/feeling 이 없다 — 답변·점수로 채우고 섹션은 숨긴다.
+// interpretation(보관함 카드용 해몽 요약)은 이 화면에서 쓰지 않는다 — 한 줄 요약·본문과 같은 말이 된다.
+
+// 해몽 답변 끝의 실천 제안 문단을 여는 말. 채팅 프롬프트(api/chat.ts)가 전체 해석 마지막에
+// "이렇게 해보면 좋아요" 식으로 1~2가지를 쓰게 되어 있다.
+const ACTION_CUE = /이렇게\s*해\s*보면|해\s*보면\s*좋아요|해\s*보는\s*건\s*어떨까요|실천해\s*보|오늘\s*(?:해\s*볼|할\s*수\s*있는)/;
+const RULE_LINE = /^\s*([-*_])(\s*\1){2,}\s*$/;
+const LIST_LINE = /^\s*([-*•]|\d+[.)])\s+/;
+
+/**
+ * 결과 화면 본문에서 끝부분의 실천 제안 문단을 뺀다 — "오늘 해볼 것" 섹션과 겹치지 않게.
+ * 실천 제안을 여는 줄(제목·문단)부터 끝까지 자르고, 남은 끝의 구분선·빈 줄을 정리한다.
+ * 첫 문단에서 걸리거나 자르고 나면 본문이 비는 경우는 그대로 둔다.
+ */
+export function stripActionSection(body: string): string {
+  const lines = body.split("\n");
+  const firstText = lines.findIndex((l) => l.trim());
+  let cut = -1;
+  for (let i = lines.length - 1; i > firstText; i--) {
+    const plain = lines[i].replace(/^\s*(#{1,6}\s+|[-*•]\s+|\d+[.)]\s+)/, "").replace(/\*\*/g, "");
+    if (ACTION_CUE.test(plain)) {
+      cut = i;
+      break;
+    }
+  }
+  if (cut < 0) return body;
+  // 실천 제안이 목록 중간 항목이면 목록 전체(바로 위 연속된 목록 줄)부터 자른다.
+  while (cut > firstText + 1 && LIST_LINE.test(lines[cut]) && LIST_LINE.test(lines[cut - 1])) cut--;
+  const kept = lines.slice(0, cut);
+  while (kept.length && (!kept[kept.length - 1].trim() || RULE_LINE.test(kept[kept.length - 1]))) kept.pop();
+  const out = kept.join("\n").trim();
+  return out || body;
+}
+
+export function fromChat(meta: DreamMeta, answer: string): DreamResult {
+  const { summary: head, full } = splitAnswer(answer);
+  // 요약 목록의 첫 항목("1. …")을 한 줄 요약 대신 쓴다.
+  const firstPoint = head
+    .split("\n")
+    .map((l) => l.replace(/^\s*\d+[.)]\s*/, "").trim())
+    .find(Boolean);
+  const badge: DreamBadge =
+    meta.badge ?? (meta.isWarning ? "흉몽" : badgeFromLuckIndex(meta.luckIndex));
+  const toChip = (label: string): DreamMoodTag => ({ label, emoji: "", bg: CHIP_BG, color: CHIP_COLOR });
+  const actions = meta.actions ?? [];
+  // 전체 해석이 본문. 마커가 없는 예전 답변이면 답변 전체.
+  const body = full || head;
+  return {
+    source: "ai",
+    title: meta.title?.trim() || "AI 꿈 해몽",
+    emoji: meta.emoji || "🌙",
+    badge,
+    summary: meta.summary?.trim() || firstPoint || "",
+    chips: (meta.keywords ?? []).slice(0, MAX_CHIPS).map(toChip),
+    // "오늘 해볼 것"이 있으면 본문 끝 실천 제안은 뺀다(채팅 말풍선은 그대로).
+    body: actions.length > 0 ? stripActionSection(body) : body,
+    actions,
+    luckIndex: meta.luckIndex,
+    moods: (meta.moodTags ?? []).map(toChip),
+    feeling: meta.feeling?.trim() || undefined,
   };
 }

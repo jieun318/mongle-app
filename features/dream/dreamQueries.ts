@@ -2,8 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { queryClient } from "@/lib/queryClient";
+import { searchDreams } from "@/features/dream/dreamSearch";
 import {
-  CATEGORIES,
   normalizeConditions,
   normalizeMoodTags,
   type DreamItem,
@@ -139,44 +139,14 @@ export function useDreamItemsByCategory(categoryId: string | undefined | null) {
   return { ...q, data };
 }
 
-// PostgREST 대신 클라이언트에서 매칭. 기존 서버 `.or()` 규칙과 동일하게:
-//   title/preview 부분일치(대소문자 무시), keywords/tags 정확 원소 포함,
-//   카테고리 라벨/ID 부분일치. sanitize 는 기존과 동일 문자 제거를 유지해
-//   서버 결과와 일치시킨다.
-function sanitize(q: string): string {
-  return q.replace(/[(),"\\%_]/g, " ").trim();
-}
-
-function searchItems(items: DreamItem[], rawQuery: string): DreamItem[] {
-  const safe = sanitize(rawQuery);
-  if (!safe) return [];
-  const lower = safe.toLowerCase();
-  const catIds = new Set(
-    CATEGORIES.filter(
-      (c) =>
-        c.label.toLowerCase().includes(lower) ||
-        c.id.toLowerCase().includes(lower),
-    ).map((c) => c.id),
-  );
-  // 메모리 필터라 네트워크 비용이 없어 상한을 두지 않는다(기존 서버 .limit(100) 은
-  // payload 절감용이었음). 매칭 전체를 id 순으로 반환 — 카테고리 페이지도 동일
-  // 규모(길몽 278개)를 이미 스크롤로 렌더한다.
-  return items.filter(
-    (i) =>
-      i.title.toLowerCase().includes(lower) ||
-      i.preview.toLowerCase().includes(lower) ||
-      i.keywords.includes(safe) ||
-      i.tags.includes(safe) ||
-      catIds.has(i.categoryId),
-  );
-}
+// 검색 규칙은 features/dream/dreamSearch.ts (순수 함수 — 커버리지 점검 스크립트와 공유).
 
 // ── 검색 (메모리 필터링) ─────────────────────────────────
 export function useSearchDreamItems(query: string) {
   const debounced = useDebouncedValue(query.trim(), 150);
   const q = useAllDreamItems();
   const data = useMemo(
-    () => (q.data && debounced ? searchItems(q.data, debounced) : []),
+    () => (q.data && debounced ? searchDreams(q.data, debounced) : []),
     [q.data, debounced],
   );
   return { ...q, data };

@@ -103,7 +103,12 @@ export function displayMoodTags(raw: unknown): DreamMoodTag[] {
   );
 }
 
-export const TRENDING_KEYWORDS = ["#돼지", "#불", "#좀비"] as const;
+// 검색 탭 추천 키워드 — 인기 검색어(searchLogs.useTrendingSearches)가 모자랄 때 채운다.
+// 사전 검색 결과가 넉넉한 키워드만 고른다(2026-10-01 커버리지 점검 기준).
+export const CURATED_KEYWORDS = [
+  "뱀", "돼지", "호랑이", "조상", "쫓기는", "떨어지는",
+  "머리카락", "결혼", "복권", "지진", "이빨 빠지는", "전 애인",
+] as const;
 
 export const CATEGORIES: DreamCategory[] = [
   { id: "animal",    label: "동물",      emoji: "🐷", bg: "#FFEEDF" }, // peach

@@ -13,16 +13,18 @@ import { useBottomSpace } from "@/lib/layout";
 import { useFocusEffect, useRouter } from "expo-router";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import BottomNav from "@/components/ui/BottomNav";
-import { SearchIcon } from "@/components/ui/icons";
+import { ClockIcon, FireIcon, SearchIcon, SparklesIcon } from "@/components/ui/icons";
+import IconLabel from "@/components/ui/IconLabel";
 // 챗봇은 실제로 열 때만 로드 — 검색 탭 진입 시 무거운 챗 모듈을 지연시킨다.
 // 진입 후 idle 에 백그라운드 예열해 첫 열기는 즉시 되게 한다(아래 useEffect).
 const importChatModal = () => import("@/components/chat/ChatBotModal");
 const ChatBotModal = lazy(importChatModal);
 import {
   CATEGORIES,
-  TRENDING_KEYWORDS,
+  CURATED_KEYWORDS,
   DreamCategory,
 } from "@/features/dream/dreamData";
+import { useTrendingSearches } from "@/features/dream/searchLogs";
 import { getRecentSearches, addRecentSearch } from "@/features/dream/recentSearches";
 
 const GRID_PADDING = 20;
@@ -50,16 +52,17 @@ function cardSizeFor(gridW: number): number {
 const MAX_CHIPS = 8;
 const normalizeKw = (s: string) => s.replace(/^#/, "").trim();
 
-// 표시할 키워드 칩: 사용자의 최근 검색어를 앞에 두고(개인화), 부족하면 기본
-// 인기 키워드로 채운다. 중복(‘#돼지’ vs ‘돼지’)은 정규화해서 제거.
-function buildKeywordChips(recents: string[]): string[] {
-  const seen = new Set(recents.map(normalizeKw));
-  const chips = [...recents];
-  for (const k of TRENDING_KEYWORDS) {
+// 표시할 키워드 칩: 사용자의 최근 검색어(개인화) → 최근 30일 인기 검색어(search_logs)
+// → 큐레이션 목록 순으로 채운다. 중복(‘#돼지’ vs ‘돼지’)은 정규화해서 제거.
+function buildKeywordChips(recents: string[], trending: readonly string[]): string[] {
+  const seen = new Set<string>();
+  const chips: string[] = [];
+  for (const k of [...recents, ...trending, ...CURATED_KEYWORDS]) {
     if (chips.length >= MAX_CHIPS) break;
-    if (!seen.has(normalizeKw(k))) {
+    const n = normalizeKw(k);
+    if (n && !seen.has(n)) {
       chips.push(k);
-      seen.add(normalizeKw(k));
+      seen.add(n);
     }
   }
   return chips;
@@ -114,8 +117,16 @@ export default function SearchScreen() {
     goResults(cleaned);
   };
 
-  const chips = buildKeywordChips(recent);
+  // 실패하거나 0020 적용 전이면 빈 배열 — 큐레이션으로 채운다.
+  const { data: trending = [] } = useTrendingSearches();
+  const chips = buildKeywordChips(recent, trending);
   const hasRecent = recent.length > 0;
+  // 칩 제목은 맨 앞 칩의 출처를 따른다.
+  const chipLabel = hasRecent
+    ? { icon: ClockIcon, text: "최근 검색어" }
+    : trending.length > 0
+      ? { icon: FireIcon, text: "지금 뜨는 꿈 키워드" }
+      : { icon: SparklesIcon, text: "추천 꿈 키워드" };
 
   return (
     <LinearGradient colors={["#F5F3FA", "#F5F3FA"]} style={{ flex: 1 }}>
@@ -146,9 +157,9 @@ export default function SearchScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>
-            {hasRecent ? "🕘 최근 검색어" : "🔥 지금 뜨는 꿈 키워드"}
-          </Text>
+          <IconLabel icon={chipLabel.icon} textStyle={styles.sectionLabel}>
+            {chipLabel.text}
+          </IconLabel>
           <View style={styles.tagRow}>
             {chips.map((kw) => (
               <TouchableOpacity

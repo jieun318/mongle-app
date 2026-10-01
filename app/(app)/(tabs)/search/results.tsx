@@ -9,13 +9,14 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import BottomNav from "@/components/ui/BottomNav";
 import { SearchIcon } from "@/components/ui/icons";
 import { useBottomSpace } from "@/lib/layout";
 import ChatBotModal from "@/components/chat/ChatBotModal";
 import DreamListItem from "@/components/dream/DreamListItem";
 import { useSearchDreamItems } from "@/features/dream/dreamQueries";
+import { logSearch } from "@/features/dream/searchLogs";
 import { ChatBubbleIcon, CloudIcon } from "@/components/ui/icons";
 
 export default function SearchResultsScreen() {
@@ -27,7 +28,17 @@ export default function SearchResultsScreen() {
   const [query, setQuery] = useState(initial);
   const [showChat, setShowChat] = useState(false);
 
-  const { data: dreams = [], isFetching } = useSearchDreamItems(query);
+  const { data: dreams = [], isFetching, isSuccess } = useSearchDreamItems(query);
+
+  // 검색어 기록(search_logs) — 입력이 1초 멈췄을 때 결과 수와 함께 한 번.
+  // 사전 전체를 받기 전(isSuccess 전)엔 결과가 0으로 보이므로 기록하지 않는다.
+  const trimmedQuery = query.trim();
+  const resultCount = dreams.length;
+  useEffect(() => {
+    if (!trimmedQuery || !isSuccess) return;
+    const t = setTimeout(() => logSearch(trimmedQuery, resultCount), 1000);
+    return () => clearTimeout(t);
+  }, [trimmedQuery, isSuccess, resultCount]);
 
   return (
     <LinearGradient colors={["#F5F3FA", "#F5F3FA"]} style={{ flex: 1 }}>

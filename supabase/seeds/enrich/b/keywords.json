@@ -1,0 +1,20 @@
+[
+{"id":"body-012","add":["피"],"remove":[],"why":"코피 — 한 글자 '피' 검색"},
+{"id":"lucky-028","add":["눈"],"remove":[],"why":"첫눈 — '눈'"},
+{"id":"daily-004","add":["집"],"remove":[],"why":"기와집 — '집'"},
+{"id":"lucky-022","add":["집"],"remove":[],"why":"새집 — '집'"},
+{"id":"lucky-018","add":["불"],"remove":[],"why":"등불 — '불'"},
+{"id":"lucky-020","add":["금"],"remove":[],"why":"황금빛 — '금'"},
+{"id":"crawled-047","add":["꽃","분꽃"],"remove":[],"why":"분꽃 — '꽃'"},
+{"id":"pregnancy-019","add":["꽃"],"remove":[],"why":"박꽃 — '꽃'"},
+{"id":"nature-009","add":["물"],"remove":[],"why":"흙탕물 — '물'"},
+{"id":"nature-010","add":["물"],"remove":[],"why":"큰물 — '물'"},
+{"id":"nature-019","add":["물"],"remove":[],"why":"우물물 — '물'"},
+{"id":"pregnancy-017","add":["물"],"remove":[],"why":"우물물 — '물'"},
+{"id":"unlucky-017","add":["물"],"remove":[],"why":"강물 — '물'"},
+{"id":"animal-020","add":["말"],"remove":[],"why":"암말 — '말'"},
+{"id":"crawled-112","add":["차"],"remove":[],"why":"자동차 — '차'"},
+{"id":"daily-021","add":["차"],"remove":[],"why":"기차 — '차'"},
+{"id":"body-026","add":["손","발"],"remove":[],"why":"손발 — '손'·'발'"},
+{"id":"people-006","add":["부부 꿈 해몽"],"remove":["이혼 꿈 해몽"],"why":"이혼 검색에 걸리던 키워드 정리 (이혼은 신규 people-039·040)"}
+]

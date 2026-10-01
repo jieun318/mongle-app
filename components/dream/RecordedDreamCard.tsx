@@ -6,6 +6,8 @@ import {
   normalizeMoodTags,
 } from "@/features/dream/dreamData";
 import DreamEmoji from "@/components/dream/DreamEmoji";
+import IconLabel from "@/components/ui/IconLabel";
+import { BookOpenIcon, CloverIcon, PencilIcon, SparklesIcon, TrashIcon, WarningIcon } from "@/components/ui/icons";
 
 interface Props {
   dream: DreamRecord;
@@ -62,22 +64,23 @@ export default function RecordedDreamCard({
                 isAi ? styles.sourceBadgeAi : styles.sourceBadgeCard,
               ]}
             >
-              <Text
-                style={[
+              <IconLabel
+                icon={isAi ? SparklesIcon : BookOpenIcon}
+                textStyle={[
                   styles.sourceBadgeText,
                   isAi ? styles.sourceBadgeTextAi : styles.sourceBadgeTextCard,
                 ]}
               >
-                {isAi ? "🤖 AI 챗봇" : "🔮 카드 해몽"}
-              </Text>
+                {isAi ? "AI 챗봇" : "카드 해몽"}
+              </IconLabel>
             </View>
             {isWarning ? (
               <View style={styles.warningBadge}>
-                <Text style={styles.warningBadgeText}>⚠️ 흉몽</Text>
+                <IconLabel icon={WarningIcon} textStyle={styles.warningBadgeText}>흉몽</IconLabel>
               </View>
             ) : (
               <View style={styles.luckyBadge}>
-                <Text style={styles.luckyBadgeText}>🍀 길몽</Text>
+                <IconLabel icon={CloverIcon} textStyle={styles.luckyBadgeText}>길몽</IconLabel>
               </View>
             )}
           </View>
@@ -154,7 +157,7 @@ export default function RecordedDreamCard({
             activeOpacity={0.7}
             onPress={onEdit}
           >
-            <Text style={styles.menuItemText}>✏️ 수정</Text>
+            <IconLabel icon={PencilIcon} textStyle={styles.menuItemText}>수정</IconLabel>
           </TouchableOpacity>
           <View style={styles.menuDivider} />
           <TouchableOpacity
@@ -162,9 +165,9 @@ export default function RecordedDreamCard({
             activeOpacity={0.7}
             onPress={onDelete}
           >
-            <Text style={[styles.menuItemText, styles.menuItemDanger]}>
-              🗑️ 삭제
-            </Text>
+            <IconLabel icon={TrashIcon} textStyle={[styles.menuItemText, styles.menuItemDanger]}>
+              삭제
+            </IconLabel>
           </TouchableOpacity>
         </View>
       ) : null}

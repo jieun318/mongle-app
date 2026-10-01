@@ -28,6 +28,9 @@ import {
 } from "@/features/chat/chatSession";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { useRouter } from "expo-router";
+import { ChevronUpIcon, SearchIcon, SparklesIcon, WarningIcon } from "@/components/ui/icons";
+import IconLabel from "@/components/ui/IconLabel";
+import { compatText } from "@/lib/emojiCompat";
 import { isCrisisDisclosure, SAFETY_STUB } from "@/features/chat/safety";
 import { isInterpretation, MORE_MARKER, segmentHasCrisis } from "@/features/chat/answer";
 import { saveChatDream, type SaveOutcome } from "@/features/chat/saveChatDream";
@@ -936,8 +939,10 @@ export default function ChatBotModal({
                       activeOpacity={0.85}
                       accessibilityRole="button"
                     >
+                      {/* 이모지(✨) 대신 SVG — 오래된 안드로이드에서 이모지가 네모로 깨진다 */}
+                      {openingId === msg.id ? null : <SparklesIcon size={16} color="#fff" />}
                       <Text style={styles.resultBtnText}>
-                        {openingId === msg.id ? "결과 카드 만드는 중…" : "✨ 해몽 결과 카드 보기"}
+                        {openingId === msg.id ? "결과 카드 만드는 중…" : "해몽 결과 카드 보기"}
                       </Text>
                     </TouchableOpacity>
                   ) : null}
@@ -950,10 +955,10 @@ export default function ChatBotModal({
                 <View
                   style={[styles.bubble, styles.aiBubble, styles.errorBubble]}
                 >
-                  <Text style={styles.errorText}>
-                    ⚠️ 답변을 가져오지 못했어요{"\n"}
-                    <Text style={styles.errorDetail}>{error}</Text>
-                  </Text>
+                  <IconLabel icon={WarningIcon} textStyle={styles.errorText}>
+                    답변을 가져오지 못했어요
+                  </IconLabel>
+                  <Text style={styles.errorDetail}>{error}</Text>
                 </View>
               )}
             </ScrollView>
@@ -1050,6 +1055,9 @@ function MessageBubble({
   }, [msg.content]);
   const hasFull = fullParas.length > 0;
   const textStyle = isUser ? styles.userText : styles.aiText;
+  // 공감 한 줄·AI 답변의 최신 이모지(🪂 등)는 오래된 안드로이드에서만 대체해 그린다.
+  // 사용자가 입력한 글은 그 기기 키보드에서 나온 것이라 그대로 둔다.
+  const show = (t: string) => (isUser ? t : compatText(t));
 
   return (
     <View style={{ alignItems: isUser ? "flex-end" : "flex-start" }}>
@@ -1058,7 +1066,7 @@ function MessageBubble({
       >
         {summaryParas.map((p, i) => (
           <Text key={`s${i}`} style={[textStyle, i > 0 && styles.paragraphGap]}>
-            {p}
+            {show(p)}
           </Text>
         ))}
 
@@ -1066,7 +1074,7 @@ function MessageBubble({
           expanded &&
           fullParas.map((p, i) => (
             <Text key={`f${i}`} style={[textStyle, styles.paragraphGap]}>
-              {p}
+              {show(p)}
             </Text>
           ))}
 
@@ -1076,9 +1084,9 @@ function MessageBubble({
             hitSlop={6}
             style={styles.moreBtn}
           >
-            <Text style={styles.moreText}>
-              {expanded ? "접기 ▲" : "🔎 전체 해석 보기"}
-            </Text>
+            {expanded ? null : <SearchIcon size={14} color={PURPLE_BRAND} />}
+            <Text style={styles.moreText}>{expanded ? "접기" : "전체 해석 보기"}</Text>
+            {expanded ? <ChevronUpIcon size={14} color={PURPLE_BRAND} /> : null}
           </TouchableOpacity>
         )}
       </View>
@@ -1205,6 +1213,9 @@ const styles = StyleSheet.create({
   // 해몽 답변 아래 "해몽 결과 카드 보기" — 말풍선(왼쪽 정렬)에 붙여 둔다.
   resultBtn: {
     alignSelf: "flex-start",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
     marginTop: 8,
     backgroundColor: PURPLE_BRAND,
     borderRadius: 16,
@@ -1219,6 +1230,9 @@ const styles = StyleSheet.create({
   moreBtn: {
     marginTop: 12,
     alignSelf: "flex-start",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 16,

@@ -15,6 +15,7 @@ import {
   type PastWeek,
 } from "@/features/fortune/dailyFortuneRepo";
 import { gradeFromKey } from "@/features/fortune/grade";
+import { MoonIcon } from "@/components/ui/icons";
 
 interface MonthGroup {
   monthLabel: string;
@@ -83,7 +84,7 @@ export default function FortuneHistoryScreen() {
         >
           {months.length === 0 ? (
             <View style={styles.empty}>
-              <Text style={styles.emptyEmoji}>🌙</Text>
+              <View style={styles.emptyEmoji}><MoonIcon size={44} color="#B8A8E0" /></View>
               <Text style={styles.emptyText}>
                 아직 지난 운세가 없어요{"\n"}한 주가 지나면 여기에 모여요
               </Text>
@@ -195,7 +196,8 @@ const styles = StyleSheet.create({
   scroll: { padding: 20, paddingTop: 12, gap: 20 },
 
   empty: { alignItems: "center", paddingTop: 80, gap: 12 },
-  emptyEmoji: { fontSize: 48, opacity: 0.7 },
+  // 이모지 대신 SVG 아이콘 — 오래된 안드로이드에서 이모지가 네모로 깨진다.
+  emptyEmoji: { opacity: 0.85, alignItems: "center" },
   emptyText: {
     fontFamily: "OnglyphPDH",
     fontSize: 14,

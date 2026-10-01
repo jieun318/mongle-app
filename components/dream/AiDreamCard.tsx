@@ -2,6 +2,9 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import type { DreamRecord } from "@/features/dream/dreams";
 import { displayMoodTags } from "@/features/dream/dreamData";
+import { compatEmoji } from "@/lib/emojiCompat";
+import IconLabel from "@/components/ui/IconLabel";
+import { PencilIcon, SparklesIcon, TrashIcon } from "@/components/ui/icons";
 
 interface Props {
   dream: DreamRecord;
@@ -47,7 +50,7 @@ export default function AiDreamCard({
         {/* 상단: AI 뱃지 + 날짜 + 메뉴 */}
         <View style={styles.topRow}>
           <View style={styles.aiBadge}>
-            <Text style={styles.aiBadgeText}>🤖 AI챗봇</Text>
+            <IconLabel icon={SparklesIcon} textStyle={styles.aiBadgeText}>AI챗봇</IconLabel>
           </View>
           <View style={styles.topRight}>
             <Text style={styles.date}>{formatDate(dream.dream_date)}</Text>
@@ -64,7 +67,7 @@ export default function AiDreamCard({
         {/* 본문: 꿈 내용 이모지 + 텍스트 */}
         <View style={styles.bodyRow}>
           <View style={styles.emojiCircle}>
-            <Text style={styles.emojiCircleText}>{dream.emoji || "🌙"}</Text>
+            <Text style={styles.emojiCircleText}>{compatEmoji(dream.emoji || "🌙")}</Text>
           </View>
           <View style={styles.textCol}>
             <Text style={styles.title} numberOfLines={1}>
@@ -111,7 +114,7 @@ export default function AiDreamCard({
             activeOpacity={0.7}
             onPress={onEdit}
           >
-            <Text style={styles.menuItemText}>✏️  수정</Text>
+            <IconLabel icon={PencilIcon} textStyle={styles.menuItemText}>수정</IconLabel>
           </TouchableOpacity>
           <View style={styles.menuDivider} />
           <TouchableOpacity
@@ -119,9 +122,9 @@ export default function AiDreamCard({
             activeOpacity={0.7}
             onPress={onDelete}
           >
-            <Text style={[styles.menuItemText, styles.menuItemDanger]}>
-              🗑️  삭제
-            </Text>
+            <IconLabel icon={TrashIcon} textStyle={[styles.menuItemText, styles.menuItemDanger]}>
+              삭제
+            </IconLabel>
           </TouchableOpacity>
         </View>
       ) : null}

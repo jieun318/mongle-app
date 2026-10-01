@@ -173,3 +173,149 @@ export function EyeOffIcon({ size = 24, color = DEFAULT_COLOR }: IconProps) {
   );
 }
 
+
+// ── 이모지 대신 쓰는 아이콘 ─────────────────────────────────
+// 오래된 안드로이드(갤럭시 S8, Android 9 등)는 기기 이모지 폰트에 없는 글자를 네모(□)로
+// 그린다. UI 고정 문구(버튼·섹션 제목·배지)의 이모지는 이 SVG 아이콘으로 대신한다.
+// AI 답변·사전 데이터 안의 이모지는 대상이 아니다.
+
+function OutlinePath({ d, size, color }: { d: string; size: number; color: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d={d} stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
+// ── Sparkles (✨ 대신 — 결과 카드, 오늘 해볼 것) ─────────────
+export function SparklesIcon({ size = 24, color = DEFAULT_COLOR }: IconProps) {
+  return (
+    <OutlinePath
+      size={size}
+      color={color}
+      d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z"
+    />
+  );
+}
+
+// ── Heart (💜·🤍 대신 — 지금 나의 마음, 위기 안내) ─────────────
+export function HeartIcon({ size = 24, color = DEFAULT_COLOR }: IconProps) {
+  return (
+    <OutlinePath
+      size={size}
+      color={color}
+      d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
+    />
+  );
+}
+
+// ── Moon (🌙 대신 — 보통 배지, 장식) ─────────────────────────
+export function MoonIcon({ size = 24, color = DEFAULT_COLOR }: IconProps) {
+  return (
+    <OutlinePath
+      size={size}
+      color={color}
+      d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"
+    />
+  );
+}
+
+// ── Cloud (☁️·🌫️ 대신 — 장식, 빈 화면) ───────────────────────
+export function CloudIcon({ size = 24, color = DEFAULT_COLOR }: IconProps) {
+  return (
+    <OutlinePath
+      size={size}
+      color={color}
+      d="M2.25 15a4.5 4.5 0 004.5 4.5H18a3.75 3.75 0 001.332-7.257 3 3 0 00-3.758-3.848 5.25 5.25 0 00-10.233 2.33A4.502 4.502 0 002.25 15z"
+    />
+  );
+}
+
+// ── ChatBubble (💬·💭 대신 — 대화 이어가기, 불러오는 중) ─────────
+export function ChatBubbleIcon({ size = 24, color = DEFAULT_COLOR }: IconProps) {
+  return (
+    <OutlinePath
+      size={size}
+      color={color}
+      d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 4.483 0 01-.923 1.785A5.969 5.969 0 006 21c1.282 0 2.47-.402 3.445-1.087.81.22 1.668.337 2.555.337z"
+    />
+  );
+}
+
+// ── Check (✓ 대신 — 보관함에서 보기) ─────────────────────────
+export function CheckIcon({ size = 24, color = DEFAULT_COLOR }: IconProps) {
+  return <OutlinePath size={size} color={color} d="M4.5 12.75l6 6 9-13.5" />;
+}
+
+// ── CheckCircle (☑︎ 대신 — 오늘 해볼 것 항목) ─────────────────
+export function CheckCircleIcon({ size = 24, color = DEFAULT_COLOR }: IconProps) {
+  return (
+    <OutlinePath
+      size={size}
+      color={color}
+      d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+    />
+  );
+}
+
+// ── Warning (⚠️ 대신 — 흉몽 배지) ────────────────────────────
+export function WarningIcon({ size = 24, color = DEFAULT_COLOR }: IconProps) {
+  return (
+    <OutlinePath
+      size={size}
+      color={color}
+      d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
+    />
+  );
+}
+
+// ── BookOpen (🔮 대신 — 해몽 본문) ───────────────────────────
+export function BookOpenIcon({ size = 24, color = DEFAULT_COLOR }: IconProps) {
+  return (
+    <OutlinePath
+      size={size}
+      color={color}
+      d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"
+    />
+  );
+}
+
+// ── ChevronUp (▲ 대신 — 접기) ────────────────────────────────
+export function ChevronUpIcon({ size = 24, color = DEFAULT_COLOR }: IconProps) {
+  return <OutlinePath size={size} color={color} d="M4.5 15.75l7.5-7.5 7.5 7.5" />;
+}
+
+// ── Clover (🍀 대신 — 길몽 배지) ─────────────────────────────
+export function CloverIcon({ size = 24, color = DEFAULT_COLOR }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Circle cx={8.6} cy={8.6} r={3.4} stroke={color} strokeWidth={1.8} />
+      <Circle cx={15.4} cy={8.6} r={3.4} stroke={color} strokeWidth={1.8} />
+      <Circle cx={8.6} cy={15.4} r={3.4} stroke={color} strokeWidth={1.8} />
+      <Circle cx={15.4} cy={15.4} r={3.4} stroke={color} strokeWidth={1.8} />
+      <Line x1={14.5} y1={14.5} x2={20.25} y2={21} stroke={color} strokeWidth={1.8} strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+// ── Trash (🗑️ 대신 — 삭제 메뉴) ──────────────────────────────
+export function TrashIcon({ size = 24, color = DEFAULT_COLOR }: IconProps) {
+  return (
+    <OutlinePath
+      size={size}
+      color={color}
+      d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
+    />
+  );
+}
+
+// ── LightBulb (💡 대신 — 운세 팁) ─────────────────────────────
+export function LightBulbIcon({ size = 24, color = DEFAULT_COLOR }: IconProps) {
+  return (
+    <OutlinePath
+      size={size}
+      color={color}
+      d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18"
+    />
+  );
+}

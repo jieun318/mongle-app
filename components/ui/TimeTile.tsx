@@ -1,6 +1,8 @@
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { parseHHMM } from "@/lib/notifications";
+import type { ComponentType } from "react";
+import { MoonIcon, type IconProps } from "@/components/ui/icons";
 
 // 알림 시각을 보여주고 탭하면 시간 선택기를 여는 타일.
 //
@@ -14,8 +16,8 @@ interface Props {
   label: string;
   /** "HH:MM" (24시간) */
   time: string;
-  /** 왼쪽 원형 배지에 들어갈 이모지 */
-  icon?: string;
+  /** 왼쪽 원형 배지에 들어갈 아이콘. 이모지 대신 SVG — 오래된 안드로이드에서 이모지가 네모로 깨진다. */
+  icon?: ComponentType<IconProps>;
   /** 시각 아래 보조 설명 (선택) */
   caption?: string;
   onPress: () => void;
@@ -24,7 +26,7 @@ interface Props {
 export default function TimeTile({
   label,
   time,
-  icon = "🌙",
+  icon: Icon = MoonIcon,
   caption,
   onPress,
 }: Props) {
@@ -48,7 +50,7 @@ export default function TimeTile({
         style={styles.tile}
       >
         <View style={styles.badge}>
-          <Text style={styles.badgeIcon}>{icon}</Text>
+          <Icon size={22} color="#7868C8" />
         </View>
 
         <View style={styles.center}>
@@ -107,7 +109,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(120,104,200,0.16)",
   },
-  badgeIcon: { fontSize: 19, lineHeight: 24 },
 
   center: { flex: 1 },
   label: {

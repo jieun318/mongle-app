@@ -20,6 +20,7 @@ import {
   getFilterTags,
 } from "@/features/dream/dreamData";
 import { useDreamItemsByCategory } from "@/features/dream/dreamQueries";
+import { ChatBubbleIcon, CloudIcon } from "@/components/ui/icons";
 
 export default function CategoryListScreen() {
   const space = useBottomSpace();
@@ -106,14 +107,14 @@ export default function CategoryListScreen() {
       >
         {isLoading && dreams.length === 0 && (
           <View style={styles.empty}>
-            <Text style={styles.emptyEmoji}>💭</Text>
+            <View style={styles.emptyEmoji}><ChatBubbleIcon size={44} color="#B8A8E0" /></View>
             <Text style={styles.emptyText}>꿈 조각을 불러오는 중...</Text>
           </View>
         )}
 
         {!isLoading && dreams.length === 0 && (
           <View style={styles.empty}>
-            <Text style={styles.emptyEmoji}>🌫️</Text>
+            <View style={styles.emptyEmoji}><CloudIcon size={44} color="#B8A8E0" /></View>
             <Text style={styles.emptyText}>아직 모인 꿈 조각이 없어요</Text>
           </View>
         )}
@@ -201,6 +202,7 @@ const styles = StyleSheet.create({
   list: { paddingHorizontal: 20, paddingTop: 12, gap: 8 },
 
   empty: { alignItems: "center", paddingTop: 60, gap: 8 },
-  emptyEmoji: { fontSize: 48, opacity: 0.6 },
+  // 이모지 대신 SVG 아이콘 — 오래된 안드로이드에서 이모지가 네모로 깨진다.
+  emptyEmoji: { opacity: 0.8 },
   emptyText: { fontFamily: "OnglyphPDH", fontSize: 14, color: "#9888CC" },
 });

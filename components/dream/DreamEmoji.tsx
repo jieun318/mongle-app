@@ -1,4 +1,5 @@
 import { Image, ImageSourcePropType, StyleProp, Text, TextStyle } from "react-native";
+import { compatEmoji } from "@/lib/emojiCompat";
 
 // 같은 emoji 라도 "어떤 꿈" 인지에 따라 PNG 로 대체할지 결정.
 // 예: 🐍 는 기본적으로 그냥 텍스트, 단 '흰 뱀' 꿈일 때만 흰뱀 PNG 사용.
@@ -35,5 +36,6 @@ export default function DreamEmoji({ emoji, size, title, style }: Props) {
       />
     );
   }
-  return <Text style={[{ fontSize: size }, style]}>{emoji}</Text>;
+  // 최신 이모지(Emoji 12+)는 그리지 못하는 오래된 안드로이드에서만 대체 이모지로 그린다.
+  return <Text style={[{ fontSize: size }, style]}>{compatEmoji(emoji)}</Text>;
 }

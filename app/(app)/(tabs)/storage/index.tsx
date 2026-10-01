@@ -29,6 +29,7 @@ import {
   listMyDreams,
 } from "@/features/dream/dreams";
 import { confirmDestructive, showNotice } from "@/lib/dialog";
+import { MoonIcon, WarningIcon } from "@/components/ui/icons";
 
 type FilterTab = "all" | "card" | "ai";
 
@@ -220,7 +221,7 @@ export default function StorageScreen() {
         </View>
       ) : error ? (
         <View style={styles.center}>
-          <Text style={styles.emptyEmoji}>⚠️</Text>
+          <View style={styles.emptyEmoji}><WarningIcon size={44} color="#D88868" /></View>
           <Text style={styles.emptyText}>{error}</Text>
         </View>
       ) : (
@@ -235,7 +236,7 @@ export default function StorageScreen() {
         >
           {filtered.length === 0 ? (
             <View style={styles.empty}>
-              <Text style={styles.emptyEmoji}>🌙</Text>
+              <View style={styles.emptyEmoji}><MoonIcon size={44} color="#B8A8E0" /></View>
               <Text style={styles.emptyText}>
                 {dreams.length === 0
                   ? "아직 기록된 꿈이 없어요\n꿈 조각을 골라 첫 꿈을 담아보세요"
@@ -366,7 +367,8 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: "center", justifyContent: "center", gap: 8 },
 
   empty: { alignItems: "center", paddingTop: 60, gap: 14 },
-  emptyEmoji: { fontSize: 48, opacity: 0.7 },
+  // 이모지 대신 SVG 아이콘 — 오래된 안드로이드에서 이모지가 네모로 깨진다.
+  emptyEmoji: { opacity: 0.85, alignItems: "center" },
   emptyText: {
     fontFamily: "OnglyphPDH",
     fontSize: 14,

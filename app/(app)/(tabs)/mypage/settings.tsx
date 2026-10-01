@@ -48,6 +48,7 @@ import {
   formatHHMM,
   timeStringToDate,
 } from "@/lib/notifications";
+import { MoonIcon, SparklesIcon } from "@/components/ui/icons";
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -417,7 +418,7 @@ export default function SettingsScreen() {
             {notify && notifyReminder && !IS_EXPO_GO && (
               <TimeTile
                 label="리마인드 시간"
-                icon="🌙"
+                icon={MoonIcon}
                 time={reminderTime}
                 onPress={() => openTimePicker("reminder")}
               />
@@ -467,7 +468,7 @@ export default function SettingsScreen() {
             {notify && notifyFortune && !IS_EXPO_GO && (
               <TimeTile
                 label="운세 알림 시간"
-                icon="🔮"
+                icon={SparklesIcon}
                 time={fortuneTime}
                 onPress={() => openTimePicker("fortune")}
               />

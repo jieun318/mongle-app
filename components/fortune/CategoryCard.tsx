@@ -5,6 +5,7 @@ import type {
   FortuneCategoryKey,
 } from "@/types/fortune";
 import { CATEGORY_META } from "@/features/fortune/content/categories";
+import { LightBulbIcon } from "@/components/ui/icons";
 
 interface CategoryCardProps {
   categoryKey: FortuneCategoryKey;
@@ -54,7 +55,9 @@ export default function CategoryCard({
     <View style={styles.body}>
       <Text style={styles.message}>{category.message}</Text>
       <View style={styles.tipRow}>
-        <Text style={styles.tipIcon}>💡</Text>
+        <View style={styles.tipIcon}>
+          <LightBulbIcon size={15} color="#5C4A7A" />
+        </View>
         <Text style={styles.tipText}>{category.tip}</Text>
       </View>
     </View>
@@ -116,7 +119,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderRadius: 10,
   },
-  tipIcon: { fontSize: 13, lineHeight: 18 },
+  // 이모지(💡) 대신 SVG — 오래된 안드로이드에서 이모지가 네모로 깨진다.
+  tipIcon: { paddingTop: 1 },
   tipText: {
     flex: 1,
     fontSize: 12,

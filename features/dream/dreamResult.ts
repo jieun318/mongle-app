@@ -36,10 +36,11 @@ export interface DreamResult {
   feeling?: string;
 }
 
-export const BADGE_STYLE: Record<DreamBadge, { bg: string; color: string; emoji: string }> = {
-  길몽: { bg: "#E8F5E8", color: "#4A9050", emoji: "🍀" },
-  흉몽: { bg: "#FFE0D0", color: "#C86040", emoji: "⚠️" },
-  보통: { bg: "#F0E8FF", color: "#7868C8", emoji: "🌙" },
+// 배지 색. 아이콘은 화면에서 SVG(클로버·경고·달)로 그린다 — 이모지는 오래된 안드로이드에서 네모로 깨진다.
+export const BADGE_STYLE: Record<DreamBadge, { bg: string; color: string }> = {
+  길몽: { bg: "#E8F5E8", color: "#4A9050" },
+  흉몽: { bg: "#FFE0D0", color: "#C86040" },
+  보통: { bg: "#F0E8FF", color: "#7868C8" },
 };
 
 const MAX_CHIPS = 4;

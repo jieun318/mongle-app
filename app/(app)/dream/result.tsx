@@ -6,6 +6,18 @@ import ScreenHeader from "@/components/ui/ScreenHeader";
 import Markdown from "@/components/ui/Markdown";
 import DreamEmoji from "@/components/dream/DreamEmoji";
 import { useBottomSpace } from "@/lib/layout";
+import {
+  BookOpenIcon,
+  ChatBubbleIcon,
+  CheckCircleIcon,
+  CheckIcon,
+  CloudIcon,
+  CloverIcon,
+  HeartIcon,
+  MoonIcon,
+  SparklesIcon,
+  WarningIcon,
+} from "@/components/ui/icons";
 import { useDreamItem } from "@/features/dream/dreamQueries";
 import { loadChatSession } from "@/features/chat/chatSession";
 import { segmentHasCrisis } from "@/features/chat/answer";
@@ -35,10 +47,11 @@ export default function DreamResultScreen() {
   );
 }
 
-function Empty({ emoji, text }: { emoji: string; text: string }) {
+// 이모지 대신 SVG 아이콘 — 오래된 안드로이드는 기기 폰트에 없는 이모지를 네모로 그린다.
+function Empty({ icon, text }: { icon: "loading" | "missing"; text: string }) {
   return (
     <View style={styles.empty}>
-      <Text style={styles.emptyEmoji}>{emoji}</Text>
+      {icon === "loading" ? <ChatBubbleIcon size={44} color="#B8A8E0" /> : <CloudIcon size={44} color="#B8A8E0" />}
       <Text style={styles.emptyText}>{text}</Text>
     </View>
   );
@@ -51,7 +64,7 @@ function DictResult({ itemId }: { itemId?: string }) {
   const { data: item, isLoading } = useDreamItem(itemId);
   const result = useMemo(() => (item ? fromDreamItem(item) : null), [item]);
   if (!result) {
-    return <Empty emoji={isLoading ? "💭" : "🌫️"} text={isLoading ? "꿈 조각을 불러오는 중..." : "꿈 조각을 찾을 수 없어요"} />;
+    return <Empty icon={isLoading ? "loading" : "missing"} text={isLoading ? "꿈 조각을 불러오는 중..." : "꿈 조각을 찾을 수 없어요"} />;
   }
   // 하단 고정 버튼 영역. 이미지 공유는 네이티브 모듈이 들어가는 다음
   // 스토어 빌드에서 이 줄에 추가한다.
@@ -123,11 +136,11 @@ function ChatResult({ answerId }: { answerId: string }) {
     </Suspense>
   ) : null;
 
-  if (state.status === "loading") return <Empty emoji="💭" text="해몽 결과를 불러오는 중..." />;
+  if (state.status === "loading") return <Empty icon="loading" text="해몽 결과를 불러오는 중..." />;
   if (state.status === "missing") {
     return (
       <>
-        <Empty emoji="🌫️" text={"대화가 만료됐거나 찾을 수 없어요\n몽이와 나눈 대화는 24시간 동안 보관돼요"} />
+        <Empty icon="missing" text={"대화가 만료됐거나 찾을 수 없어요\n몽이와 나눈 대화는 24시간 동안 보관돼요"} />
         <View style={[styles.footer, { paddingBottom: 16 + space.system }]}>
           <PrimaryButton label="몽이와 대화하기" onPress={continueChat} />
         </View>
@@ -141,7 +154,7 @@ function ChatResult({ answerId }: { answerId: string }) {
       <>
         <ScrollView style={styles.flex} contentContainerStyle={styles.scroll}>
           <View style={[styles.card, styles.safetyCard]}>
-            <Text style={styles.cardLabel}>🤍 지금 마음이 먼저예요</Text>
+            <CardLabel icon={<HeartIcon size={15} color={LABEL_COLOR} />}>지금 마음이 먼저예요</CardLabel>
             <Text style={styles.safetyText}>{SAFETY_STUB}</Text>
           </View>
         </ScrollView>
@@ -156,10 +169,13 @@ function ChatResult({ answerId }: { answerId: string }) {
   const footer = (
     <View style={[styles.footer, { paddingBottom: 16 + space.system }]}>
       <TouchableOpacity style={styles.btnSecondary} onPress={continueChat} activeOpacity={0.85}>
-        <Text style={styles.btnSecondaryText}>💬 대화 이어가기</Text>
+        <View style={styles.btnRow}>
+          <ChatBubbleIcon size={18} color="#7868C8" />
+          <Text style={styles.btnSecondaryText}>대화 이어가기</Text>
+        </View>
       </TouchableOpacity>
       {state.saved ? (
-        <PrimaryButton label="✓ 보관함에서 보기" onPress={() => router.push("/(app)/storage")} />
+        <PrimaryButton icon={<CheckIcon size={18} color="#fff" />} label="보관함에서 보기" onPress={() => router.push("/(app)/storage")} />
       ) : (
         <View style={[styles.btnPrimary, styles.btnDisabled]}>
           <Text style={styles.btnDisabledText}>아직 보관함에 없어요</Text>
@@ -175,7 +191,24 @@ function ChatResult({ answerId }: { answerId: string }) {
   );
 }
 
-function PrimaryButton({ label, onPress }: { label: string; onPress: () => void }) {
+const LABEL_COLOR = "#A898D8";
+
+function CardLabel({ icon, children }: { icon: ReactNode; children: string }) {
+  return (
+    <View style={styles.cardLabelRow}>
+      {icon}
+      <Text style={styles.cardLabel}>{children}</Text>
+    </View>
+  );
+}
+
+function BadgeIcon({ badge, color }: { badge: DreamResult["badge"]; color: string }) {
+  if (badge === "길몽") return <CloverIcon size={14} color={color} />;
+  if (badge === "흉몽") return <WarningIcon size={14} color={color} />;
+  return <MoonIcon size={14} color={color} />;
+}
+
+function PrimaryButton({ label, onPress, icon }: { label: string; onPress: () => void; icon?: ReactNode }) {
   return (
     <TouchableOpacity style={styles.btnPrimary} onPress={onPress} activeOpacity={0.85}>
       <LinearGradient
@@ -184,7 +217,10 @@ function PrimaryButton({ label, onPress }: { label: string; onPress: () => void 
         end={{ x: 1, y: 1 }}
         style={styles.btnPrimaryGradient}
       >
-        <Text style={styles.btnPrimaryText}>{label}</Text>
+        <View style={styles.btnRow}>
+          {icon}
+          <Text style={styles.btnPrimaryText}>{label}</Text>
+        </View>
       </LinearGradient>
     </TouchableOpacity>
   );
@@ -209,17 +245,24 @@ function ResultBody({ result, footer }: { result: DreamResult; footer: ReactNode
           end={{ x: 1, y: 1 }}
           style={styles.hero}
         >
-          <Text style={[styles.deco, styles.decoMoon]}>🌙</Text>
-          <Text style={[styles.deco, styles.decoCloudL]}>☁️</Text>
-          <Text style={[styles.deco, styles.decoCloudR]}>☁️</Text>
+          <View style={[styles.deco, styles.decoMoon]}>
+            <MoonIcon size={22} color="#C9A050" />
+          </View>
+          <View style={[styles.deco, styles.decoCloudL]}>
+            <CloudIcon size={28} color="#A898D8" />
+          </View>
+          <View style={[styles.deco, styles.decoCloudR]}>
+            <CloudIcon size={18} color="#A898D8" />
+          </View>
 
           <DreamEmoji emoji={result.emoji} size={64} title={result.title} />
           <Text style={styles.title}>{result.title}</Text>
           <View style={styles.badgeRow}>
             <View style={[styles.pill, { backgroundColor: badge.bg }]}>
-              <Text style={[styles.pillText, { color: badge.color }]}>
-                {badge.emoji} {result.badge}
-              </Text>
+              <View style={styles.btnRow}>
+                <BadgeIcon badge={result.badge} color={badge.color} />
+                <Text style={[styles.pillText, { color: badge.color }]}>{result.badge}</Text>
+              </View>
             </View>
             {result.categoryLabel ? (
               <View style={[styles.pill, styles.categoryPill]}>
@@ -256,7 +299,7 @@ function ResultBody({ result, footer }: { result: DreamResult; footer: ReactNode
         {/* 해몽 본문 — 마크다운 렌더. 한 문장짜리 본문이 요약으로 올라가 비면 숨긴다. */}
         {result.body ? (
           <View style={styles.card}>
-            <Text style={styles.cardLabel}>🔮 해몽</Text>
+            <CardLabel icon={<BookOpenIcon size={15} color={LABEL_COLOR} />}>해몽</CardLabel>
             <Markdown>{result.body}</Markdown>
           </View>
         ) : null}
@@ -264,7 +307,7 @@ function ResultBody({ result, footer }: { result: DreamResult; footer: ReactNode
         {/* 지금 나의 마음 — 채팅 해몽에서만(감정 칩 + 메타 feeling). 해석(interpretation)은 쓰지 않는다 */}
         {result.feeling || (result.moods && result.moods.length > 0) ? (
           <View style={styles.card}>
-            <Text style={styles.cardLabel}>💜 지금 나의 마음</Text>
+            <CardLabel icon={<HeartIcon size={15} color={LABEL_COLOR} />}>지금 나의 마음</CardLabel>
             {result.moods && result.moods.length > 0 ? (
               <View style={[styles.chipRow, styles.chipRowLeft]}>
                 {result.moods.map((t) => (
@@ -281,10 +324,12 @@ function ResultBody({ result, footer }: { result: DreamResult; footer: ReactNode
         {/* 오늘 해볼 것 */}
         {result.actions.length > 0 && (
           <View style={styles.card}>
-            <Text style={styles.cardLabel}>✨ 오늘 해볼 것</Text>
+            <CardLabel icon={<SparklesIcon size={15} color={LABEL_COLOR} />}>오늘 해볼 것</CardLabel>
             {result.actions.map((a, i) => (
               <View key={i} style={styles.actionRow}>
-                <Text style={styles.actionCheck}>☑︎</Text>
+                <View style={styles.actionCheck}>
+                  <CheckCircleIcon size={18} color="#8868D8" />
+                </View>
                 <Text style={styles.actionText}>{a}</Text>
               </View>
             ))}
@@ -324,10 +369,10 @@ const styles = StyleSheet.create({
     gap: 8,
     overflow: "hidden",
   },
-  deco: { position: "absolute", opacity: 0.45 },
-  decoMoon: { top: 12, right: 18, fontSize: 22 },
-  decoCloudL: { bottom: 14, left: 14, fontSize: 26 },
-  decoCloudR: { top: 18, left: 36, fontSize: 16, opacity: 0.3 },
+  deco: { position: "absolute", opacity: 0.55 },
+  decoMoon: { top: 14, right: 18 },
+  decoCloudL: { bottom: 14, left: 14 },
+  decoCloudR: { top: 18, left: 36, opacity: 0.35 },
   title: {
     fontFamily: "OnglyphPDH",
     fontSize: 22,
@@ -366,7 +411,9 @@ const styles = StyleSheet.create({
   cardLabel: { fontSize: 12, fontWeight: "700", color: "#A898D8" },
 
   actionRow: { flexDirection: "row", gap: 8 },
-  actionCheck: { fontSize: 14, color: "#8868D8", lineHeight: 22 },
+  actionCheck: { paddingTop: 2 },
+  cardLabelRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+  btnRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6 },
   actionText: { flex: 1, fontSize: 14, color: "#5848A8", lineHeight: 22 },
 
   luckLabel: { fontSize: 13, fontWeight: "700", color: "#6848C0" },
@@ -406,6 +453,5 @@ const styles = StyleSheet.create({
   safetyText: { fontSize: 15, color: "#3828A0", lineHeight: 25 },
 
   empty: { flex: 1, alignItems: "center", paddingTop: 80, gap: 8 },
-  emptyEmoji: { fontSize: 48, opacity: 0.6 },
   emptyText: { fontFamily: "OnglyphPDH", fontSize: 14, color: "#9888CC", textAlign: "center", lineHeight: 22 },
 });

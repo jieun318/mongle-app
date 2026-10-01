@@ -69,12 +69,19 @@ const dreamMetaSchema = z.object({
     .min(0)
     .max(100)
     .describe(
-      `0~100 사이 길운 지수. 한국 꿈 해석 관습 반영. 명백한 길몽(돈/성공/임신/태몽/용/돼지 등)은 ${LUCK_GOOD_MIN}~95, 평범한 꿈은 45~60, 흉몽(죽음/추격/추락/이별)은 15~${LUCK_BAD_MAX}. badge 와 반드시 맞출 것.`,
+      `0~100 사이 길운 지수. 한국 꿈 해석 관습 반영. badge 와 반드시 맞출 것.
+- 길몽 ${LUCK_GOOD_MIN}~95: 전통적으로 길몽으로 알려진 꿈(돼지, 용, 똥, 불이 활활 타는 집, 뱀에 물림, 임신·태몽, 돈·보물 등).
+- 보통 40~65: 불안·스트레스·긴장 같은 심리 해석이 중심인 꿈(쫓기기, 떨어지기, 시험, 늦기, 길 잃기, 발표·준비 부족 등).
+  꿈속에서 무섭거나 불안했다는 것만으로는 흉몽이 아니다. 길흉이 상황에 따라 갈리는 꿈도 보통.
+- 흉몽 15~${LUCK_BAD_MAX}: 전통적으로 흉몽으로 알려진 꿈(이빨이 빠짐, 검은 뱀, 신발을 잃어버림, 거울이 깨짐 등)이거나,
+  사용자가 꿈속에서 큰 고통(심한 통증, 피를 많이 흘림, 가족의 큰 사고)을 겪었다고 말한 경우에만.
+- 꿈속 죽음·장례·돌아가신 분은 새 출발·재생으로 풀이되는 경우가 많다 — 그것만으로 흉몽 판정 금지.`,
     ),
   badge: z
     .enum(["길몽", "흉몽", "보통"])
     .describe(
-      `꿈의 길흉 판정. luckIndex 가 ${LUCK_GOOD_MIN} 이상이면 "길몽", ${LUCK_BAD_MAX} 이하면 "흉몽", 그 사이면 "보통". 길흉이 상황에 따라 갈리면 "보통".`,
+      `꿈의 길흉 판정. luckIndex 가 ${LUCK_GOOD_MIN} 이상이면 "길몽", ${LUCK_BAD_MAX} 이하면 "흉몽", 그 사이면 "보통".
+결과 화면에 배지와 강도 막대로 크게 보이므로, 확실한 근거(위 luckIndex 기준)가 없으면 "보통"으로 둔다.`,
     ),
   summary: z
     .string()
@@ -102,7 +109,7 @@ const dreamMetaSchema = z.object({
   isWarning: z
     .boolean()
     .describe(
-      "흉몽이거나 경고성 메시지가 강한 꿈이면 true. 평범하거나 길몽이면 false.",
+      'badge 가 "흉몽"일 때만 true. 심리 해석 중심의 "보통" 꿈(쫓기기·떨어지기·시험 등)이나 길몽이면 false.',
     ),
   moodTags: z
     .array(z.string().min(1).max(8))
@@ -146,6 +153,11 @@ export async function extractDreamMeta(
       model: google("gemini-2.5-flash"),
       schema: dreamMetaSchema,
       system: `사용자가 입력한 꿈 내용을 분석해 보관함 카드와 해몽 결과 화면에 표시할 메타데이터(title/emoji/luckIndex/badge/isWarning/moodTags/keywords/summary/interpretation/feeling/actions) 를 JSON 으로 반환하세요. 한국 문화권 꿈 해석 관습을 반영하세요.
+
+길흉 판정(badge/luckIndex)은 보수적으로 하세요. 불안·스트레스 같은 심리 해석이 중심인 꿈
+(쫓기기, 떨어지기, 시험, 늦기, 길 잃기 등)은 "보통"(luckIndex 40~65)입니다. "흉몽"은 전통적으로
+흉몽으로 알려진 꿈(이빨이 빠짐, 검은 뱀 등)이거나 사용자가 꿈속의 큰 고통을 말한 경우에만 쓰세요.
+결과 화면에서 흉몽은 붉은 강도 막대로 크게 보여 사용자가 겁먹을 수 있습니다.
 
 단, 입력에 사용자 본인의 자살·자해 관련 상태 표현("죽고 싶다", "사라지고 싶다",
 "자해했다" 등)이 포함된 경우에는 그 부분을 꿈 상징으로 해석하지 마세요.

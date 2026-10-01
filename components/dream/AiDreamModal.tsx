@@ -11,6 +11,9 @@ import { useBottomSpace } from "@/lib/layout";
 import { useState } from "react";
 import type { DreamRecord } from "@/features/dream/dreams";
 import { displayMoodTags } from "@/features/dream/dreamData";
+import { compatEmoji } from "@/lib/emojiCompat";
+import IconLabel from "@/components/ui/IconLabel";
+import { SparklesIcon } from "@/components/ui/icons";
 
 interface Props {
   dream: DreamRecord | null;
@@ -83,13 +86,13 @@ export default function AiDreamModal({ dream, onClose }: Props) {
             >
               {/* 꿈 내용을 대표하는 큰 이모지 비주얼 */}
               <View style={styles.heroEmojiWrap}>
-                <Text style={styles.heroEmojiText}>{dream.emoji || "🌙"}</Text>
+                <Text style={styles.heroEmojiText}>{compatEmoji(dream.emoji || "🌙")}</Text>
               </View>
 
               {/* AI 뱃지 */}
               <View style={styles.badgeRow}>
                 <View style={styles.aiBadge}>
-                  <Text style={styles.aiBadgeText}>🤖 AI챗봇</Text>
+                  <IconLabel icon={SparklesIcon} textStyle={styles.aiBadgeText}>AI챗봇</IconLabel>
                 </View>
               </View>
 

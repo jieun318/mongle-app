@@ -16,6 +16,7 @@ import { useBottomSpace } from "@/lib/layout";
 import ChatBotModal from "@/components/chat/ChatBotModal";
 import DreamListItem from "@/components/dream/DreamListItem";
 import { useSearchDreamItems } from "@/features/dream/dreamQueries";
+import { ChatBubbleIcon, CloudIcon } from "@/components/ui/icons";
 
 export default function SearchResultsScreen() {
   const space = useBottomSpace();
@@ -58,9 +59,7 @@ export default function SearchResultsScreen() {
       >
         {dreams.length === 0 && (
           <View style={styles.empty}>
-            <Text style={styles.emptyEmoji}>
-              {isFetching ? "💭" : "🌫️"}
-            </Text>
+            <View style={styles.emptyEmoji}>{isFetching ? <ChatBubbleIcon size={44} color="#B8A8E0" /> : <CloudIcon size={44} color="#B8A8E0" />}</View>
             <Text style={styles.emptyText}>
               {!query.trim()
                 ? "검색어를 입력해보세요"
@@ -148,7 +147,8 @@ const styles = StyleSheet.create({
   list: { paddingHorizontal: 20, paddingTop: 16, gap: 8 },
 
   empty: { alignItems: "center", paddingTop: 60, gap: 8 },
-  emptyEmoji: { fontSize: 48, opacity: 0.6 },
+  // 이모지 대신 SVG 아이콘 — 오래된 안드로이드에서 이모지가 네모로 깨진다.
+  emptyEmoji: { opacity: 0.8 },
   emptyText: { fontFamily: "OnglyphPDH", fontSize: 14, color: "#9888CC" },
 
   askBtn: {

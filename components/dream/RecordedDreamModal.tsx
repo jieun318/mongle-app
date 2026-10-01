@@ -14,6 +14,8 @@ import {
   normalizeMoodTags,
 } from "@/features/dream/dreamData";
 import DreamEmoji from "@/components/dream/DreamEmoji";
+import IconLabel from "@/components/ui/IconLabel";
+import { SparklesIcon } from "@/components/ui/icons";
 
 interface Props {
   dream: DreamRecord | null;
@@ -79,14 +81,15 @@ export default function RecordedDreamModal({
                 <View style={styles.badgeRow}>
                   {isAi ? (
                     <View style={[styles.sourceBadge, styles.sourceBadgeAi]}>
-                      <Text
-                        style={[
+                      <IconLabel
+                        icon={SparklesIcon}
+                        textStyle={[
                           styles.sourceBadgeText,
                           styles.sourceBadgeTextAi,
                         ]}
                       >
-                        🤖 AI 챗봇
-                      </Text>
+                        AI 챗봇
+                      </IconLabel>
                     </View>
                   ) : null}
                   {category ? (

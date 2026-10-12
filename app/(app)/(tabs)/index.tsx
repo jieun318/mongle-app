@@ -521,7 +521,7 @@ export default function HomeScreen() {
     // 여기서 state 를 비울 필요가 없다. 로드할 게 없으면 그냥 나간다.
     if (!userId) return;
     let cancelled = false;
-    getDailyFortune().then((f) => {
+    getDailyFortune(userId).then((f) => {
       if (!cancelled) setFortuneState({ userId, fortune: f });
     });
     return () => {
@@ -884,7 +884,7 @@ export default function HomeScreen() {
     // (네트워크/세션 타이밍 등) 다시 탭하면 복구된다. AsyncStorage 의 FORTUNE_VIEWED_DATE_KEY 만
     // 보고 일찍 return 해 버리면, 첫 commit 실패 시 mypage 의 이번 주 운세에 영원히
     // 안 뜨는 버그가 생긴다.
-    commitDailyFortuneToDB(fortune).catch(() => {});
+    commitDailyFortuneToDB(fortune, userId).catch(() => {});
 
     // 오늘 이미 봤으면 애니 생략하고 결과만 즉시 표시
     if (alreadyViewed) {

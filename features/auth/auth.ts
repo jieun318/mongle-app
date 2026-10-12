@@ -77,7 +77,26 @@ let bootLinkPending = false;
 // 앱이 스피너에 갇힌다. 상한을 둔다.
 const BOOT_LINK_TIMEOUT_MS = 5000;
 
+// 같은 세션이 여러 번 들어온다(콜드스타트의 INITIAL_SESSION + getSession 경로,
+// 포그라운드 복귀 시 startAutoRefresh 등). 그때마다 새 객체를 내면 useSession 을
+// 쓰는 (app)/_layout 과 홈 전체가 내용 변화 없이 다시 그려진다.
+// 토큰이 바뀌었거나(TOKEN_REFRESHED) 사용자 정보가 갱신됐으면(USER_UPDATED →
+// updated_at) 다른 세션으로 본다.
+function sameSnapshot(a: SessionSnapshot, b: SessionSnapshot): boolean {
+  if (a.loading !== b.loading) return false;
+  const sa = a.session;
+  const sb = b.session;
+  if (sa === sb) return true;
+  if (!sa || !sb) return false;
+  return (
+    sa.access_token === sb.access_token &&
+    sa.user.id === sb.user.id &&
+    sa.user.updated_at === sb.user.updated_at
+  );
+}
+
 function setSnapshot(next: SessionSnapshot): void {
+  if (sameSnapshot(snapshot, next)) return;
   snapshot = next;
   listeners.forEach((l) => l());
 }

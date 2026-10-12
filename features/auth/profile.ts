@@ -1,3 +1,4 @@
+import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { clearUserScopedCaches } from "@/lib/sessionCleanup";
 import * as ImageManipulator from "expo-image-manipulator";
@@ -32,14 +33,22 @@ export interface ProfileRecord {
 
 type SupaError = { message: string } | null;
 
-export async function getMyProfile(): Promise<{
+// sessionUser 는 호출부가 세션 스토어(useSession)의 session.user 를 넘긴다.
+// 예전엔 getUser() 로 Auth 서버에 매번 물었는데, 마이페이지 진입마다 그 왕복이
+// profiles 조회 앞에 직렬로 끼었다. 넘길 수 없는 곳(모달 등)만 getSession 으로
+// 기기에 저장된 세션을 읽는다 — 네트워크 없음. 신원 검증은 RLS 가 맡는다.
+export async function getMyProfile(sessionUser?: User | null): Promise<{
   data: ProfileRecord | null;
   email: string | null;
   error: SupaError;
 }> {
-  const { data: userRes, error: userErr } = await supabase.auth.getUser();
-  if (userErr) return { data: null, email: null, error: userErr };
-  const user = userRes.user;
+  let user = sessionUser ?? null;
+  if (!user) {
+    const { data: sessionRes, error: sessionErr } =
+      await supabase.auth.getSession();
+    if (sessionErr) return { data: null, email: null, error: sessionErr };
+    user = sessionRes.session?.user ?? null;
+  }
   if (!user) {
     return { data: null, email: null, error: { message: "로그인이 필요해요" } };
   }

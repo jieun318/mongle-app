@@ -9,18 +9,19 @@ export interface DailyFortuneRow {
   created_at: string;
 }
 
-// 오늘 (혹은 임의 dateKey) 의 운세 1건 조회. 비로그인/없음 → null.
+// userId 는 모두 호출부가 세션 스토어(useSession)에서 넘긴다. 함수마다 getUser() 로
+// Auth 서버에 묻던 왕복을 없앴다. 다른 계정 id 가 섞여도 RLS(auth.uid() = user_id)가
+// 읽기·쓰기를 막는다.
+
+// 오늘 (혹은 임의 dateKey) 의 운세 1건 조회. 없음 → null.
 export async function loadDailyFortuneFromDB(
+  userId: string,
   dateKey: string,
 ): Promise<Fortune | null> {
-  const { data: userRes } = await supabase.auth.getUser();
-  const user = userRes.user;
-  if (!user) return null;
-
   const { data, error } = await supabase
     .from("daily_fortunes")
     .select("payload")
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .eq("date", dateKey)
     .maybeSingle();
 
@@ -32,24 +33,17 @@ export async function loadDailyFortuneFromDB(
   return data.payload as Fortune;
 }
 
-// 운세 영속화 (upsert). 비로그인 시 no-op.
+// 운세 영속화 (upsert).
 export async function saveDailyFortuneToDB(
+  userId: string,
   dateKey: string,
   fortune: Fortune,
-  expectedUserId?: string,
 ): Promise<void> {
-  const { data: userRes } = await supabase.auth.getUser();
-  const user = userRes.user;
-  if (!user) return;
-  // 호출부가 소유자 검증에 쓴 uid 와 실제 저장 대상이 같은지 확인.
-  // getUser() 가 두 번 불리는 사이에 계정이 바뀌는 좁은 창을 막는다.
-  if (expectedUserId && user.id !== expectedUserId) return;
-
   const { error } = await supabase
     .from("daily_fortunes")
     .upsert(
       {
-        user_id: user.id,
+        user_id: userId,
         date: dateKey,
         grade: fortune.grade,
         payload: fortune,
@@ -64,17 +58,14 @@ export async function saveDailyFortuneToDB(
 
 // 기간 내 모든 운세 조회 (mypage 주간 / 지난 운세 페이지에서 사용).
 export async function listDailyFortunesInRange(
+  userId: string,
   startYMD: string,
   endYMD: string,
 ): Promise<DailyFortuneRow[]> {
-  const { data: userRes } = await supabase.auth.getUser();
-  const user = userRes.user;
-  if (!user) return [];
-
   const { data, error } = await supabase
     .from("daily_fortunes")
     .select("user_id, date, grade, payload, created_at")
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .gte("date", startYMD)
     .lte("date", endYMD)
     .order("date", { ascending: true });
@@ -115,12 +106,15 @@ function dateToYMD(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-export async function loadThisWeekFortunes(): Promise<WeekDayFortune[]> {
+export async function loadThisWeekFortunes(
+  userId: string,
+): Promise<WeekDayFortune[]> {
   const monday = startOfThisWeekMonday();
   const sunday = new Date(monday);
   sunday.setDate(monday.getDate() + 6);
 
   const rows = await listDailyFortunesInRange(
+    userId,
     dateToYMD(monday),
     dateToYMD(sunday),
   );
@@ -163,11 +157,9 @@ function mondayOfYMD(ymd: string): Date {
   return dt;
 }
 
-export async function loadPastWeeksFortunes(): Promise<PastWeek[]> {
-  const { data: userRes } = await supabase.auth.getUser();
-  const user = userRes.user;
-  if (!user) return [];
-
+export async function loadPastWeeksFortunes(
+  userId: string,
+): Promise<PastWeek[]> {
   const thisMonday = startOfThisWeekMonday();
   const lastSunday = new Date(thisMonday);
   lastSunday.setDate(thisMonday.getDate() - 1);
@@ -177,7 +169,7 @@ export async function loadPastWeeksFortunes(): Promise<PastWeek[]> {
   const { data, error } = await supabase
     .from("daily_fortunes")
     .select("user_id, date, grade, payload, created_at")
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .lte("date", lastSundayYMD)
     .order("date", { ascending: false });
 

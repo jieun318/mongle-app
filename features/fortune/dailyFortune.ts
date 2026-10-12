@@ -8,7 +8,6 @@ import {
   FortuneLucky,
   MoodType,
 } from "@/types/fortune";
-import { supabase } from "@/lib/supabase";
 import {
   loadDailyFortuneFromDB,
   saveDailyFortuneToDB,
@@ -124,12 +123,11 @@ async function getDeviceId(): Promise<string> {
 
 // 시드 ID: 로그인된 경우 userId 우선 (같은 계정이면 어느 기기에서든 동일 운세),
 //          비로그인 시 deviceId 폴백.
-async function getSeedId(): Promise<string> {
-  try {
-    const { data } = await supabase.auth.getUser();
-    if (data.user?.id) return data.user.id;
-  } catch {}
-  return getDeviceId();
+// userId 는 호출부가 세션 스토어(useSession)에서 넘긴다. 예전엔 여기서 getUser() 로
+// Auth 서버에 매번 물었는데, 그 왕복이 홈 운세 표시 앞에 직렬로 끼고 auth lock 을 쥔
+// 채라 다른 Supabase 요청까지 줄을 세웠다.
+async function getSeedId(userId: string | null): Promise<string> {
+  return userId ?? getDeviceId();
 }
 
 // 카테고리별 sub-seed — 종합 시드와 별개 namespace.
@@ -282,36 +280,37 @@ async function cacheLocally(
 //     누르기 전에도 mypage 의 이번 주 운세에 표시되는 문제가 있었다.
 //   - DB 영속화는 사용자가 구슬을 탭하는 시점에 commitDailyFortuneToDB 로 명시 호출.
 //   - cache 없고 DB 있음 (이전에 이미 봐서 저장된 경우) → DB 값을 cache 로 백필.
-export async function getDailyFortune(): Promise<Fortune> {
+//   - 캐시가 맞으면 DB 를 기다리지 않는다. 우선순위상 어차피 캐시를 쓰므로
+//     DB 조회는 결과에 영향이 없는 왕복이었다.
+export async function getDailyFortune(userId: string | null): Promise<Fortune> {
   const now = new Date();
   const dKey = dateKey(now);
-  const seedId = await getSeedId();
+  const seedId = await getSeedId(userId);
 
-  // 캐시 읽기
-  let cached: Fortune | null = null;
+  // 캐시 읽기. 키 하나에 오늘 날짜(dKey)·소유자(seedId = 로그인 시 userId)를 같이
+  // 저장해 두고, 둘 다 운세 시드와 같은 기준으로 맞을 때만 쓴다.
+  // 날짜가 바뀌었거나 다른 계정이 남긴 캐시면 버린다.
   try {
     const raw = await AsyncStorage.getItem(FORTUNE_CACHE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as Partial<FortuneCache>;
-      // seedId 불일치 = 다른 계정이 남긴 캐시.
       // seedId 없음 = 이 필드가 생기기 전 버전의 캐시라 소유자를 알 수 없으므로
       // 똑같이 버린다(= 오늘 1회 재생성되고 이후 정상).
       if (parsed.dateKey === dKey && parsed.seedId === seedId && parsed.fortune) {
-        cached = parsed.fortune;
+        return backfillFortune(parsed.fortune, seedId, dKey);
       }
     }
   } catch {
     // 캐시 손상 시 무시
   }
 
-  // DB 확인 (로그인된 경우만 의미 있음)
-  const dbFortune = await loadDailyFortuneFromDB(dKey).catch(() => null);
+  // 캐시 없음 → DB 확인 (로그인된 경우만 의미 있음)
+  const dbFortune = userId
+    ? await loadDailyFortuneFromDB(userId, dKey).catch(() => null)
+    : null;
 
-  // 우선순위: 캐시 > DB > 새로 생성
   let fortune: Fortune;
-  if (cached) {
-    fortune = backfillFortune(cached, seedId, dKey);
-  } else if (dbFortune && isOwnedBySeed(dbFortune, seedId, dKey, now)) {
+  if (dbFortune && isOwnedBySeed(dbFortune, seedId, dKey, now)) {
     fortune = backfillFortune(dbFortune, seedId, dKey);
   } else {
     // DB 값이 다른 계정의 것이면(구버전 클라이언트가 남긴 오염 행) 버리고
@@ -320,32 +319,24 @@ export async function getDailyFortune(): Promise<Fortune> {
   }
 
   // 캐시 백필만 수행 — DB 저장은 commitDailyFortuneToDB 에서.
-  if (!cached) {
-    await cacheLocally(dKey, seedId, fortune);
-  }
+  await cacheLocally(dKey, seedId, fortune);
 
   return fortune;
 }
 
 // 사용자가 구슬을 처음 탭한 시점에 호출 — 이번 주 운세 위젯에 표시되기 시작한다.
-// upsert 라 여러 번 호출돼도 안전. 비로그인 시 no-op.
-export async function commitDailyFortuneToDB(fortune: Fortune): Promise<void> {
+// upsert 라 여러 번 호출돼도 안전. 비로그인(userId null) 시 no-op.
+export async function commitDailyFortuneToDB(
+  fortune: Fortune,
+  userId: string | null,
+): Promise<void> {
+  if (!userId) return;
   const now = new Date();
   const dKey = dateKey(now);
 
-  // 저장 직전에 현재 세션 uid 를 다시 확인한다. 화면에 떠 있던 fortune 이
-  // 다른 계정 것이면(구버전이 남긴 캐시 등) 여기서 걸러야 DB 가 오염되지 않는다.
-  let uid: string | undefined;
-  try {
-    const { data } = await supabase.auth.getUser();
-    uid = data.user?.id;
-  } catch {
-    return;
-  }
-  if (!uid) return; // 비로그인 → 기존과 동일하게 no-op
+  // 화면에 떠 있던 fortune 이 다른 계정 것이면(구버전이 남긴 캐시 등) 여기서
+  // 걸러야 DB 가 오염되지 않는다. 로그인 상태에서는 seedId === userId.
+  if (!isOwnedBySeed(fortune, userId, dKey, now)) return;
 
-  // 로그인 상태에서는 seedId === uid (getSeedId 참조).
-  if (!isOwnedBySeed(fortune, uid, dKey, now)) return;
-
-  await saveDailyFortuneToDB(dKey, fortune, uid).catch(() => {});
+  await saveDailyFortuneToDB(userId, dKey, fortune).catch(() => {});
 }

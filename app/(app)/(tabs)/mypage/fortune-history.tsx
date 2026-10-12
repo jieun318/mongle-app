@@ -16,6 +16,7 @@ import {
 } from "@/features/fortune/dailyFortuneRepo";
 import { gradeFromKey } from "@/features/fortune/grade";
 import { MoonIcon } from "@/components/ui/icons";
+import { useSession } from "@/features/auth/auth";
 
 interface MonthGroup {
   monthLabel: string;
@@ -41,10 +42,14 @@ export default function FortuneHistoryScreen() {
   const [weeks, setWeeks] = useState<PastWeek[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const { session } = useSession();
+  const userId = session?.user?.id ?? null;
+
   const load = useCallback(async () => {
-    const w = await loadPastWeeksFortunes();
+    if (!userId) return;
+    const w = await loadPastWeeksFortunes(userId);
     setWeeks(w);
-  }, []);
+  }, [userId]);
 
   useFocusEffect(
     useCallback(() => {

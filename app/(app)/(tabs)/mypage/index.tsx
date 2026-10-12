@@ -15,6 +15,7 @@ import { useBottomSpace } from "@/lib/layout";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import BottomNav from "@/components/ui/BottomNav";
+import { useSession } from "@/features/auth/auth";
 import { gradeFromKey } from "@/features/fortune/grade";
 import {
   loadThisWeekFortunes,
@@ -57,11 +58,19 @@ export default function MypageScreen() {
   const [week, setWeek] = useState<WeekDayFortune[]>([]);
   const [loading, setLoading] = useState(true);
   const hasLoadedRef = useRef(false); // 첫 로드 후로는 스피너 안 띄우고 백그라운드 갱신
+  const { session } = useSession();
+  // 토큰 갱신마다 session.user 객체가 새로 오므로 load 는 userId 에만 묶고,
+  // 사용자 정보(이메일·메타데이터)는 ref 로 최신값을 읽는다.
+  const userId = session?.user?.id ?? null;
+  const sessionUserRef = useRef(session?.user ?? null);
+  sessionUserRef.current = session?.user ?? null;
 
   const load = useCallback(async () => {
+    const sessionUser = sessionUserRef.current;
+    if (!userId || !sessionUser) return;
     const [p, wk] = await Promise.all([
-      getMyProfile(),
-      loadThisWeekFortunes(),
+      getMyProfile(sessionUser),
+      loadThisWeekFortunes(userId),
     ]);
     if (!p.error) {
       setProfile(p.data);
@@ -73,7 +82,7 @@ export default function MypageScreen() {
       setAvatarUrl(url);
     }
     setWeek(wk);
-  }, []);
+  }, [userId]);
 
   useFocusEffect(
     useCallback(() => {

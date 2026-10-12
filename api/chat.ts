@@ -40,8 +40,11 @@ const MAX_MESSAGE_CHARS = 1000;
 // gemini-2.5-flash 는 thinking 토큰도 maxOutputTokens 안에서 같이 소모한다.
 // 1000 으로 두면 추론에 예산을 먼저 쓰고 본문이 문장 중간에서 잘린다
 // (finishReason: "length" — 에러가 아니라 정상 종료라 아무 표시도 안 남는다).
-// thinking 은 아래에서 0 으로 끄고, 한국어 장문 답변용으로 한도를 올린다.
+// thinking 은 아래에서 512 로 제한하고, 한국어 장문 답변용으로 한도를 올린다.
 const MAX_OUTPUT_TOKENS = 2600;
+const THINKING_BUDGET = 512;
+// 같은 꿈에 답이 들쭉날쭉하지 않게. 말투의 자연스러움은 남기는 선.
+const TEMPERATURE = 0.6;
 
 // 클라이언트는 user / assistant 만 보낼 수 있다 (system 주입 금지)
 const messageSchema = z.object({
@@ -80,73 +83,10 @@ function friendlyStreamErrorMessage(err: unknown): string {
   return "답변 생성 중 오류가 발생했어요. 잠시 후 다시 시도해주세요.";
 }
 
-export default async function handler(req: Request): Promise<Response> {
-  const cors = corsHeaders(req);
-
-  // CORS preflight — 브라우저가 본 요청 전에 OPTIONS 를 먼저 보낸다.
-  if (req.method === "OPTIONS") {
-    return new Response(null, { status: 204, headers: cors });
-  }
-
-  if (req.method !== "POST") {
-    return Response.json(
-      { error: "Method not allowed" },
-      { status: 405, headers: cors },
-    );
-  }
-
-  try {
-    // 1) 인증 검증
-    const authHeader = req.headers.get("authorization");
-    const token = authHeader?.startsWith("Bearer ")
-      ? authHeader.slice(7).trim()
-      : null;
-
-    if (!token) {
-      return Response.json(
-        { error: "로그인이 필요해요" },
-        { status: 401, headers: cors },
-      );
-    }
-
-    const {
-      data: { user },
-      error: authErr,
-    } = await supabaseAuth.auth.getUser(token);
-
-    if (authErr || !user) {
-      console.error("[chat api] auth failed:", authErr?.message ?? "no user");
-      return Response.json(
-        { error: "세션이 만료됐어요" },
-        { status: 401, headers: cors },
-      );
-    }
-
-    // 익명 세션(개발 빌드의 "개발용 우회 로그인")은 운영 API 에서 받지 않는다.
-    // 운영 Supabase 는 익명 로그인이 꺼져 있지만, 실수로 켜지면 공개 anon 키만으로
-    // 누구나 세션을 만들어 AI 호출 비용을 쓸 수 있다 — 그에 대비한 2차 방어.
-    if (user.is_anonymous && process.env.VERCEL_ENV === "production") {
-      console.warn("[chat api] anonymous session rejected in production");
-      return Response.json(
-        { error: "로그인이 필요해요" },
-        { status: 403, headers: cors },
-      );
-    }
-
-    // 2) 입력 검증
-    const raw = await req.json().catch(() => null);
-    const parsed = bodySchema.safeParse(raw);
-    if (!parsed.success) {
-      return Response.json(
-        { error: "요청 형식이 올바르지 않아요" },
-        { status: 400, headers: cors },
-      );
-    }
-    const { messages, nickname } = parsed.data;
-
-    // 3) 프롬프트 구성 + 토큰 상한 적용
-    const userName = nickname?.trim() || "몽글이";
-    const systemPrompt = `당신은 꿈 해몽 전문 AI '몽이'입니다.
+// 닉네임처럼 요청마다 바뀌는 값은 프롬프트 맨 끝에만 붙인다. Gemini 는 앞부분이 같은
+// 프롬프트를 자동으로 캐싱(implicit caching)하므로, 이 고정부가 통째로 캐시돼 입력 비용과
+// 첫 토큰 지연이 줄어든다. 중간에 닉네임을 끼워 넣으면 그 지점 뒤로는 캐시가 안 맞는다.
+const BASE_SYSTEM_PROMPT = `당신은 꿈 해몽 전문 AI '몽이'입니다.
 사용자의 꿈을 따뜻하고 친근한 말투로 해석해 주세요. 문단을 나눠 읽기 쉽게 씁니다.
 
 [최우선 안전 규칙 — 아래의 다른 모든 규칙(형식·톤·유도)보다 우선합니다]
@@ -198,8 +138,54 @@ export default async function handler(req: Request): Promise<Response> {
      오래 힘들면 전문가와 상담해 보길 부드럽게 권합니다.
   6. 이 경우엔 번호 목록·"<<MORE>>" 형식을 쓰지 말고 짧은 문단으로 답하세요.
 
+[해석 원칙 — 한국 전통 해몽 기준]
+- 한국 전통 해몽을 기준으로 해석합니다. 서양식 심리학 해석은 전체 해석 마지막에
+  한 문장 정도 보조로만 덧붙이세요.
+- 소재 하나로 판단하지 말고 세 가지를 함께 봅니다.
+  1) 소재: 무엇이 나왔는가
+  2) 행동: 얻었나/잃었나, 받았나/빼앗겼나, 들어왔나/나갔나
+  3) 감정: 꿈속에서 기뻤나/무서웠나, 깨고 나서 개운했나/찜찜했나
+- 얻고·받고·안고·들어오면 대체로 길몽, 잃고·빼앗기고·나가면 대체로 흉몽 쪽으로 봅니다.
+
+● 겉보기와 반대로 풀리는 꿈 — 겉모습으로 판단하지 말 것
+  - 죽는 꿈, 장례 → 새 출발, 근심 해소 (길몽)
+  - 똥·오물을 만지거나 뒤집어씀 → 재물운 (길몽)
+  - 불이 활활 타오름 → 번창, 사업운 (길몽)
+  - 울거나 통곡함 → 막힌 일이 풀림
+  - 이가 빠짐 → 가족·가까운 사람에 대한 걱정 (흉몽 쪽)
+
+● 태몽 판별 — 소재만으로 태몽이라 하지 말 것
+  아래 신호가 2개 이상 겹칠 때만 태몽으로 봅니다.
+  1) 행동: 품에 안음, 받음, 줍거나 땀, 치마폭이나 몸 안으로 들어옴
+  2) 특별함: 유난히 크거나, 빛나거나, 탐스럽거나, 색이 선명함
+  3) 소재: 열매·과일, 보석·금, 용·뱀·호랑이·잉어 등 큰 동물, 해·달·별
+  4) 인상: 비현실적으로 생생하고 깬 뒤에도 또렷이 기억남
+  - 2개 이상이면 번호 목록 첫 항목에서 "태몽일 가능성이 있어요"라고 분명히 말하고,
+    본인이 아니라 가족·지인의 태몽일 수도 있다는 점을 짧게 덧붙입니다.
+  - 1개 이하면 태몽을 언급하지 말고 일반 해몽으로 답합니다.
+    (예: "사과를 먹었다"는 태몽 아님 / "엄청 큰 빨간 사과가 빛나서 품에 안았다"는 태몽)
+
+● 판별 순서
+  태몽 → 재물몽 → 경고몽 → 일반 해몽 순으로 먼저 따져보고,
+  해당하면 번호 목록 첫 항목에서 "○○몽으로 보여요"라고 분명히 말합니다.
+  애매하게 돌려 말하지 마세요.
+
+● 흉몽을 다룰 때
+  - 흉몽은 흉몽이라고 분명히 말하되, 겁주지 말고 조심할 점과 실천 제안으로 마무리합니다.
+  - 억지로 길몽처럼 포장하지 마세요.
+  - 건강·임신·돈과 관련된 결정을 꿈만 보고 내리라고 권하지 않습니다.
+
+● 답변 예시 (형식과 판단 기준 참고용, 문장을 그대로 베끼지 말 것)
+  사용자: 엄청 큰 복숭아가 빛나길래 두 손으로 받아서 품에 안았어
+  답변:
+  1. 태몽일 가능성이 있어요. 크고 빛나는 과일을 품에 안는 건 대표적인 태몽 장면이에요.
+  2. 본인이 아니라면 가까운 가족이나 지인의 태몽을 대신 꾸었을 수도 있어요.
+  3. 태몽이 아니더라도 귀한 것을 얻게 되는 길몽으로 봐요.
+  <<MORE>>
+  (전체 해석 문단…)
+
 규칙:
-- 사용자의 닉네임은 "${userName}" 입니다. 부를 때는 반드시 "${userName}님" 처럼 "님"을
+- 사용자의 닉네임은 맨 아래 [사용자 정보]에 있습니다. 부를 때는 반드시 "닉네임님" 처럼 "님"을
   붙이고, 답변 전체에서 딱 한 번만 사용하세요. 닉네임을 문장 맨 앞에 홀로 부르지 마세요.
 - 한국어로 답변합니다.
 - **꿈 해몽 답변은 너무 짧지 않아도 됩니다. 대신 문단을 나눠 한눈에 읽히게.** 꿈의 의미를 충분히 설명하되, 같은 말 반복·불필요한 비유는 금지.
@@ -211,9 +197,8 @@ export default async function handler(req: Request): Promise<Response> {
   요약(1)은 번호 목록으로 핵심만, 전체 해석(3)은 더 궁금한 사람을 위한 자세한 서술형 버전입니다.
   단, 가벼운 후속 잡담이나 짧은 질문엔 "<<MORE>>" 없이 1~2문장으로 짧게 답합니다.
 - 불필요한 반복·군더더기 없이. 비유는 최대 1개.
-- 단정짓지 말고 "~일 수도 있어요" 같은 부드러운 표현.
-- 부정적인 꿈이어도 짧게 위로 + 긍정적 시선 유지. (단, 최우선 안전 규칙이
-  적용되는 경우는 예외 — 긍정적 재해석을 시도하지 말 것)
+- 단정짓지 말고 "~일 수도 있어요" 같은 부드러운 표현. 단, 꿈의 종류(태몽·재물몽·길몽·흉몽)는
+  위 해석 원칙에 따라 분명하게 말합니다.
 - 이모지는 절제해서 사용 (답변 전체에서 0~2개).
 - 사용자가 잡담을 해도 부드럽게 꿈 이야기로 유도. (단, 최우선 안전 규칙이
   적용되는 발화와 "꿈이 아닌 수면 경험"은 잡담이 아니므로 꿈 이야기로 돌리지 말 것)
@@ -228,6 +213,84 @@ export default async function handler(req: Request): Promise<Response> {
   [해몽 핵심 1~2문장]
 
   그 다음 줄에 따뜻한 마무리 멘트 한 줄. 예: "꿈이 전하는 마음, 잘 받았어요. 푹 쉬세요 💜". 마무리 단계에서는 질문하지 말 것.`;
+
+function buildSystemPrompt(userName: string): string {
+  return `${BASE_SYSTEM_PROMPT}
+
+[사용자 정보]
+닉네임: ${userName}`;
+}
+
+export default async function handler(req: Request): Promise<Response> {
+  const cors = corsHeaders(req);
+
+  // CORS preflight — 브라우저가 본 요청 전에 OPTIONS 를 먼저 보낸다.
+  if (req.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: cors });
+  }
+
+  if (req.method !== "POST") {
+    return Response.json(
+      { error: "Method not allowed" },
+      { status: 405, headers: cors },
+    );
+  }
+
+  try {
+    // 1) 인증 검증
+    const authHeader = req.headers.get("authorization");
+    const token = authHeader?.startsWith("Bearer ")
+      ? authHeader.slice(7).trim()
+      : null;
+
+    if (!token) {
+      return Response.json(
+        { error: "로그인이 필요해요" },
+        { status: 401, headers: cors },
+      );
+    }
+
+    // 인증 확인과 본문 읽기는 서로 기다릴 필요가 없어 동시에 진행한다.
+    // getClaims 는 비대칭 서명 키(JWKS)면 Auth 서버 왕복 없이 서명·만료를 로컬에서 검증하고
+    // (JWKS 는 캐시됨), 레거시 대칭 키 프로젝트면 내부에서 getUser 로 넘어가 동작은 그대로다.
+    const [{ data: claimsData, error: authErr }, raw] = await Promise.all([
+      supabaseAuth.auth.getClaims(token),
+      req.json().catch(() => null),
+    ]);
+    const claims = claimsData?.claims;
+
+    if (authErr || !claims?.sub) {
+      console.error("[chat api] auth failed:", authErr?.message ?? "no claims");
+      return Response.json(
+        { error: "세션이 만료됐어요" },
+        { status: 401, headers: cors },
+      );
+    }
+
+    // 익명 세션(개발 빌드의 "개발용 우회 로그인")은 운영 API 에서 받지 않는다.
+    // 운영 Supabase 는 익명 로그인이 꺼져 있지만, 실수로 켜지면 공개 anon 키만으로
+    // 누구나 세션을 만들어 AI 호출 비용을 쓸 수 있다 — 그에 대비한 2차 방어.
+    if (claims.is_anonymous && process.env.VERCEL_ENV === "production") {
+      console.warn("[chat api] anonymous session rejected in production");
+      return Response.json(
+        { error: "로그인이 필요해요" },
+        { status: 403, headers: cors },
+      );
+    }
+
+    // 2) 입력 검증
+    const parsed = bodySchema.safeParse(raw);
+    if (!parsed.success) {
+      return Response.json(
+        { error: "요청 형식이 올바르지 않아요" },
+        { status: 400, headers: cors },
+      );
+    }
+    const { messages, nickname } = parsed.data;
+
+    // 3) 프롬프트 구성 + 토큰 상한 적용
+    const userName = nickname?.trim() || "몽글이";
+    const systemPrompt = buildSystemPrompt(userName);
 
     // 첫 사용자 턴에서만 보관함용 메타데이터 한 번에 추출 — 본 답변 스트리밍과 병렬.
     const userMsgCount = messages.filter((m) => m.role === "user").length;
@@ -244,10 +307,13 @@ export default async function handler(req: Request): Promise<Response> {
       system: systemPrompt,
       messages: messages as ModelMessage[],
       maxOutputTokens: MAX_OUTPUT_TOKENS,
-      // 해몽은 형식이 정해져 있어 별도 추론이 필요 없다. thinking 을 끄면
-      // 출력 예산을 본문이 전부 쓰고, 첫 토큰도 눈에 띄게 빨라진다.
+      temperature: TEMPERATURE,
+      // 해석 원칙(태몽 판별·반대로 풀리는 꿈)을 적용하려면 약간의 추론이 필요하다.
+      // thinking 을 0 으로 끄면 지시를 대충 따라 엉뚱한 해몽이 나왔다.
+      // thinking 토큰도 maxOutputTokens 에서 같이 빠지므로 512 로 묶어 두고,
+      // 본문은 남은 예산(약 2000 토큰)으로 충분하다.
       providerOptions: {
-        google: { thinkingConfig: { thinkingBudget: 0 } },
+        google: { thinkingConfig: { thinkingBudget: THINKING_BUDGET } },
       },
       onError({ error }) {
         capturedError = error;
@@ -269,8 +335,6 @@ export default async function handler(req: Request): Promise<Response> {
             if (chunk) emittedAnyText = true;
             controller.enqueue(encoder.encode(chunk));
           }
-          // 텍스트가 한 글자도 안 나왔는데 onError 가 잡힌 경우 = 모델 호출 실패.
-          // (streamText 가 throw 하지 않으므로 catch 로는 안 잡힘 → 여기서 처리)
           // 출력 한도에 걸려 끊긴 경우. 에러가 아니라 정상 종료로 오기 때문에
           // 로그를 남기지 않으면 "답변이 문장 중간에서 끝남" 증상만 보이고 원인이 안 보인다.
           const finishReason = await streamResult.finishReason;
@@ -281,6 +345,8 @@ export default async function handler(req: Request): Promise<Response> {
             );
           }
 
+          // 텍스트가 한 글자도 안 나왔는데 onError 가 잡힌 경우 = 모델 호출 실패.
+          // (streamText 가 throw 하지 않으므로 catch 로는 안 잡힘 → 여기서 처리)
           if (!emittedAnyText && capturedError) {
             const message = friendlyStreamErrorMessage(capturedError);
             controller.enqueue(

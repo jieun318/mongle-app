@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useBottomSpace } from "@/lib/layout";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Svg, { Path } from "react-native-svg";
 import Constants from "expo-constants";
 import { getMyProfile } from "@/features/auth/profile";
@@ -56,110 +56,120 @@ interface ChatMessage {
 // 문자열 포함으로는 대부분 놓친다. 문장 경계는 넘지 않게 10자로 제한.
 const GAWI_RE = /가위[^.!?\n]{0,10}눌/;
 
+// 스트리밍 중 화면 갱신 간격. 이보다 촘촘하면 체감 차이는 없고 리렌더만 늘어난다.
+const STREAM_RENDER_MS = 60;
 // 자주 등장하는 꿈 키워드에 대한 contextual 공감 멘트. 위에서부터 먼저 매칭되는 항목 사용.
+// 키워드는 한 글자로 두지 않는다 — "금"은 "지금", "피"는 "피곤", "용 "은 "꿈 내용 ",
+// "불 "은 "이불 "에 걸린다. 문구는 감정만 받아준다(길몽/흉몽 판단은 AI 해몽과 어긋날 수 있음).
 const CONTEXTUAL_EMPATHY: ReadonlyArray<{
   keywords: readonly string[];
-  // 사이에 다른 말이 끼는 표현을 위한 선택적 정규식 (keywords 와 OR)
   pattern?: RegExp;
   line: string;
 }> = [
-  // 가위눌림은 꿈이 아니라 수면마비다. 목록 맨 위에 둬서 다른 키워드보다 먼저
-  // 잡히게 하고, 문구에서도 "꿈"이라 부르지 않는다.
   {
     keywords: ["가위눌", "수면마비", "몸이 안 움직", "몸을 못 움직"],
-    // "가위에 자주 눌려", "어젯밤 가위 심하게 눌렸어" 처럼 사이에 말이 끼는 게
-    // 오히려 흔하다. 단순 문자열 매칭으로는 다 놓친다.
     pattern: GAWI_RE,
     line: "가위에 눌리셨군요, 몸이 안 움직여서 많이 무서우셨겠어요 😰",
   },
+  { keywords: ["임신", "태몽"], line: "태몽 같은 꿈, 따뜻한 기운이 느껴져요 🤰" },
   { keywords: ["좀비"], line: "좀비 꿈, 정말 무서웠겠어요 🧟" },
-  { keywords: ["쫓기", "도망"], line: "쫓기는 꿈, 마음이 많이 졸였겠어요 😨" },
-  { keywords: ["물에 빠지", "홍수", "바다"], line: "물에 빠지는 꿈, 정말 숨막혔겠어요 🌊" },
+  { keywords: ["쫓기", "쫓겨", "도망"], line: "쫓기는 꿈, 마음이 많이 졸였겠어요 😨" },
+  { keywords: ["물에 빠지", "물에 빠졌", "홍수"], line: "물에 빠지는 꿈, 정말 숨막혔겠어요 🌊" },
+  { keywords: ["바다"], line: "바다가 나오는 꿈, 탁 트인 장면이었겠어요 🌊" },
   { keywords: ["수영"], line: "수영하는 꿈, 시원한 느낌이었겠어요 🏊" },
+  { keywords: ["자전거"], line: "자전거 타는 꿈이라니, 시원하게 달리는 기분이었겠어요 🚲" },
+  { keywords: ["떨어지", "떨어졌", "추락", "낙하"], line: "떨어지는 꿈, 가슴이 철렁했겠어요 🪂" },
   {
-    keywords: ["자전거"],
-    line: "자전거 타는 꿈이라니, 시원하게 달리는 기분이었겠어요 🚲",
-  },
-  {
-    keywords: ["달리", "뛰는", "뛰어", "계주", "마라톤"],
+    keywords: ["달리기", "달리는", "달렸", "뛰는", "뛰어", "계주", "마라톤"],
     line: "달리는 꿈이라니, 활기찬 장면이었겠어요 🏃",
   },
-  { keywords: ["떨어지", "추락", "낙하"], line: "떨어지는 꿈, 가슴이 철렁했겠어요 🪂" },
-  {
-    keywords: ["날아", "하늘", "비행기"],
-    line: "하늘을 나는 꿈이라니, 자유로운 기분이었겠어요 ✨",
-  },
-  { keywords: ["뱀"], line: "뱀 꿈, 강렬한 장면이었겠어요 🐍" },
-  { keywords: ["용 ", "용꿈", "용을"], line: "용 꿈이라니, 정말 신비로웠겠어요 🐉" },
+  { keywords: ["날아", "하늘을", "하늘에", "비행기"], line: "하늘을 나는 꿈이라니, 자유로운 기분이었겠어요 ✨" },
+  { keywords: ["뱀이", "뱀을", "뱀꿈", "뱀 꿈", "구렁이"], line: "뱀 꿈, 강렬한 장면이었겠어요 🐍" },
+  { keywords: ["용꿈", "용 꿈", "용이", "용을", "용 한 마리"], line: "용 꿈이라니, 정말 신비로웠겠어요 🐉" },
   { keywords: ["호랑이"], line: "호랑이 꿈, 위엄 있는 장면이었겠어요 🐯" },
-  { keywords: ["강아지", "개꿈", "개를"], line: "강아지 꿈, 따뜻한 느낌이었겠어요 🐶" },
+  { keywords: ["강아지", "개가", "개를", "개한테"], line: "강아지 꿈, 따뜻한 느낌이었겠어요 🐶" },
   { keywords: ["고양이"], line: "고양이 꿈, 인상 깊은 장면이었겠어요 🐱" },
-  {
-    keywords: ["시험", "수능", "공부", "학교", "면접"],
-    line: "시험 꿈, 마음이 조마조마했겠어요 📝",
-  },
+  { keywords: ["시험", "수능", "면접"], line: "시험 꿈, 마음이 조마조마했겠어요 📝" },
+  { keywords: ["학교", "교실", "학창"], line: "학교가 나오는 꿈, 옛 기억이 떠올랐겠어요 🏫" },
   { keywords: ["결혼"], line: "결혼 꿈이라니, 설레는 마음이었겠어요 💍" },
-  { keywords: ["이별", "헤어"], line: "이별 꿈, 마음이 시렸겠어요 💔" },
-  { keywords: ["임신", "태몽"], line: "태몽 같은 꿈, 따뜻한 기운이 느껴져요 🤰" },
+  { keywords: ["이별", "헤어졌", "헤어지"], line: "이별 꿈, 마음이 시렸겠어요 💔" },
   { keywords: ["아기", "신생아"], line: "아기 꿈이라니, 마음이 포근해졌겠어요 👶" },
-  { keywords: ["죽", "사망", "장례"], line: "죽음이 나오는 꿈, 마음이 무거웠겠어요" },
-  { keywords: ["피"], line: "피 나오는 꿈, 많이 놀라셨겠어요" },
-  { keywords: ["불 ", "불꿈", "화재"], line: "불이 나오는 꿈, 강렬했겠어요 🔥" },
-  { keywords: ["돈", "금", "복권", "로또"], line: "돈이 나오는 꿈, 마음이 두근했겠어요 💰" },
   {
-    keywords: ["똥", "대변"],
-    line: "똥 꿈이라니, 살짝 당황하셨죠? 사실 길몽으로 알려져있어요 💩",
+    keywords: ["죽는", "죽었", "죽이", "죽음", "사망", "장례", "돌아가신", "돌아가셨"],
+    line: "꿈에서 마음이 많이 무거우셨겠어요",
   },
-  { keywords: ["싸움", "다투", "싸우"], line: "다투는 꿈, 마음이 답답했겠어요 🥊" },
-  { keywords: ["이사", "집을 옮"], line: "이사하는 꿈, 마음이 분주했겠어요 🏠" },
+  { keywords: ["피가", "피를", "피투성", "피범벅"], line: "피 나오는 꿈, 많이 놀라셨겠어요" },
+  { keywords: ["불이", "불길", "불꿈", "불 꿈", "화재", "불타"], line: "불이 나오는 꿈, 강렬했겠어요 🔥" },
+  {
+    keywords: ["돈을", "돈이", "돈다발", "황금", "금덩이", "금반지", "금괴", "복권", "로또"],
+    line: "돈이 나오는 꿈, 마음이 두근했겠어요 💰",
+  },
+  { keywords: ["똥", "대변"], line: "똥 꿈이라니, 살짝 당황하셨죠? 사실 길몽으로 알려져있어요 💩" },
+  { keywords: ["싸움", "다투", "싸우", "싸웠"], line: "다투는 꿈, 마음이 답답했겠어요 🥊" },
+  { keywords: ["이사를", "이사하", "이삿짐", "집을 옮"], line: "이사하는 꿈, 마음이 분주했겠어요 🏠" },
   { keywords: ["여행"], line: "여행하는 꿈, 마음이 설레었겠어요 ✈️" },
   { keywords: ["요리", "음식"], line: "음식이 나오는 꿈, 마음이 따뜻해졌겠어요 🍽️" },
 ];
 
-// 키워드에 안 걸린 꿈도 분위기(공포/슬픔/긍정/중립)를 어림해서
-// 마무리 표현을 여러 개 중 하나로 골라 매번 똑같이 "인상 깊으셨겠어요" 가
-// 반복되지 않도록 한다. (instant 표시용이라 AI 호출 없이 클라이언트에서 처리)
+// 키워드에 안 걸린 꿈은 분위기를 어림해 마무리 표현을 고른다.
+// 한 글자 큐 금지 — "그리"는 "그리고", "사고"는 "사고 싶어"에 걸린다.
 const SENTIMENT_CUES: Record<"scary" | "sad" | "good", readonly string[]> = {
   scary: [
-    "무서", "공포", "쫓", "도망", "괴물", "귀신", "악몽", "피",
-    "죽", "사고", "추락", "떨어", "불안", "소름", "오싹", "납치", "위험",
-    "수면마비",
+    "무서", "공포", "쫓", "도망", "괴물", "귀신", "악몽", "피가", "피를", "피투성",
+    "죽는", "죽었", "죽이", "죽음", "교통사고", "사고가", "사고 나", "추락", "떨어",
+    "불안", "소름", "오싹", "납치", "위험", "수면마비",
   ],
-  sad: ["슬프", "울었", "눈물", "이별", "헤어", "그리", "외로", "보고싶", "잃", "장례", "후회"],
+  sad: [
+    "슬프", "슬펐", "울었", "눈물", "이별", "헤어졌", "그리워", "그립", "외로",
+    "보고싶", "보고 싶", "잃", "장례", "후회",
+  ],
   good: [
-    "행복", "기쁘", "웃", "신나", "즐거", "설레", "사랑", "예쁘",
-    "아름", "선물", "성공", "합격", "용", "빛나", "포근", "따뜻",
+    "행복", "기쁘", "기뻤", "웃", "신나", "즐거", "설레", "사랑", "예쁘",
+    "아름", "선물", "성공", "합격", "용꿈", "용이", "용을", "빛나", "포근", "따뜻",
   ],
 };
 
-// 분위기별 마무리 표현 풀 — 토픽 뒤에 붙여 "○○ 꿈, △△△" 형태로 완성.
+// "○○ 꿈, △△△" 형태로 붙는다. 문구 안에 "꿈"을 또 쓰지 않는다.
 const FALLBACK_CLOSERS: Record<"scary" | "sad" | "good" | "neutral", readonly string[]> = {
   scary: [
     "마음이 많이 졸였겠어요 😨",
     "가슴이 철렁했겠어요 😰",
     "꽤 오싹한 장면이었겠어요 😨",
     "놀란 마음이 쉽게 가시질 않았겠어요 😣",
+    "깨고 나서도 심장이 두근거렸겠어요 😰",
+    "잠에서 깨서 한참 진정이 안 됐겠어요 😣",
+    "생각만 해도 등골이 서늘하네요 😨",
+    "많이 긴장되는 장면이었겠어요 😟",
   ],
   sad: [
     "마음이 먹먹했겠어요 🥺",
     "마음이 시렸겠어요 💧",
     "여운이 길게 남았겠어요 🥺",
+    "깨고 나서도 마음이 아렸겠어요 💧",
+    "괜히 마음 한구석이 허전했겠어요 🥺",
+    "아침 내내 생각났겠어요 💧",
   ],
   good: [
     "기분 좋은 장면이었겠어요 ✨",
     "좋은 기운이 느껴져요 💫",
-    "괜히 설레는 꿈이네요 🌟",
-    "왠지 마음이 들뜨는 꿈이에요 ✨",
+    "괜히 설레셨겠어요 🌟",
+    "왠지 마음이 들뜨셨겠어요 ✨",
+    "깨고 나서 기분이 좋으셨겠어요 😊",
+    "포근한 여운이 남았겠어요 🌸",
+    "듣기만 해도 기분이 좋아지네요 💫",
+    "하루를 기분 좋게 시작하셨겠어요 ☀️",
   ],
   neutral: [
     "인상 깊으셨겠어요 🌙",
     "기억에 오래 남을 장면이네요 💭",
-    "어떤 의미일지 궁금해지는 꿈이에요 🌙",
-    "마음 한켠에 남는 꿈이네요 💫",
-    "묘하게 여운이 남는 꿈이에요 🌙",
+    "어떤 의미일지 궁금해지네요 🌙",
+    "마음 한켠에 남으셨겠어요 💫",
+    "묘하게 여운이 남네요 🌙",
+    "생생하게 기억나셨나 봐요 💭",
+    "깨고 나서도 계속 생각나셨겠어요 🌙",
+    "어떤 장면이었는지 더 궁금해져요 💭",
   ],
 };
-
 // 사용자가 "꿈"이라는 말을 쓰지 않았을 때 쓰는 문구. 무엇을 겪었는지 모르는
 // 상태에서 "그런 꿈을 꾸셨군요" 라고 단정하면(가위눌림·불면·잠꼬대 등) 어긋난다.
 // 여기선 겪은 일을 꿈으로 규정하지 않고 마음만 받아준다.
@@ -486,7 +496,9 @@ export default function ChatBotModal({
     requestAnimationFrame(() => {
       scrollRef.current?.scrollToEnd({ animated: true });
     });
-  }, [messages, loading, visible]);
+    // 스트리밍 중 글이 늘어나는 건 ScrollView 의 onContentSizeChange 가 따라간다.
+    // 여기선 말풍선이 새로 생길 때만 — content 까지 deps 에 두면 토큰마다 스크롤이 두 번 돈다.
+  }, [messages.length, loading, visible]);
 
   // 아직 보관함에 저장하지 않은 구간(savedCountRef 뒤)을 저장한다.
   // 닫기·새 대화는 기다리지 않고(fire-and-forget) 결과를 onSaved 토스트로 알리고,
@@ -740,14 +752,30 @@ export default function ChatBotModal({
           }
         };
 
+        // 토큰마다 setMessages 를 부르면 긴 해몽에서 수백 번 리렌더돼 스크롤이 버벅인다.
+        // 첫 조각은 바로 그리고(체감 속도), 이후는 STREAM_RENDER_MS 마다 한 번씩 몰아서 그린다.
+        let renderTimer: ReturnType<typeof setTimeout> | null = null;
+        const cancelRender = () => {
+          if (renderTimer) clearTimeout(renderTimer);
+          renderTimer = null;
+        };
+
         xhr.onprogress = () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
+          if (xhr.status < 200 || xhr.status >= 300) return;
+          if (firstChunk) {
             applyText(xhr.responseText);
+            return;
           }
+          if (renderTimer) return;
+          renderTimer = setTimeout(() => {
+            renderTimer = null;
+            applyText(xhr.responseText);
+          }, STREAM_RENDER_MS);
         };
 
         xhr.onreadystatechange = () => {
           if (xhr.readyState !== 4) return;
+          cancelRender();
 
           if (xhr.status < 200 || xhr.status >= 300) {
             // 서버 에러 응답 — JSON 이면 detail 까지 보여줌
@@ -785,8 +813,14 @@ export default function ChatBotModal({
           resolve();
         };
 
-        xhr.onerror = () => reject(new Error("네트워크 오류"));
-        xhr.ontimeout = () => reject(new Error("응답 시간 초과"));
+        xhr.onerror = () => {
+          cancelRender();
+          reject(new Error("네트워크 오류"));
+        };
+        xhr.ontimeout = () => {
+          cancelRender();
+          reject(new Error("응답 시간 초과"));
+        };
 
         // 화면엔 24시간치 대화가 남아있지만 서버로는 "지금 이야기 중인 꿈"만
         // 보낸다. 이미 보관함에 저장된 앞 구간은 다른 꿈이라 해몽에 도움이 안
@@ -927,7 +961,7 @@ export default function ChatBotModal({
                     msg={msg}
                     onReport={
                       msg.role === "assistant" && !msg.isStub
-                        ? () => setReportTarget(msg)
+                        ? setReportTarget
                         : undefined
                     }
                   />
@@ -1033,12 +1067,14 @@ export default function ChatBotModal({
 }
 
 // 메시지 버블 — 문단 단위로 분리해서 렌더. onReport 가 있으면(AI 응답) 신고 버튼 노출.
-function MessageBubble({
+// memo: 스트리밍 중엔 마지막 버블만 바뀐다. onReport 를 안정된 setter 로 받아
+// 지난 대화 버블들은 다시 그리지 않는다.
+const MessageBubble = memo(function MessageBubble({
   msg,
   onReport,
 }: {
   msg: ChatMessage;
-  onReport?: () => void;
+  onReport?: (msg: ChatMessage) => void;
 }) {
   const isUser = msg.role === "user";
   const [expanded, setExpanded] = useState(false);
@@ -1092,7 +1128,7 @@ function MessageBubble({
       </View>
       {onReport ? (
         <TouchableOpacity
-          onPress={onReport}
+          onPress={() => onReport(msg)}
           hitSlop={8}
           style={styles.reportBtn}
         >
@@ -1101,7 +1137,7 @@ function MessageBubble({
       ) : null}
     </View>
   );
-}
+});
 
 const PURPLE_BUBBLE = "#9B8BB4";
 const PURPLE_BRAND = "#7868C8";

@@ -1,4 +1,5 @@
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { memo } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import type { DreamRecord } from "@/features/dream/dreams";
 import {
@@ -9,14 +10,16 @@ import DreamEmoji from "@/components/dream/DreamEmoji";
 import IconLabel from "@/components/ui/IconLabel";
 import { BookOpenIcon, CloverIcon, PencilIcon, SparklesIcon, TrashIcon, WarningIcon } from "@/components/ui/icons";
 
+// 콜백은 보관함이 모든 카드에 같은 함수를 넘기고, 카드가 자기 dream 을 실어 부른다.
+// 카드마다 인라인 화살표를 만들면 memo 가 무력화된다.
 interface Props {
   dream: DreamRecord;
-  onPress: () => void;
+  onPress: (dream: DreamRecord) => void;
   menuOpen: boolean;
-  onMenuToggle: () => void;
+  onMenuToggle: (id: string) => void;
   onMenuClose: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
+  onEdit: (dream: DreamRecord) => void;
+  onDelete: (dream: DreamRecord) => void;
 }
 
 function formatDate(iso: string): string {
@@ -25,7 +28,8 @@ function formatDate(iso: string): string {
   return `${y}.${m}.${d}`;
 }
 
-export default function RecordedDreamCard({
+// memo: 검색어 입력·메뉴 열기 때 바뀌지 않은 카드는 다시 그리지 않는다.
+function RecordedDreamCard({
   dream,
   onPress,
   menuOpen,
@@ -54,7 +58,7 @@ export default function RecordedDreamCard({
       <TouchableOpacity
         style={styles.card}
         activeOpacity={0.85}
-        onPress={menuOpen ? onMenuClose : onPress}
+        onPress={menuOpen ? onMenuClose : () => onPress(dream)}
       >
         <View style={styles.headerRow}>
           <View style={styles.headerBadges}>
@@ -86,7 +90,7 @@ export default function RecordedDreamCard({
           </View>
           <TouchableOpacity
             style={styles.kebabBtn}
-            onPress={onMenuToggle}
+            onPress={() => onMenuToggle(dream.id)}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
             <Text style={styles.kebabText}>⋮</Text>
@@ -155,7 +159,7 @@ export default function RecordedDreamCard({
           <TouchableOpacity
             style={styles.menuItem}
             activeOpacity={0.7}
-            onPress={onEdit}
+            onPress={() => onEdit(dream)}
           >
             <IconLabel icon={PencilIcon} textStyle={styles.menuItemText}>수정</IconLabel>
           </TouchableOpacity>
@@ -163,7 +167,7 @@ export default function RecordedDreamCard({
           <TouchableOpacity
             style={styles.menuItem}
             activeOpacity={0.7}
-            onPress={onDelete}
+            onPress={() => onDelete(dream)}
           >
             <IconLabel icon={TrashIcon} textStyle={[styles.menuItemText, styles.menuItemDanger]}>
               삭제
@@ -174,6 +178,8 @@ export default function RecordedDreamCard({
     </View>
   );
 }
+
+export default memo(RecordedDreamCard);
 
 const styles = StyleSheet.create({
   cardWrap: {

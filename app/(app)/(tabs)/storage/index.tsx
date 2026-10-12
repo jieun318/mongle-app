@@ -3,15 +3,28 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  ScrollView,
+  FlatList,
   StyleSheet,
   ActivityIndicator,
   RefreshControl,
   Image,
+  type ListRenderItem,
+  type StyleProp,
+  type ViewProps,
+  type ViewStyle,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useMemo, useRef, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import BottomNav from "@/components/ui/BottomNav";
 import { SearchIcon } from "@/components/ui/icons";
 import { useBottomSpace } from "@/lib/layout";
@@ -45,6 +58,41 @@ const SOURCE_BY_TAB: Record<FilterTab, DreamSource | null> = {
   ai: "ai",
 };
 
+// 검색어 입력이 이만큼 멈춘 뒤에 목록을 거른다. 글자마다 전체 꿈의 제목·본문을
+// 훑고 카드를 다시 그리지 않도록.
+const SEARCH_DEBOUNCE_MS = 150;
+
+// 카드의 ⋮ 메뉴는 카드 아래로 삐져나오는 절대 위치 팝업이다. FlatList 는 카드마다
+// 셀(View)로 감싸고, zIndex 는 형제끼리만 비교되므로 카드 안쪽에서 올린 zIndex 로는
+// 다음 셀 위로 못 올라간다. 메뉴가 열린 카드의 셀 자체를 올린다.
+const OpenMenuIdContext = createContext<string | null>(null);
+
+function MenuAwareCell({
+  item,
+  style,
+  onLayout,
+  children,
+}: {
+  item: DreamRecord;
+  style: StyleProp<ViewStyle> | undefined;
+  // onLayout 은 FlatList 가 행 높이를 재는 데 쓰므로 반드시 넘긴다.
+  // (onFocusCapture 는 키보드·TV 포커스 이동용이라 터치 앱에선 받지 않는다.)
+  onLayout?: ViewProps["onLayout"];
+  children: ReactNode;
+}) {
+  const openMenuId = useContext(OpenMenuIdContext);
+  return (
+    <View
+      style={[style, item.id === openMenuId && styles.cellElevated]}
+      onLayout={onLayout}
+    >
+      {children}
+    </View>
+  );
+}
+
+const keyOf = (d: DreamRecord) => d.id;
+
 export default function StorageScreen() {
   const space = useBottomSpace();
   const router = useRouter();
@@ -59,11 +107,20 @@ export default function StorageScreen() {
   const hasLoadedRef = useRef(seeded !== null); // 첫 로드 후엔 스피너 X, 백그라운드 갱신만
 
   const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQuery(query), SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(t);
+  }, [query]);
   const [tab, setTab] = useState<FilterTab>("all");
   const [selectedRecord, setSelectedRecord] = useState<DreamRecord | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   const closeMenu = useCallback(() => setOpenMenuId(null), []);
+  const toggleMenu = useCallback(
+    (id: string) => setOpenMenuId((cur) => (cur === id ? null : id)),
+    [],
+  );
 
   const openDream = useCallback((d: DreamRecord) => {
     setSelectedRecord(d);
@@ -138,7 +195,7 @@ export default function StorageScreen() {
   const stats = useMemo(() => computeStats(dreams), [dreams]);
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const q = debouncedQuery.trim().toLowerCase();
     const sourceFilter = SOURCE_BY_TAB[tab];
     return dreams.filter((d) => {
       if (sourceFilter && d.source !== sourceFilter) return false;
@@ -151,7 +208,25 @@ export default function StorageScreen() {
         )
       );
     });
-  }, [dreams, query, tab]);
+  }, [dreams, debouncedQuery, tab]);
+
+  const renderItem = useCallback<ListRenderItem<DreamRecord>>(
+    ({ item }) => {
+      const Card = item.source === "ai" ? AiDreamCard : RecordedDreamCard;
+      return (
+        <Card
+          dream={item}
+          onPress={openDream}
+          menuOpen={openMenuId === item.id}
+          onMenuToggle={toggleMenu}
+          onMenuClose={closeMenu}
+          onEdit={handleEditDream}
+          onDelete={handleDeleteDream}
+        />
+      );
+    },
+    [openDream, openMenuId, toggleMenu, closeMenu, handleEditDream, handleDeleteDream],
+  );
 
   return (
     <LinearGradient colors={["#F5F3FA", "#F5F3FA"]} style={{ flex: 1 }}>
@@ -225,56 +300,49 @@ export default function StorageScreen() {
           <Text style={styles.emptyText}>{error}</Text>
         </View>
       ) : (
-        <ScrollView
-          contentContainerStyle={[styles.list, { paddingBottom: space.withNav }]}
-          showsVerticalScrollIndicator={false}
-          onScrollBeginDrag={closeMenu}
-          keyboardShouldPersistTaps="handled"
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-        >
-          {filtered.length === 0 ? (
-            <View style={styles.empty}>
-              <View style={styles.emptyEmoji}><MoonIcon size={44} color="#B8A8E0" /></View>
-              <Text style={styles.emptyText}>
-                {dreams.length === 0
-                  ? "아직 기록된 꿈이 없어요\n꿈 조각을 골라 첫 꿈을 담아보세요"
-                  : query.trim()
-                    ? "일치하는 꿈이 없어요"
-                    : tab === "ai"
-                      ? "AI 챗봇으로 기록한 꿈이 없어요"
-                      : "이 분류에 담긴 꿈이 없어요"}
-              </Text>
-              {dreams.length === 0 ? (
-                <TouchableOpacity
-                  style={styles.ctaBtn}
-                  onPress={() => router.push("/(app)/search")}
-                >
-                  <Text style={styles.ctaBtnText}>꿈 조각 둘러보기</Text>
-                </TouchableOpacity>
-              ) : null}
-            </View>
-          ) : (
-            filtered.map((d) => {
-              const Card = d.source === "ai" ? AiDreamCard : RecordedDreamCard;
-              return (
-                <Card
-                  key={d.id}
-                  dream={d}
-                  onPress={() => openDream(d)}
-                  menuOpen={openMenuId === d.id}
-                  onMenuToggle={() =>
-                    setOpenMenuId((cur) => (cur === d.id ? null : d.id))
-                  }
-                  onMenuClose={closeMenu}
-                  onEdit={() => handleEditDream(d)}
-                  onDelete={() => handleDeleteDream(d)}
-                />
-              );
-            })
-          )}
-        </ScrollView>
+        // 꿈 수만큼 카드가 늘어난다. FlatList 로 화면 근처 카드만 그린다.
+        // 위쪽 검색창·탭·통계는 목록 밖에 고정돼 있어 스크롤 컨테이너가 중첩되지 않는다.
+        <OpenMenuIdContext.Provider value={openMenuId}>
+          <FlatList
+            data={filtered}
+            keyExtractor={keyOf}
+            renderItem={renderItem}
+            CellRendererComponent={MenuAwareCell}
+            ItemSeparatorComponent={ListGap}
+            contentContainerStyle={[styles.list, { paddingBottom: space.withNav }]}
+            showsVerticalScrollIndicator={false}
+            onScrollBeginDrag={closeMenu}
+            keyboardShouldPersistTaps="handled"
+            initialNumToRender={6}
+            maxToRenderPerBatch={6}
+            windowSize={7}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
+            ListEmptyComponent={
+              <View style={styles.empty}>
+                <View style={styles.emptyEmoji}><MoonIcon size={44} color="#B8A8E0" /></View>
+                <Text style={styles.emptyText}>
+                  {dreams.length === 0
+                    ? "아직 기록된 꿈이 없어요\n꿈 조각을 골라 첫 꿈을 담아보세요"
+                    : query.trim()
+                      ? "일치하는 꿈이 없어요"
+                      : tab === "ai"
+                        ? "AI 챗봇으로 기록한 꿈이 없어요"
+                        : "이 분류에 담긴 꿈이 없어요"}
+                </Text>
+                {dreams.length === 0 ? (
+                  <TouchableOpacity
+                    style={styles.ctaBtn}
+                    onPress={() => router.push("/(app)/search")}
+                  >
+                    <Text style={styles.ctaBtnText}>꿈 조각 둘러보기</Text>
+                  </TouchableOpacity>
+                ) : null}
+              </View>
+            }
+          />
+        </OpenMenuIdContext.Provider>
       )}
 
       <BottomNav active="storage" />
@@ -293,6 +361,8 @@ export default function StorageScreen() {
     </LinearGradient>
   );
 }
+
+const ListGap = () => <View style={styles.gap} />;
 
 const styles = StyleSheet.create({
   header: { paddingTop: 60, paddingHorizontal: 20, paddingBottom: 12, gap: 4 },
@@ -362,7 +432,9 @@ const styles = StyleSheet.create({
   statLabel: { fontSize: 11, color: "#9888CC" },
 
   // paddingBottom 은 useBottomSpace().withNav 로 렌더 시점에 덮어쓴다.
-  list: { paddingHorizontal: 20, paddingTop: 14, gap: 10 },
+  list: { paddingHorizontal: 20, paddingTop: 14 },
+  gap: { height: 10 },
+  cellElevated: { zIndex: 20, elevation: 6 },
 
   center: { flex: 1, alignItems: "center", justifyContent: "center", gap: 8 },
 

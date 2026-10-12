@@ -4,17 +4,20 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
+  FlatList,
   StyleSheet,
   Image,
+  type ListRenderItem,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import BottomNav from "@/components/ui/BottomNav";
 import { SearchIcon } from "@/components/ui/icons";
 import { useBottomSpace } from "@/lib/layout";
 import DreamListItem from "@/components/dream/DreamListItem";
 import {
+  type DreamItem,
   filterDreams,
   getCategoryById,
   getFilterTags,
@@ -45,6 +48,17 @@ export default function CategoryListScreen() {
         d.keywords.some((k) => k.toLowerCase().includes(q)),
     );
   }, [baseDreams, activeFilter, query]);
+
+  const openItem = useCallback(
+    (id: string) =>
+      router.push({ pathname: "/(app)/dream/result", params: { itemId: id } }),
+    [router],
+  );
+
+  const renderItem = useCallback<ListRenderItem<DreamItem>>(
+    ({ item }) => <DreamListItem dream={item} onPress={openItem} />,
+    [openItem],
+  );
 
   const submitSearch = () => {
     const q = query.trim();
@@ -101,42 +115,42 @@ export default function CategoryListScreen() {
         })}
       </ScrollView>
 
-      <ScrollView
+      {/* 길몽 카테고리는 200행 가까이 된다. ScrollView 로 전부 그리던 걸 FlatList 로
+          바꿔 화면 근처 행만 그린다. 위쪽 검색창·필터는 이 목록 밖에 고정돼 있어
+          스크롤 컨테이너가 중첩되지 않는다. */}
+      <FlatList
+        data={dreams}
+        keyExtractor={keyOf}
+        renderItem={renderItem}
+        ItemSeparatorComponent={ListGap}
         contentContainerStyle={[styles.list, { paddingBottom: space.withNav }]}
         showsVerticalScrollIndicator={false}
-      >
-        {isLoading && dreams.length === 0 && (
-          <View style={styles.empty}>
-            <View style={styles.emptyEmoji}><ChatBubbleIcon size={44} color="#B8A8E0" /></View>
-            <Text style={styles.emptyText}>꿈 조각을 불러오는 중...</Text>
-          </View>
-        )}
-
-        {!isLoading && dreams.length === 0 && (
-          <View style={styles.empty}>
-            <View style={styles.emptyEmoji}><CloudIcon size={44} color="#B8A8E0" /></View>
-            <Text style={styles.emptyText}>아직 모인 꿈 조각이 없어요</Text>
-          </View>
-        )}
-
-        {dreams.map((dream) => (
-          <DreamListItem
-            key={dream.id}
-            dream={dream}
-            onPress={() =>
-              router.push({
-                pathname: "/(app)/dream/result",
-                params: { itemId: dream.id },
-              })
-            }
-          />
-        ))}
-      </ScrollView>
+        keyboardShouldPersistTaps="handled"
+        initialNumToRender={12}
+        maxToRenderPerBatch={12}
+        windowSize={7}
+        ListEmptyComponent={
+          isLoading ? (
+            <View style={styles.empty}>
+              <View style={styles.emptyEmoji}><ChatBubbleIcon size={44} color="#B8A8E0" /></View>
+              <Text style={styles.emptyText}>꿈 조각을 불러오는 중...</Text>
+            </View>
+          ) : (
+            <View style={styles.empty}>
+              <View style={styles.emptyEmoji}><CloudIcon size={44} color="#B8A8E0" /></View>
+              <Text style={styles.emptyText}>아직 모인 꿈 조각이 없어요</Text>
+            </View>
+          )
+        }
+      />
 
       <BottomNav active="search" />
     </LinearGradient>
   );
 }
+
+const keyOf = (d: DreamItem) => d.id;
+const ListGap = () => <View style={styles.gap} />;
 
 const styles = StyleSheet.create({
   headerRow: {
@@ -199,7 +213,8 @@ const styles = StyleSheet.create({
   filterTagTextActive: { color: "#fff" },
 
   // paddingBottom 은 useBottomSpace().withNav 로 렌더 시점에 덮어쓴다.
-  list: { paddingHorizontal: 20, paddingTop: 12, gap: 8 },
+  list: { paddingHorizontal: 20, paddingTop: 12 },
+  gap: { height: 8 },
 
   empty: { alignItems: "center", paddingTop: 60, gap: 8 },
   // 이모지 대신 SVG 아이콘 — 오래된 안드로이드에서 이모지가 네모로 깨진다.

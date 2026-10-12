@@ -1,13 +1,15 @@
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { DreamItem } from "@/features/dream/dreamData";
 import DreamEmoji from "@/components/dream/DreamEmoji";
-import type { ComponentType } from "react";
+import { memo, type ComponentType } from "react";
 import IconLabel from "@/components/ui/IconLabel";
 import { CloverIcon, WarningIcon, type IconProps } from "@/components/ui/icons";
 
 interface Props {
   dream: DreamItem;
-  onPress: () => void;
+  // 목록이 하나의 안정된 함수를 모든 행에 넘기도록 id 를 돌려준다
+  // (행마다 인라인 화살표를 만들면 memo 가 무력화된다).
+  onPress: (id: string) => void;
 }
 
 // 아이콘은 이모지 대신 SVG — 오래된 안드로이드에서 이모지가 네모로 깨진다.
@@ -17,7 +19,8 @@ const TAG_STYLES: Record<string, { bg: string; color: string; icon?: ComponentTy
   태몽: { bg: "#FBE3EC", color: "#C868A0" },
 };
 
-export default function DreamListItem({ dream, onPress }: Props) {
+// memo: 검색어 입력·필터 변경 때 바뀌지 않은 행은 다시 그리지 않는다.
+function DreamListItem({ dream, onPress }: Props) {
   const primaryTag = dream.tags[0];
   const tagStyle = primaryTag
     ? TAG_STYLES[primaryTag] ?? { bg: "#F0E8FF", color: "#7868C8" }
@@ -27,7 +30,7 @@ export default function DreamListItem({ dream, onPress }: Props) {
     <TouchableOpacity
       style={styles.item}
       activeOpacity={0.85}
-      onPress={onPress}
+      onPress={() => onPress(dream.id)}
     >
       <View
         style={[
@@ -58,6 +61,8 @@ export default function DreamListItem({ dream, onPress }: Props) {
     </TouchableOpacity>
   );
 }
+
+export default memo(DreamListItem);
 
 const styles = StyleSheet.create({
   item: {

@@ -1,21 +1,23 @@
 import {
-  ScrollView,
+  FlatList,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
   Image,
+  type ListRenderItem,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import BottomNav from "@/components/ui/BottomNav";
 import { SearchIcon } from "@/components/ui/icons";
 import { useBottomSpace } from "@/lib/layout";
 import ChatBotModal from "@/components/chat/ChatBotModal";
 import DreamListItem from "@/components/dream/DreamListItem";
 import { useSearchDreamItems } from "@/features/dream/dreamQueries";
+import type { DreamItem } from "@/features/dream/dreamData";
 import { logSearch } from "@/features/dream/searchLogs";
 import { ChatBubbleIcon, CloudIcon } from "@/components/ui/icons";
 
@@ -39,6 +41,17 @@ export default function SearchResultsScreen() {
     const t = setTimeout(() => logSearch(trimmedQuery, resultCount), 1000);
     return () => clearTimeout(t);
   }, [trimmedQuery, isSuccess, resultCount]);
+
+  const openItem = useCallback(
+    (id: string) =>
+      router.push({ pathname: "/(app)/dream/result", params: { itemId: id } }),
+    [router],
+  );
+
+  const renderItem = useCallback<ListRenderItem<DreamItem>>(
+    ({ item }) => <DreamListItem dream={item} onPress={openItem} />,
+    [openItem],
+  );
 
   return (
     <LinearGradient colors={["#F5F3FA", "#F5F3FA"]} style={{ flex: 1 }}>
@@ -64,11 +77,20 @@ export default function SearchResultsScreen() {
         />
       </View>
 
-      <ScrollView
+      {/* 짧은 검색어는 180건 넘게 나온다. FlatList 로 화면 근처 행만 그린다.
+          위쪽 검색창은 목록 밖에 고정돼 있어 스크롤 컨테이너가 중첩되지 않는다. */}
+      <FlatList
+        data={dreams}
+        keyExtractor={keyOf}
+        renderItem={renderItem}
+        ItemSeparatorComponent={ListGap}
         contentContainerStyle={[styles.list, { paddingBottom: space.withNav }]}
         showsVerticalScrollIndicator={false}
-      >
-        {dreams.length === 0 && (
+        keyboardShouldPersistTaps="handled"
+        initialNumToRender={12}
+        maxToRenderPerBatch={12}
+        windowSize={7}
+        ListEmptyComponent={
           <View style={styles.empty}>
             <View style={styles.emptyEmoji}>{isFetching ? <ChatBubbleIcon size={44} color="#B8A8E0" /> : <CloudIcon size={44} color="#B8A8E0" />}</View>
             <Text style={styles.emptyText}>
@@ -94,21 +116,8 @@ export default function SearchResultsScreen() {
               </TouchableOpacity>
             )}
           </View>
-        )}
-
-        {dreams.map((dream) => (
-          <DreamListItem
-            key={dream.id}
-            dream={dream}
-            onPress={() =>
-              router.push({
-                pathname: "/(app)/dream/result",
-                params: { itemId: dream.id },
-              })
-            }
-          />
-        ))}
-      </ScrollView>
+        }
+      />
 
       <BottomNav active="search" />
 
@@ -120,6 +129,9 @@ export default function SearchResultsScreen() {
     </LinearGradient>
   );
 }
+
+const keyOf = (d: DreamItem) => d.id;
+const ListGap = () => <View style={styles.gap} />;
 
 const styles = StyleSheet.create({
   headerRow: {
@@ -155,7 +167,8 @@ const styles = StyleSheet.create({
   searchInput: { flex: 1, fontSize: 13, color: "#6858B8", padding: 0 },
 
   // paddingBottom 은 useBottomSpace().withNav 로 렌더 시점에 덮어쓴다.
-  list: { paddingHorizontal: 20, paddingTop: 16, gap: 8 },
+  list: { paddingHorizontal: 20, paddingTop: 16 },
+  gap: { height: 8 },
 
   empty: { alignItems: "center", paddingTop: 60, gap: 8 },
   // 이모지 대신 SVG 아이콘 — 오래된 안드로이드에서 이모지가 네모로 깨진다.

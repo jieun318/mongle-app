@@ -1,5 +1,6 @@
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
+import { queryClient } from "@/lib/queryClient";
 import { clearUserScopedCaches } from "@/lib/sessionCleanup";
 import * as ImageManipulator from "expo-image-manipulator";
 
@@ -7,6 +8,17 @@ const AVATAR_BUCKET = "avatars";
 const AVATAR_FILENAME = "avatar.jpg";
 const AVATAR_MAX_SIZE = 500;
 const AVATAR_QUALITY = 0.85;
+
+// ── 쿼리 키 ──────────────────────────────────────────────────
+// userId 를 넣어 계정별로 캐시를 나눈다. 로그아웃·탈퇴 시엔 clearUserScopedCaches 가
+// queryClient.clear() 로 통째로 비운다.
+export const PROFILE_KEY = ["profile"] as const;
+export const profileKey = (userId: string) => [...PROFILE_KEY, userId] as const;
+export const AVATAR_URL_KEY = ["avatarUrl"] as const;
+export const avatarUrlKey = (userId: string, path: string) =>
+  [...AVATAR_URL_KEY, userId, path] as const;
+// signed URL 유효시간. 캐시는 그보다 조금 일찍 버려 만료된 주소를 쓰지 않게 한다.
+export const AVATAR_URL_TTL_SEC = 3600;
 
 export const AVATAR_OPTIONS = [
   "🐷",
@@ -124,11 +136,14 @@ export async function updateMyProfile(input: UpdateProfileInput) {
   if (input.notifyDreamReminder !== undefined)
     patch.notify_dream_reminder = input.notifyDreamReminder;
 
-  return supabase
+  const res = await supabase
     .from("profiles")
     .upsert(patch, { onConflict: "uid" })
     .select()
     .single<ProfileRecord>();
+  // 마이페이지 프로필 카드가 바뀐 닉네임·아바타를 보도록 프로필 쿼리만 다시 받게 한다.
+  if (!res.error) void queryClient.invalidateQueries({ queryKey: PROFILE_KEY });
+  return res;
 }
 
 // 회원 탈퇴 — schema.sql 의 delete_my_account() RPC 호출.
@@ -227,6 +242,8 @@ export async function uploadAvatar(localUri: string): Promise<{
   if (uploadErr) return { data: null, error: uploadErr };
 
   // 4) profiles.profile_image_url 에 path 저장
+  // 파일 경로는 늘 같으므로(uid/avatar.jpg) 캐시된 signed URL 도 버려야 새 사진이 보인다.
+  void queryClient.invalidateQueries({ queryKey: AVATAR_URL_KEY });
   return updateMyProfile({ profileImageUrl: path });
 }
 
@@ -244,6 +261,7 @@ export async function removeAvatar(): Promise<{
   const path = avatarPath(user.id);
   // 파일 삭제 (없어도 무해)
   await supabase.storage.from(AVATAR_BUCKET).remove([path]);
+  void queryClient.invalidateQueries({ queryKey: AVATAR_URL_KEY });
 
   return updateMyProfile({ profileImageUrl: null });
 }
@@ -256,7 +274,7 @@ export async function getAvatarSignedUrl(
   if (!path) return null;
   const { data, error } = await supabase.storage
     .from(AVATAR_BUCKET)
-    .createSignedUrl(path, 3600);
+    .createSignedUrl(path, AVATAR_URL_TTL_SEC);
   if (error) return null;
   return data?.signedUrl ?? null;
 }

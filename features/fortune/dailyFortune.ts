@@ -8,7 +8,9 @@ import {
   FortuneLucky,
   MoodType,
 } from "@/types/fortune";
+import { queryClient } from "@/lib/queryClient";
 import {
+  THIS_WEEK_FORTUNES_KEY,
   loadDailyFortuneFromDB,
   saveDailyFortuneToDB,
 } from "./dailyFortuneRepo";
@@ -339,4 +341,6 @@ export async function commitDailyFortuneToDB(
   if (!isOwnedBySeed(fortune, userId, dKey, now)) return;
 
   await saveDailyFortuneToDB(userId, dKey, fortune).catch(() => {});
+  // 마이페이지 "이번 주 운세"에 오늘 칸이 채워지도록 그 쿼리만 다시 받게 한다.
+  void queryClient.invalidateQueries({ queryKey: THIS_WEEK_FORTUNES_KEY });
 }

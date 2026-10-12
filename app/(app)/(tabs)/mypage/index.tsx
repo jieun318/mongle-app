@@ -12,20 +12,17 @@ import { showNotice } from "@/lib/dialog";
 import { SettingsIcon, PencilIcon } from "@/components/ui/icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useBottomSpace } from "@/lib/layout";
-import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useRef, useState } from "react";
+import { useRouter } from "expo-router";
 import BottomNav from "@/components/ui/BottomNav";
 import { useSession } from "@/features/auth/auth";
 import { gradeFromKey } from "@/features/fortune/grade";
 import {
-  loadThisWeekFortunes,
   type WeekDayFortune,
 } from "@/features/fortune/dailyFortuneRepo";
-import {
-  getAvatarSignedUrl,
-  getMyProfile,
-  type ProfileRecord,
-} from "@/features/auth/profile";
+import { useThisWeekFortunes } from "@/features/fortune/fortuneQueries";
+import { avatarUrlKey } from "@/features/auth/profile";
+import { useAvatarUrl, useMyProfile } from "@/features/auth/profileQueries";
+import { useRefetchStaleOnFocus } from "@/lib/useRefetchStaleOnFocus";
 
 const CONTACT_EMAIL = "mongle.help@gmail.com";
 
@@ -49,55 +46,28 @@ function formatJoinDate(iso: string | undefined): string {
   return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")} 가입`;
 }
 
+const NO_WEEK: WeekDayFortune[] = [];
+
 export default function MypageScreen() {
   const space = useBottomSpace();
   const router = useRouter();
-  const [profile, setProfile] = useState<ProfileRecord | null>(null);
-  const [email, setEmail] = useState<string | null>(null);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [week, setWeek] = useState<WeekDayFortune[]>([]);
-  const [loading, setLoading] = useState(true);
-  const hasLoadedRef = useRef(false); // 첫 로드 후로는 스피너 안 띄우고 백그라운드 갱신
   const { session } = useSession();
-  // 토큰 갱신마다 session.user 객체가 새로 오므로 load 는 userId 에만 묶고,
-  // 사용자 정보(이메일·메타데이터)는 ref 로 최신값을 읽는다.
   const userId = session?.user?.id ?? null;
-  const sessionUserRef = useRef(session?.user ?? null);
-  sessionUserRef.current = session?.user ?? null;
 
-  const load = useCallback(async () => {
-    const sessionUser = sessionUserRef.current;
-    if (!userId || !sessionUser) return;
-    const [p, wk] = await Promise.all([
-      getMyProfile(sessionUser),
-      loadThisWeekFortunes(userId),
-    ]);
-    if (!p.error) {
-      setProfile(p.data);
-      setEmail(p.email);
-      // 사진이 있으면 1시간짜리 signed URL 생성
-      const url = p.data?.profile_image_url
-        ? await getAvatarSignedUrl(p.data.profile_image_url)
-        : null;
-      setAvatarUrl(url);
-    }
-    setWeek(wk);
-  }, [userId]);
-
-  useFocusEffect(
-    useCallback(() => {
-      let cancelled = false;
-      if (!hasLoadedRef.current) setLoading(true);
-      load().finally(() => {
-        if (cancelled) return;
-        setLoading(false);
-        hasLoadedRef.current = true;
-      });
-      return () => {
-        cancelled = true;
-      };
-    }, [load]),
-  );
+  // 예전엔 진입마다 프로필 → signed URL 을 차례로, 이번 주 운세와 함께 다시 받았다.
+  // 이제 React Query 캐시(키에 userId)를 쓰고, 바뀌는 시점에만 다시 받는다:
+  //   프로필 — updateMyProfile 이 invalidate / 이번 주 운세 — 오늘 운세 저장 시 invalidate
+  //   아바타 URL — 만료 10분 전까지 같은 URL 재사용(이미지 캐시가 먹는다)
+  const profileQuery = useMyProfile(session?.user ?? null);
+  const weekQuery = useThisWeekFortunes(userId);
+  const profile = profileQuery.data?.profile ?? null;
+  const email = profileQuery.data?.email ?? null;
+  const imagePath = profile?.profile_image_url ?? null;
+  const avatarUrl = useAvatarUrl(userId, imagePath).data ?? null;
+  const week = weekQuery.data ?? NO_WEEK;
+  const loading = profileQuery.isPending || weekQuery.isPending;
+  // 화면이 계속 마운트돼 있는 동안 URL 이 만료되지 않게, 들어올 때 오래된 것만 갱신.
+  useRefetchStaleOnFocus(userId && imagePath ? avatarUrlKey(userId, imagePath) : null);
 
   return (
     <LinearGradient colors={["#F5F3FA", "#F5F3FA"]} style={{ flex: 1 }}>

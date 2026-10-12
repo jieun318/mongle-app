@@ -4,6 +4,11 @@ import { supabase } from "@/lib/supabase";
 import { queryClient } from "@/lib/queryClient";
 import { searchDreams } from "@/features/dream/dreamSearch";
 import {
+  MY_DREAMS_STALE_MS,
+  fetchMyDreams,
+  myDreamsKey,
+} from "@/features/dream/dreams";
+import {
   normalizeConditions,
   normalizeMoodTags,
   type DreamItem,
@@ -106,6 +111,17 @@ export function useAllDreamItems() {
     queryKey: ALL_DREAM_ITEMS_KEY,
     queryFn: fetchAllDreamItems,
     staleTime: 60 * 60 * 1000, // 1h
+  });
+}
+
+// 내 꿈 보관함 목록. 이 기기에서의 저장·수정·삭제는 dreams.ts 가 바로 invalidate 하고,
+// staleTime 은 다른 기기에서 저장한 꿈이 들어오는 주기다.
+export function useMyDreams(userId: string | null) {
+  return useQuery({
+    queryKey: myDreamsKey(userId ?? ""),
+    queryFn: fetchMyDreams,
+    enabled: !!userId,
+    staleTime: MY_DREAMS_STALE_MS,
   });
 }
 

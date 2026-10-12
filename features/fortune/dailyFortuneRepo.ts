@@ -1,6 +1,20 @@
 import { supabase } from "@/lib/supabase";
 import type { Fortune, FortuneGrade } from "@/types/fortune";
 
+// ── 쿼리 키 ──────────────────────────────────────────────────
+// userId 와 이번 주 월요일을 키에 넣는다. 계정이 바뀌면 다른 캐시를, 주가 바뀌면
+// 새로 받는다. 로그아웃 시엔 clearUserScopedCaches 가 queryClient.clear() 로 비운다.
+export const THIS_WEEK_FORTUNES_KEY = ["thisWeekFortunes"] as const;
+export const thisWeekFortunesKey = (userId: string, mondayYMD: string) =>
+  [...THIS_WEEK_FORTUNES_KEY, userId, mondayYMD] as const;
+export const FORTUNE_HISTORY_KEY = ["fortuneHistory"] as const;
+export const fortuneHistoryKey = (userId: string, mondayYMD: string) =>
+  [...FORTUNE_HISTORY_KEY, userId, mondayYMD] as const;
+
+// 지난 운세 화면이 받아 오는 기간. 예전엔 전체 기록을 payload 째 받아 한 화면에
+// 다 그려서, 쓸수록 느려졌다.
+export const FORTUNE_HISTORY_WEEKS = 12;
+
 export interface DailyFortuneRow {
   user_id: string;
   date: string; // YYYY-MM-DD
@@ -70,9 +84,11 @@ export async function listDailyFortunesInRange(
     .lte("date", endYMD)
     .order("date", { ascending: true });
 
+  // 빈 배열로 삼키지 않는다. React Query 가 실패를 "운세 없음"으로 캐시해 버리면
+  // 다음 갱신 때까지 빈 주간이 보인다. throw 하면 재시도하고 기존 캐시를 유지한다.
   if (error) {
     console.warn("[daily_fortunes] range load failed:", error.message);
-    return [];
+    throw new Error(error.message);
   }
   if (!data) return [];
   return data as DailyFortuneRow[];
@@ -97,6 +113,10 @@ function startOfThisWeekMonday(): Date {
   const offset = day === 0 ? -6 : 1 - day;
   d.setDate(d.getDate() + offset);
   return d;
+}
+
+export function thisMondayYMD(): string {
+  return dateToYMD(startOfThisWeekMonday());
 }
 
 function dateToYMD(d: Date): string {
@@ -164,16 +184,21 @@ export async function loadPastWeeksFortunes(
   const lastSunday = new Date(thisMonday);
   lastSunday.setDate(thisMonday.getDate() - 1);
   const lastSundayYMD = dateToYMD(lastSunday);
+  const firstMonday = new Date(thisMonday);
+  firstMonday.setDate(thisMonday.getDate() - 7 * FORTUNE_HISTORY_WEEKS);
 
-  // 이번 주 월요일 이전의 모든 운세
+  // 이번 주 월요일 이전 FORTUNE_HISTORY_WEEKS 주의 운세
   const { data, error } = await supabase
     .from("daily_fortunes")
     .select("user_id, date, grade, payload, created_at")
     .eq("user_id", userId)
+    .gte("date", dateToYMD(firstMonday))
     .lte("date", lastSundayYMD)
     .order("date", { ascending: false });
 
-  if (error || !data || data.length === 0) return [];
+  // 실패는 throw — 위 listDailyFortunesInRange 와 같은 이유.
+  if (error) throw new Error(error.message);
+  if (!data || data.length === 0) return [];
   const rows = data as DailyFortuneRow[];
 
   // 주(월요일 키) 별로 그룹핑

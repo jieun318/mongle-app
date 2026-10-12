@@ -1,5 +1,20 @@
 import { supabase } from "@/lib/supabase";
+import { queryClient } from "@/lib/queryClient";
 import type { DreamMoodTag } from "@/features/dream/dreamData";
+
+// ── 보관함 목록 쿼리 키 ─────────────────────────────────────────
+// 키에 userId 를 넣어 계정이 바뀌면 다른 캐시를 보게 한다(로그아웃 시엔
+// clearUserScopedCaches 가 queryClient.clear() 로 통째로 비운다).
+export const MY_DREAMS_KEY = ["myDreams"] as const;
+export const myDreamsKey = (userId: string) => [...MY_DREAMS_KEY, userId] as const;
+export const MY_DREAMS_STALE_MS = 5 * 60 * 1000;
+
+// 꿈 저장·수정·삭제 뒤 보관함 목록만 다시 받게 한다. 다른 쿼리(꿈 사전 등)는 그대로.
+// 이 모듈의 쓰기 함수들이 성공 시 직접 부르므로, 호출부(꿈 기록 화면·챗봇 저장·
+// 보관함 삭제)마다 따로 챙길 필요가 없다.
+function invalidateMyDreams(): void {
+  void queryClient.invalidateQueries({ queryKey: MY_DREAMS_KEY });
+}
 
 export type DreamSource = "card" | "ai";
 
@@ -75,7 +90,7 @@ export async function createDream(input: CreateDreamInput) {
     };
   }
 
-  return supabase
+  const res = await supabase
     .from("dreams")
     .insert({
       user_id: user.id,
@@ -94,6 +109,8 @@ export async function createDream(input: CreateDreamInput) {
     })
     .select()
     .single<DreamRecord>();
+  if (!res.error) invalidateMyDreams();
+  return res;
 }
 
 export interface UpdateDreamInput {
@@ -129,17 +146,21 @@ export async function updateDream(id: string, input: UpdateDreamInput) {
   if (input.interpretationSummary !== undefined)
     patch.interpretation_summary = input.interpretationSummary;
 
-  return supabase
+  const res = await supabase
     .from("dreams")
     .update(patch)
     .eq("id", id)
     .select()
     .single<DreamRecord>();
+  if (!res.error) invalidateMyDreams();
+  return res;
 }
 
 // 본인 꿈만 삭제 가능 — RLS(dreams_delete_own) 가 user_id = auth.uid() 강제.
 export async function deleteDream(id: string) {
-  return supabase.from("dreams").delete().eq("id", id);
+  const res = await supabase.from("dreams").delete().eq("id", id);
+  if (!res.error) invalidateMyDreams();
+  return res;
 }
 
 export async function listMyDreams() {
@@ -152,43 +173,21 @@ export async function listMyDreams() {
     .returns<DreamRecord[]>();
 }
 
-// ── 보관함 프리페치 캐시 ────────────────────────────────────────
-// 홈이 준비된 뒤 보관함 목록을 백그라운드로 미리 당겨둔다. 보관함 탭 첫 진입에서
-// 스피너 없이 즉시 뜨게 하는 용도. 보관함은 포커스마다 재조회하므로, 캐시가 조금
-// 오래돼도 화면 진입 시 자동 갱신되어 안전하다(첫 마운트의 스피너만 제거).
-let dreamsCache: { data: DreamRecord[]; at: number } | null = null;
-let dreamsInflight: Promise<void> | null = null;
-// 리셋 세대. 진행 중이던 프리페치가 리셋 이후에 완료돼도 이전 계정 데이터로
-// 캐시를 되살리지 않도록 구분한다.
-let dreamsCacheGen = 0;
-
-// 로그아웃/계정 전환 시 호출. queryClient.clear() 는 이 캐시를 건드리지 못한다.
-export function resetMyDreamsCache(): void {
-  dreamsCache = null;
-  dreamsInflight = null;
-  dreamsCacheGen++;
+// 보관함 미리 받기(홈) — 탭 첫 진입에서 스피너 없이 바로 뜨게 한다.
+// 이미 신선한 캐시가 있으면 prefetchQuery 가 네트워크를 타지 않는다.
+export function prefetchMyDreams(userId: string): Promise<void> {
+  return queryClient.prefetchQuery({
+    queryKey: myDreamsKey(userId),
+    queryFn: fetchMyDreams,
+    staleTime: MY_DREAMS_STALE_MS,
+  });
 }
 
-// 캐시가 maxAgeMs 이내면 반환, 아니면 null. 보관함 첫 마운트 초기 상태 seed 용.
-export function getCachedMyDreams(maxAgeMs = 15000): DreamRecord[] | null {
-  if (dreamsCache && Date.now() - dreamsCache.at < maxAgeMs) return dreamsCache.data;
-  return null;
-}
-
-// 백그라운드 프리페치. 동시 호출은 진행 중인 하나로 합친다(fire-and-forget).
-export function prefetchMyDreams(): Promise<void> {
-  if (dreamsInflight) return dreamsInflight;
-  const gen = dreamsCacheGen;
-  dreamsInflight = listMyDreams()
-    .then(({ data, error }) => {
-      if (gen !== dreamsCacheGen) return; // 그 사이 로그아웃 → 결과 폐기
-      if (!error && data) dreamsCache = { data, at: Date.now() };
-    })
-    .catch(() => {})
-    .finally(() => {
-      if (gen === dreamsCacheGen) dreamsInflight = null;
-    });
-  return dreamsInflight;
+// useQuery/prefetch 용 — 에러를 throw 로 바꿔 Query 가 error 상태를 갖게 한다.
+export async function fetchMyDreams(): Promise<DreamRecord[]> {
+  const { data, error } = await listMyDreams();
+  if (error) throw new Error(error.message);
+  return data ?? [];
 }
 
 // 단건 조회 — 편집 화면에서 사용. RLS 가 본인 row 만 통과시킨다.

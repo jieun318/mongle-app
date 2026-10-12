@@ -14,14 +14,13 @@ import {
   type ViewStyle,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { useFocusEffect, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import {
   createContext,
   useCallback,
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -38,9 +37,12 @@ import {
   DreamSource,
   computeStats,
   deleteDream,
-  getCachedMyDreams,
-  listMyDreams,
+  myDreamsKey,
 } from "@/features/dream/dreams";
+import { useMyDreams } from "@/features/dream/dreamQueries";
+import { useSession } from "@/features/auth/auth";
+import { queryClient } from "@/lib/queryClient";
+import { useRefetchStaleOnFocus } from "@/lib/useRefetchStaleOnFocus";
 import { confirmDestructive, showNotice } from "@/lib/dialog";
 import { MoonIcon, WarningIcon } from "@/components/ui/icons";
 
@@ -92,19 +94,25 @@ function MenuAwareCell({
 }
 
 const keyOf = (d: DreamRecord) => d.id;
+// 데이터가 아직 없을 때 쓰는 고정 빈 배열 — 매 렌더 새 [] 면 아래 useMemo 가 매번 다시 돈다.
+const NO_DREAMS: DreamRecord[] = [];
 
 export default function StorageScreen() {
   const space = useBottomSpace();
   const router = useRouter();
 
-  // 홈에서 미리 예열해둔 목록이 있으면 그걸로 시작 → 첫 진입 스피너 생략.
-  // 캐시가 있어도 useFocusEffect 가 백그라운드로 재조회하므로 항상 최신으로 갱신된다.
-  const seeded = getCachedMyDreams();
-  const [dreams, setDreams] = useState<DreamRecord[]>(seeded ?? []);
-  const [loading, setLoading] = useState(seeded === null);
+  // 목록은 React Query 캐시(키에 userId 포함)에서 읽는다. 홈에서 미리 받아 둔 게 있으면
+  // 첫 진입부터 스피너 없이 뜨고, 다시 들어올 땐 staleTime 이 지났을 때만 갱신한다.
+  // 이 기기에서의 저장·수정·삭제는 dreams.ts 가 이 쿼리를 바로 invalidate 한다.
+  const { session } = useSession();
+  const userId = session?.user?.id ?? null;
+  const dreamsQuery = useMyDreams(userId);
+  const dreams = dreamsQuery.data ?? NO_DREAMS;
+  // 캐시가 있으면 갱신 실패해도 기존 목록을 보여주고, 아무것도 없을 때만 에러 화면.
+  const loading = dreamsQuery.isPending;
+  const error = dreamsQuery.data ? null : (dreamsQuery.error?.message ?? null);
   const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const hasLoadedRef = useRef(seeded !== null); // 첫 로드 후엔 스피너 X, 백그라운드 갱신만
+  useRefetchStaleOnFocus(userId ? myDreamsKey(userId) : null);
 
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
@@ -126,37 +134,12 @@ export default function StorageScreen() {
     setSelectedRecord(d);
   }, []);
 
-  const load = useCallback(async () => {
-    const { data, error } = await listMyDreams();
-    if (error) {
-      setError(error.message);
-      setDreams([]);
-    } else {
-      setError(null);
-      setDreams(data ?? []);
-    }
-  }, []);
-
-  useFocusEffect(
-    useCallback(() => {
-      let cancelled = false;
-      if (!hasLoadedRef.current) setLoading(true);
-      load().finally(() => {
-        if (cancelled) return;
-        setLoading(false);
-        hasLoadedRef.current = true;
-      });
-      return () => {
-        cancelled = true;
-      };
-    }, [load]),
-  );
-
+  const { refetch } = dreamsQuery;
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await load();
+    await refetch();
     setRefreshing(false);
-  }, [load]);
+  }, [refetch]);
 
   const handleEditDream = useCallback(
     (d: DreamRecord) => {
@@ -182,10 +165,13 @@ export default function StorageScreen() {
             showNotice("삭제 실패", error.message);
             return;
           }
-          // 즉시 로컬 state 에서 제거 (낙관적 업데이트)
+          // 다시 받아오는 동안(deleteDream 이 invalidate)에도 카드가 남아 있지 않게
+          // 캐시에서 바로 뺀다.
           setOpenMenuId(null);
           setSelectedRecord(null);
-          setDreams((prev) => prev.filter((row) => row.id !== d.id));
+          queryClient.setQueryData<DreamRecord[]>(myDreamsKey(d.user_id), (prev) =>
+            prev?.filter((row) => row.id !== d.id),
+          );
         },
       );
     },

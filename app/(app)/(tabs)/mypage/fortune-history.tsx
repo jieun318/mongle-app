@@ -8,15 +8,18 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useBottomSpace } from "@/lib/layout";
-import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useMemo, useState } from "react";
+import { useRouter } from "expo-router";
+import { useMemo } from "react";
 import {
-  loadPastWeeksFortunes,
+  FORTUNE_HISTORY_WEEKS,
   type PastWeek,
 } from "@/features/fortune/dailyFortuneRepo";
+import { useFortuneHistory } from "@/features/fortune/fortuneQueries";
 import { gradeFromKey } from "@/features/fortune/grade";
 import { MoonIcon } from "@/components/ui/icons";
 import { useSession } from "@/features/auth/auth";
+
+const NO_WEEKS: PastWeek[] = [];
 
 interface MonthGroup {
   monthLabel: string;
@@ -39,30 +42,13 @@ function groupByMonth(weeks: PastWeek[]): MonthGroup[] {
 export default function FortuneHistoryScreen() {
   const space = useBottomSpace();
   const router = useRouter();
-  const [weeks, setWeeks] = useState<PastWeek[]>([]);
-  const [loading, setLoading] = useState(true);
-
   const { session } = useSession();
   const userId = session?.user?.id ?? null;
-
-  const load = useCallback(async () => {
-    if (!userId) return;
-    const w = await loadPastWeeksFortunes(userId);
-    setWeeks(w);
-  }, [userId]);
-
-  useFocusEffect(
-    useCallback(() => {
-      let cancelled = false;
-      setLoading(true);
-      load().finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-      return () => {
-        cancelled = true;
-      };
-    }, [load]),
-  );
+  // 예전엔 들어올 때마다 스피너를 띄우고 전체 기록을 다시 받았다. 지난 주들은 바뀌지
+  // 않으므로 캐시를 그대로 쓰고, 주가 바뀌면(키의 월요일) 새로 받는다.
+  const historyQuery = useFortuneHistory(userId);
+  const weeks = historyQuery.data ?? NO_WEEKS;
+  const loading = historyQuery.isPending;
 
   const months = useMemo(() => groupByMonth(weeks), [weeks]);
 
@@ -91,7 +77,9 @@ export default function FortuneHistoryScreen() {
             <View style={styles.empty}>
               <View style={styles.emptyEmoji}><MoonIcon size={44} color="#B8A8E0" /></View>
               <Text style={styles.emptyText}>
-                아직 지난 운세가 없어요{"\n"}한 주가 지나면 여기에 모여요
+                {historyQuery.isError
+                  ? "지난 운세를 불러오지 못했어요"
+                  : `최근 ${FORTUNE_HISTORY_WEEKS}주 동안의 지난 운세가 없어요\n한 주가 지나면 여기에 모여요`}
               </Text>
             </View>
           ) : (

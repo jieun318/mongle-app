@@ -635,7 +635,7 @@ export default function HomeScreen() {
     let timer: ReturnType<typeof setTimeout> | null = null;
     const task = InteractionManager.runAfterInteractions(() => {
       timer = setTimeout(() => {
-        prefetchMyDreams();
+        if (userId) prefetchMyDreams(userId);
         prefetchDreamBrowse();
         importChatModal(); // 챗 모듈 예열 — 첫 열기 지연 제거 (import 캐시되어 1회만)
       }, 600);
@@ -644,7 +644,7 @@ export default function HomeScreen() {
       task.cancel();
       if (timer) clearTimeout(timer);
     };
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
     // 떠다니는 애니메이션

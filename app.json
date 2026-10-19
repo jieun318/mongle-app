@@ -70,7 +70,18 @@
         }
       ],
       "./plugins/withTrimmedPermissions.js",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "//": "Play Console 'DEX 코드 최적화 미달' 대응 — 릴리스에서 R8 축소·난독화. 리소스 축소(enableShrinkResourcesInReleaseBuilds)는 알림 아이콘 등 동적 참조 리소스 위험이 있어 별도로 켠다.",
+            "enableMinifyInReleaseBuilds": true,
+            "//extraProguardRules": "Reanimated·Worklets·RN·expo-modules-core·expo-updates·svg 는 consumerProguardFiles 로 규칙이 자동 적용된다. expo-notifications 는 proguard-rules.pro 를 갖고 있지만 build.gradle 에 consumerProguardFiles 가 없어 앱에서 직접 넣는다. Supabase·카카오 로그인은 JS(OAuth 브라우저) 경로라 네이티브 규칙이 필요 없다.",
+            "extraProguardRules": "-keep class expo.modules.notifications.** { *; }"
+          }
+        }
+      ]
     ],
     "runtimeVersion": {
       "policy": "fingerprint"

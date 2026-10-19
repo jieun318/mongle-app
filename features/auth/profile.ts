@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { queryClient } from "@/lib/queryClient";
 import { clearUserScopedCaches } from "@/lib/sessionCleanup";
 import * as ImageManipulator from "expo-image-manipulator";
+import Constants from "expo-constants";
 
 const AVATAR_BUCKET = "avatars";
 const AVATAR_FILENAME = "avatar.jpg";
@@ -146,7 +147,17 @@ export async function updateMyProfile(input: UpdateProfileInput) {
   return res;
 }
 
-// 회원 탈퇴 — schema.sql 의 delete_my_account() RPC 호출.
+// api/kakao-unlink 주소 — api/chat·api/weather 와 같은 규칙.
+function getKakaoUnlinkUrl(): string {
+  const base = process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
+  if (base) return `${base.replace(/\/$/, "")}/api/kakao-unlink`;
+  const hostUri =
+    Constants.expoConfig?.hostUri ?? Constants.expoGoConfig?.debuggerHost;
+  if (hostUri) return `http://${hostUri.split(":")[0]}:8081/api/kakao-unlink`;
+  return "/api/kakao-unlink";
+}
+
+// 회원 탈퇴 — 아바타 삭제 → 카카오 연결 끊기 → delete_my_account() RPC → 로그아웃.
 // auth.users 가 삭제되면 profiles / dreams / bookmarks 는
 // ON DELETE CASCADE 로 자동 정리된다.
 export async function deleteMyAccount() {
@@ -162,6 +173,22 @@ export async function deleteMyAccount() {
     const uid = userRes.user?.id;
     if (uid) {
       await supabase.storage.from(AVATAR_BUCKET).remove([avatarPath(uid)]);
+    }
+  } catch {
+    // 무시
+  }
+
+  // 카카오 연결 끊기 — RPC 앞이어야 한다(auth.users 가 지워지면 서버가 카카오
+  // 회원번호를 조회할 수 없다). 카카오 계정이 아니면 서버가 skipped 로 답한다.
+  // 실패는 무시한다 — 아바타와 같은 이유. 원인은 서버 로그(console.error)에 남는다.
+  try {
+    const { data: sessionRes } = await supabase.auth.getSession();
+    const token = sessionRes.session?.access_token;
+    if (token) {
+      await fetch(getKakaoUnlinkUrl(), {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
     }
   } catch {
     // 무시

@@ -37,8 +37,10 @@ export function useConsentState(user: User | null): ConsentState {
   const metaAgreedAt = user?.user_metadata?.[CONSENT_META_KEY];
   const hasMeta = typeof metaAgreedAt === "string";
 
-  // 이메일 가입자는 가입 폼에서 동의했다(user_metadata). profiles 에 아직 없으면
-  // 옮겨 적는다. 실패해도 막지 않는다 — 다음 실행 때 다시 시도된다.
+  // 이메일 가입자는 가입 폼에서 동의했다(user_metadata). 보통은 handle_new_user
+  // 트리거(0022)가 이미 옮겨 놨다. 0022 적용 전에 가입했거나 profiles 행을 앱이
+  // 만든 경우(getMyProfile 폴백)만 여기서 옮겨 적는다. 실패해도 막지 않는다.
+  // 예전 이메일 가입자는 이 값이 없다 → 동의 화면을 거친다.
   const syncing = useRef(false);
   useEffect(() => {
     if (!user || agreedAt !== null || !hasMeta || syncing.current) return;

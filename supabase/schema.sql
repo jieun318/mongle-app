@@ -63,7 +63,8 @@ alter table public.profiles
   add column if not exists notify_dream_reminder boolean not null default true;
 
 -- terms_agreed_at : 약관·개인정보·국외 이전·만 14세 동의 시각. null 이면
---                   앱이 동의 화면(/consent)으로 보낸다 (0022)
+--                   앱이 동의 화면(/consent)으로 보낸다. 기존 가입자는 백필하지
+--                   않는다 — 전원 null 로 새 동의를 받는다 (0022)
 alter table public.profiles
   add column if not exists terms_agreed_at timestamptz;
 
@@ -339,7 +340,9 @@ create policy "ai_message_reports_select_own"
 
 -- ============================================================
 -- 트리거: 회원가입 시 profiles 자동 생성
---   raw_user_meta_data.nickname 을 가져와 채움 (없으면 '몽글이')
+--   닉네임: nickname → name → full_name → user_name → preferred_username
+--           → '몽글이' (빈 문자열 제외, 0018)
+--   terms_agreed_at: 이메일 가입 폼이 보낸 ISO 시각. 없거나 형식이 틀리면 null (0022)
 -- ============================================================
 create or replace function public.handle_new_user()
 returns trigger
@@ -347,11 +350,30 @@ language plpgsql
 security definer
 set search_path = public
 as $$
+declare
+  v_raw    text := new.raw_user_meta_data->>'terms_agreed_at';
+  v_agreed timestamptz := null;
 begin
-  insert into public.profiles (uid, nickname)
+  if v_raw ~ '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}' then
+    begin
+      v_agreed := v_raw::timestamptz;
+    exception when others then
+      v_agreed := null;
+    end;
+  end if;
+
+  insert into public.profiles (uid, nickname, terms_agreed_at)
   values (
     new.id,
-    coalesce(new.raw_user_meta_data->>'nickname', '몽글이')
+    coalesce(
+      nullif(trim(new.raw_user_meta_data->>'nickname'), ''),
+      nullif(trim(new.raw_user_meta_data->>'name'), ''),
+      nullif(trim(new.raw_user_meta_data->>'full_name'), ''),
+      nullif(trim(new.raw_user_meta_data->>'user_name'), ''),
+      nullif(trim(new.raw_user_meta_data->>'preferred_username'), ''),
+      '몽글이'
+    ),
+    v_agreed
   )
   on conflict (uid) do nothing;
   return new;

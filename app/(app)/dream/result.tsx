@@ -350,6 +350,10 @@ function ResultBody({ result, footer }: { result: DreamResult; footer: ReactNode
             />
           </View>
         </View>
+
+        <Text style={styles.disclaimer}>
+          {result.source === "ai" ? "AI 해몽은" : "꿈 해몽은"} 재미·참고용이에요
+        </Text>
       </ScrollView>
 
       {footer}
@@ -417,6 +421,7 @@ const styles = StyleSheet.create({
   actionText: { flex: 1, fontSize: 14, color: "#5848A8", lineHeight: 22 },
 
   luckLabel: { fontSize: 13, fontWeight: "700", color: "#6848C0" },
+  disclaimer: { fontSize: 12, color: "#6B5C82", textAlign: "center" },
   progressBg: { height: 8, borderRadius: 4, backgroundColor: "#F0E8FF", overflow: "hidden" },
   progressFill: { height: "100%", borderRadius: 4 },
 

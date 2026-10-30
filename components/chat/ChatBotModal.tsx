@@ -1003,31 +1003,35 @@ export default function ChatBotModal({
                 { paddingBottom: kbShown ? 12 : 12 + space.system },
               ]}
             >
-              <TextInput
-                style={styles.input}
-                placeholder="기억하고 계신 꿈 내용을 입력해주세요"
-                placeholderTextColor="#A898D0"
-                value={input}
-                onChangeText={setInput}
-                multiline
-                maxLength={500}
-                returnKeyType="send"
-                blurOnSubmit
-                onSubmitEditing={handleSend}
-              />
+              <View style={styles.inputRow}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="기억하고 계신 꿈 내용을 입력해주세요"
+                  placeholderTextColor="#A898D0"
+                  value={input}
+                  onChangeText={setInput}
+                  multiline
+                  maxLength={500}
+                  returnKeyType="send"
+                  blurOnSubmit
+                  onSubmitEditing={handleSend}
+                />
 
-              <TouchableOpacity
-                style={[
-                  styles.sendBtn,
-                  (!input.trim() || loading || streaming) &&
-                    styles.sendBtnDisabled,
-                ]}
-                onPress={handleSend}
-                disabled={!input.trim() || loading || streaming}
-                activeOpacity={0.85}
-              >
-                <SendIcon />
-              </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.sendBtn,
+                    (!input.trim() || loading || streaming) &&
+                      styles.sendBtnDisabled,
+                  ]}
+                  onPress={handleSend}
+                  disabled={!input.trim() || loading || streaming}
+                  activeOpacity={0.85}
+                >
+                  <SendIcon />
+                </TouchableOpacity>
+              </View>
+              {/* 생성형 AI 고지 — 약관 10조·스토어 설명과 같은 취지를 화면에서도 */}
+              <Text style={styles.disclaimer}>AI 해몽은 재미·참고용이에요</Text>
             </View>
           </View>
         </View>
@@ -1292,9 +1296,6 @@ const styles = StyleSheet.create({
   errorDetail: { fontSize: 11, color: "#9F4848" },
 
   inputBar: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    gap: 8,
     paddingHorizontal: 14,
     paddingTop: 12,
     backgroundColor: "#fff",
@@ -1322,4 +1323,7 @@ const styles = StyleSheet.create({
     backgroundColor: PURPLE_BRAND,
   },
   sendBtnDisabled: { backgroundColor: "#C0B0E0" },
+  inputRow: { flexDirection: "row", alignItems: "flex-end", gap: 8 },
+  // #6B5C82 on #fff — WCAG 4.5:1 이상
+  disclaimer: { marginTop: 6, fontSize: 11, color: "#6B5C82", textAlign: "center" },
 });

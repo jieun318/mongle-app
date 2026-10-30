@@ -240,10 +240,25 @@ export default function LoginForm() {
         )}
       </View>
 
-      <Text style={styles.terms}>
-        로그인하면 서비스 이용약관과 개인정보처리방침에{"\n"}동의하는 것으로
-        간주됩니다.
-      </Text>
+      {/* 카카오 첫 로그인은 /consent 에서, 이메일 가입은 가입 폼에서 따로
+          동의를 받는다. 여기는 문서를 열어 볼 수 있는 링크만 둔다. */}
+      <View style={styles.termsRow}>
+        <Text
+          style={styles.termsLink}
+          onPress={() => router.push("/terms")}
+          accessibilityRole="link"
+        >
+          이용약관
+        </Text>
+        <Text style={styles.termsSep}>·</Text>
+        <Text
+          style={styles.termsLink}
+          onPress={() => router.push("/privacy")}
+          accessibilityRole="link"
+        >
+          개인정보처리방침
+        </Text>
+      </View>
     </View>
   );
 }
@@ -321,11 +336,18 @@ const styles = StyleSheet.create({
   devBtn: { alignItems: "center", paddingVertical: 6 },
   devLabel: { fontSize: 14, color: "#9B8BB4" },
 
-  terms: {
+  termsRow: {
     marginTop: "auto",
-    fontSize: 11,
-    color: "#9B8BB4",
-    textAlign: "center",
-    lineHeight: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
+  // #6B5C82 on 배경 그라데이션(#EEF6FF 부근) — WCAG 4.5:1 이상
+  termsLink: {
+    fontSize: 12,
+    color: "#6B5C82",
+    textDecorationLine: "underline",
+    paddingVertical: 6,
+  },
+  termsSep: { fontSize: 12, color: "#6B5C82" },
 });

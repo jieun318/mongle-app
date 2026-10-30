@@ -10,6 +10,7 @@ import { useState } from "react";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import PasswordInput from "@/components/ui/PasswordInput";
+import AgreeRow from "@/features/auth/components/AgreeRow";
 import ScreenHeader from "@/components/ui/ScreenHeader";
 import { signUpWithEmail } from "@/features/auth/auth";
 import { showNotice } from "@/lib/dialog";
@@ -26,11 +27,14 @@ export default function SignupForm() {
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [agreePrivacy, setAgreePrivacy] = useState(false);
+  const [agreeTransfer, setAgreeTransfer] = useState(false);
+  const [agreeAge, setAgreeAge] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
-  // 필수 동의 2개가 모두 켜져야 가입 버튼이 눌린다.
-  const agreedAll = agreeTerms && agreePrivacy;
+  // 필수 동의 4개가 모두 켜져야 가입 버튼이 눌린다. 항목은 카카오 첫 로그인
+  // 동의 화면(app/consent.tsx)과 같아야 한다 — terms_agreed_at 하나가 넷 다를 뜻한다.
+  const agreedAll = agreeTerms && agreePrivacy && agreeTransfer && agreeAge;
   const canSubmit = agreedAll && !loading;
 
   // 서버 왕복 전에 잡을 수 있는 것만. 메시지는 auth.ts 의 매핑 문구와
@@ -74,40 +78,6 @@ export default function SignupForm() {
     // (auth)/_layout 의 세션 리다이렉트가 (app) 으로 보낸다.
   };
 
-  const renderAgreeRow = (
-    checked: boolean,
-    onToggle: () => void,
-    label: string,
-    href: string,
-  ) => (
-    <View style={styles.agreeRow}>
-      <TouchableOpacity
-        style={styles.agreeHit}
-        onPress={onToggle}
-        disabled={loading}
-        activeOpacity={0.6}
-        accessibilityRole="checkbox"
-        accessibilityState={{ checked }}
-      >
-        <View style={[styles.checkbox, checked && styles.checkboxOn]}>
-          {checked && <Text style={styles.checkMark}>✓</Text>}
-        </View>
-        <Text style={styles.agreeLabel}>
-          <Text style={styles.agreeRequired}>[필수] </Text>
-          {label}
-        </Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        onPress={() => router.push(href)}
-        disabled={loading}
-        activeOpacity={0.6}
-        style={styles.agreeViewBtn}
-      >
-        <Text style={styles.agreeViewLabel}>보기</Text>
-      </TouchableOpacity>
-    </View>
-  );
-
   return (
     <View style={styles.container}>
       <ScreenHeader title="회원가입" fallbackHref="/(auth)/login" />
@@ -146,18 +116,33 @@ export default function SignupForm() {
         />
 
         <View style={styles.agreeWrap}>
-          {renderAgreeRow(
-            agreeTerms,
-            () => setAgreeTerms((v) => !v),
-            "이용약관에 동의합니다",
-            "/terms",
-          )}
-          {renderAgreeRow(
-            agreePrivacy,
-            () => setAgreePrivacy((v) => !v),
-            "개인정보처리방침에 동의합니다",
-            "/privacy",
-          )}
+          <AgreeRow
+            checked={agreeTerms}
+            onToggle={() => setAgreeTerms((v) => !v)}
+            label="이용약관에 동의합니다"
+            href="/terms"
+            disabled={loading}
+          />
+          <AgreeRow
+            checked={agreePrivacy}
+            onToggle={() => setAgreePrivacy((v) => !v)}
+            label="개인정보 수집·이용에 동의합니다"
+            href="/privacy"
+            disabled={loading}
+          />
+          <AgreeRow
+            checked={agreeTransfer}
+            onToggle={() => setAgreeTransfer((v) => !v)}
+            label="개인정보 국외 이전에 동의합니다"
+            href="/privacy"
+            disabled={loading}
+          />
+          <AgreeRow
+            checked={agreeAge}
+            onToggle={() => setAgreeAge((v) => !v)}
+            label="만 14세 이상입니다"
+            disabled={loading}
+          />
         </View>
 
         {formError && <Text style={styles.errorText}>{formError}</Text>}
@@ -209,27 +194,4 @@ const styles = StyleSheet.create({
   btnDimmed: { opacity: 0.5 },
 
   agreeWrap: { gap: 8, marginTop: 6, marginBottom: 2 },
-  agreeRow: { flexDirection: "row", alignItems: "center" },
-  // 토글 영역만 flex:1 로 넓혀, 옆의 "보기" 링크와 탭 영역이 겹치지 않게 한다.
-  agreeHit: { flex: 1, flexDirection: "row", alignItems: "center", gap: 8 },
-  checkbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 6,
-    borderWidth: 1.5,
-    borderColor: "#D6CCE8",
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  checkboxOn: { backgroundColor: "#8868D8", borderColor: "#8868D8" },
-  checkMark: { color: "#fff", fontSize: 13, fontWeight: "700", lineHeight: 16 },
-  agreeLabel: { fontSize: 13, color: "#5C4A7A" },
-  agreeRequired: { color: "#7868B8", fontWeight: "700" },
-  agreeViewBtn: { paddingVertical: 4, paddingHorizontal: 6 },
-  agreeViewLabel: {
-    fontSize: 12,
-    color: "#9B8BB4",
-    textDecorationLine: "underline",
-  },
 });

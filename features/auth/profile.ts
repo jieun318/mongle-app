@@ -42,6 +42,9 @@ export interface ProfileRecord {
   notify_enabled: boolean;
   notify_dream_reminder: boolean;
   created_at: string;
+  // 0022 적용 전 DB 에는 컬럼이 없어 undefined 로 온다. 동의 게이트는 null 일 때만
+  // 동의 화면으로 보낸다 — 마이그레이션 전에 앱이 먼저 나가도 전원이 갇히지 않게.
+  terms_agreed_at?: string | null;
 }
 
 type SupaError = { message: string } | null;
@@ -115,6 +118,8 @@ export interface UpdateProfileInput {
   profileImageUrl?: string | null;
   notifyEnabled?: boolean;
   notifyDreamReminder?: boolean;
+  // ISO 시각. 동의 화면·가입 폼 동의 기록용(features/auth/consent.ts)
+  termsAgreedAt?: string;
 }
 
 export async function updateMyProfile(input: UpdateProfileInput) {
@@ -136,6 +141,8 @@ export async function updateMyProfile(input: UpdateProfileInput) {
     patch.notify_enabled = input.notifyEnabled;
   if (input.notifyDreamReminder !== undefined)
     patch.notify_dream_reminder = input.notifyDreamReminder;
+  if (input.termsAgreedAt !== undefined)
+    patch.terms_agreed_at = input.termsAgreedAt;
 
   const res = await supabase
     .from("profiles")

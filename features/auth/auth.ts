@@ -216,6 +216,12 @@ function toKoreanAuthError(e: unknown): Error {
   }
 }
 
+// 가입 폼에서 필수 동의를 마친 시각을 user_metadata 에 실어 보낸다.
+// 세션이 생기자마자 (app)/_layout 의 동의 게이트가 profiles 를 읽는데, 그 시점엔
+// profiles.terms_agreed_at 이 아직 비어 있다. 게이트는 이 값을 보고 동의 화면을
+// 건너뛰고 profiles 에 옮겨 적는다(features/auth/consent.ts).
+export const CONSENT_META_KEY = "terms_agreed_at";
+
 export async function signUpWithEmail(
   email: string,
   password: string,
@@ -224,6 +230,7 @@ export async function signUpWithEmail(
     const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
       password,
+      options: { data: { [CONSENT_META_KEY]: new Date().toISOString() } },
     });
     if (error) return { error: toKoreanAuthError(error) };
 

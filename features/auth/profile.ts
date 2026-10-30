@@ -185,13 +185,18 @@ export async function deleteMyAccount() {
     const { data: sessionRes } = await supabase.auth.getSession();
     const token = sessionRes.session?.access_token;
     if (token) {
-      await fetch(getKakaoUnlinkUrl(), {
+      const res = await fetch(getKakaoUnlinkUrl(), {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });
+      // fetch 는 4xx/5xx 에도 throw 하지 않는다. 확인 안 하면 실패가 흔적 없이 묻힌다.
+      if (!res.ok) {
+        const body = await res.text().catch(() => "");
+        console.error("[deleteMyAccount] kakao unlink failed:", res.status, body);
+      }
     }
-  } catch {
-    // 무시
+  } catch (e) {
+    console.error("[deleteMyAccount] kakao unlink request error:", e);
   }
 
   const { error } = await supabase.rpc("delete_my_account");

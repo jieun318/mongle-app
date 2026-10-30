@@ -53,8 +53,11 @@ export default function AccountDeletionScreen() {
           </P>
           <Bullet label="접수 이메일">mongle.help@gmail.com</Bullet>
           <Bullet label="제목">계정 삭제 요청</Bullet>
-          <Bullet label="본문 기재 사항">
-            가입에 사용한 카카오 계정 이메일 주소, 앱에서 사용 중인 닉네임
+          <Bullet label="본문 기재 사항 (카카오 가입자)">
+            앱에서 사용 중인 닉네임, 가입일(마이페이지 프로필에 표시된 날짜)
+          </Bullet>
+          <Bullet label="본문 기재 사항 (이메일 가입자)">
+            가입에 사용한 이메일 주소 — 해당 주소에서 요청 메일을 보내 주세요.
           </Bullet>
           <P style={styles.small}>
             본인 확인 후 영업일 기준 7일 이내에 처리하고 결과를 회신합니다.
@@ -65,7 +68,8 @@ export default function AccountDeletionScreen() {
         <Section n="3" title="삭제되는 데이터">
           <P>계정 삭제 시 아래 데이터가 복원 불가능하게 영구 삭제됩니다.</P>
           <Bullet label="계정 정보">
-            이메일 주소, 닉네임, 카카오 연동 인증 정보
+            닉네임, 카카오 연동 인증 정보(카카오 연결 끊기 포함), 이메일
+            주소·암호화된 비밀번호(이메일 가입자)
           </Bullet>
           <Bullet label="프로필">프로필 설정 및 프로필 사진</Bullet>
           <Bullet label="꿈 기록">
@@ -103,8 +107,8 @@ export default function AccountDeletionScreen() {
             탈퇴 전에 따로 보관해 주세요.
           </Bullet>
           <Bullet label="재가입">
-            탈퇴 후 같은 카카오 계정으로 다시 가입할 수 있으나, 이전 데이터는
-            연결되지 않습니다.
+            탈퇴 후 같은 카카오 계정이나 이메일로 다시 가입할 수 있으나, 이전
+            데이터는 연결되지 않습니다.
           </Bullet>
         </Section>
 
@@ -118,7 +122,7 @@ export default function AccountDeletionScreen() {
         </Section>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>최종 수정일: 2026년 8월 4일</Text>
+          <Text style={styles.footerText}>최종 수정일: 2026년 10월 30일</Text>
         </View>
       </ScrollView>
     </>

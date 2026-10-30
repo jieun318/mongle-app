@@ -18,7 +18,7 @@ export default function TermsScreen() {
         <Text style={styles.meta}>
           본 약관은 몽글(이하 "회사")이 제공하는 운세·꿈 해몽·AI 챗봇 서비스(이하
           "서비스")의 이용과 관련하여 회사와 이용자 간의 권리·의무 및 책임사항을
-          규정합니다. 본 약관은 2026년 6월 23일부터 시행됩니다.
+          규정합니다. 본 약관은 2026년 11월 6일부터 시행됩니다.
         </Text>
 
         <Section n="1" title="목적">
@@ -36,7 +36,7 @@ export default function TermsScreen() {
             본 약관에 따라 서비스를 이용하는 회원 및 비회원
           </Bullet>
           <Bullet label="회원">
-            소셜 로그인(카카오 등)으로 가입하여 서비스를 이용하는 자
+            카카오 로그인 또는 이메일로 가입하여 서비스를 이용하는 자
           </Bullet>
           <Bullet label="콘텐츠">
             이용자가 작성한 꿈 일기, 챗봇 대화 등 서비스 내 게시·저장한 정보
@@ -59,8 +59,13 @@ export default function TermsScreen() {
 
         <Section n="4" title="이용계약의 체결">
           <P>
-            이용계약은 이용자가 본 약관에 동의하고 소셜 로그인을 통해 가입을
-            완료함으로써 체결됩니다.
+            이용계약은 이용자가 본 약관에 동의하고 카카오 로그인 또는 이메일
+            가입을 완료함으로써 체결됩니다.
+          </P>
+          <P>
+            서비스는 만 14세 이상인 사람만 이용할 수 있습니다. 이용자는 가입 시
+            만 14세 이상임을 확인하여야 하며, 만 14세 미만인 사람은 가입할 수
+            없습니다.
           </P>
           <P>
             회사는 다음 각 호에 해당하는 경우 가입을 거부하거나 사후에
@@ -69,6 +74,7 @@ export default function TermsScreen() {
           <Bullet label="타인 명의 도용">실명이 아니거나 타인의 정보를 이용한 경우</Bullet>
           <Bullet label="허위 정보 기재">등록 내용에 허위·기재 누락·오기가 있는 경우</Bullet>
           <Bullet label="법령·약관 위반">부정한 목적으로 서비스를 이용하려는 경우</Bullet>
+          <Bullet label="연령 미달">만 14세 미만인 사람이 가입한 경우</Bullet>
         </Section>
 
         <Section n="5" title="서비스의 제공 및 변경">
@@ -141,7 +147,7 @@ export default function TermsScreen() {
 
         <Section n="11" title="계약 해지 및 이용 제한">
           <P>
-            이용자는 언제든지 앱 내 [마이페이지 &gt; 회원 탈퇴]를 통해
+            이용자는 언제든지 앱 내 [마이페이지 &gt; 설정 &gt; 회원 탈퇴]를 통해
             이용계약을 해지할 수 있으며, 탈퇴 시 관련 법령 및 개인정보처리방침에
             따라 콘텐츠가 처리됩니다.
           </P>
@@ -176,8 +182,11 @@ export default function TermsScreen() {
         </Section>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>공고일자: 2026년 6월 23일</Text>
-          <Text style={styles.footerText}>시행일자: 2026년 6월 23일</Text>
+          <Text style={styles.footerText}>공고일자: 2026년 10월 30일</Text>
+          <Text style={styles.footerText}>시행일자: 2026년 11월 6일</Text>
+          <Text style={styles.footerText}>
+            이전 약관: 2026년 6월 23일 ~ 2026년 11월 5일 적용
+          </Text>
         </View>
       </ScrollView>
     </View>

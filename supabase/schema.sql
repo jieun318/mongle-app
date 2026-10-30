@@ -62,6 +62,11 @@ alter table public.profiles
   add column if not exists notify_enabled        boolean not null default true,
   add column if not exists notify_dream_reminder boolean not null default true;
 
+-- terms_agreed_at : 약관·개인정보·국외 이전·만 14세 동의 시각. null 이면
+--                   앱이 동의 화면(/consent)으로 보낸다 (0022)
+alter table public.profiles
+  add column if not exists terms_agreed_at timestamptz;
+
 
 -- ============================================================
 -- 4. dreams — 사용자가 기록한 꿈

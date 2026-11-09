@@ -39,7 +39,6 @@ export default async function handler(req: Request): Promise<Response> {
       {
         headers: {
           apikey: SUPABASE_ANON_KEY,
-          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
         },
         signal: AbortSignal.timeout(10000),
       },

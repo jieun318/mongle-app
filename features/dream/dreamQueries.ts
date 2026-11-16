@@ -97,10 +97,14 @@ export function useDreamItem(id: string | undefined | null) {
 // 모두 이 캐시에서 파생 → 첫 요청 후엔 네트워크 없이 즉시 동작.
 const ALL_DREAM_ITEMS_KEY = ["dreamItems", "all"] as const;
 
+// status 필터: anon·일반 사용자는 RLS 가 이미 published 만 주지만, admin 계정은
+// dream_items_admin_all 정책으로 초안·반려까지 보여서 앱 목록·검색에 섞인다(0023).
+// 단건 조회(useDreamItem)는 거르지 않는다 — 관리자 미리보기용.
 async function fetchAllDreamItems(): Promise<DreamItem[]> {
   const { data, error } = await supabase
     .from("dream_items")
     .select("*")
+    .eq("status", "published")
     .order("id");
   if (error) throw error;
   return (data ?? []).map((r) => mapDreamItemRow(r as DreamItemRow));

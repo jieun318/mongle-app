@@ -245,7 +245,7 @@ const EXAMPLE_PROMPTS = [
   "돌아가신 할머니가 꿈에 나왔어요",
 ];
 
-// 프로덕션은 EXPO_PUBLIC_API_BASE_URL (예: https://mongle.vercel.app) 로 절대경로 호출.
+// 프로덕션은 EXPO_PUBLIC_API_BASE_URL (예: https://mongle-app.vercel.app) 로 절대경로 호출.
 // 미설정 시엔 dev 서버 host:8081 로 폴백 (Expo Go / 로컬 web 개발).
 function getApiUrl(): string {
   const base = process.env.EXPO_PUBLIC_API_BASE_URL?.trim();

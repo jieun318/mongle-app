@@ -9,9 +9,14 @@ import { queryClient } from "@/lib/queryClient";
 import SplashAnimation from "@/components/SplashAnimation";
 import DialogHost from "@/components/ui/DialogHost";
 import { setupNotificationHandler } from "@/lib/notifications";
+import { initAnalytics } from "@/lib/analytics";
+import { useScreenTracking } from "@/lib/useScreenTracking";
 
 // 네이티브 스플래시는 커스텀 스플래시 첫 레이아웃 시점에 직접 hide 한다.
 SplashScreen.preventAutoHideAsync().catch(() => {});
+
+// 사용 분석(PostHog) — 키가 없거나(개발·preview) 사용자가 끄면 아무것도 보내지 않는다.
+initAnalytics();
 
 // 앱 foreground 에서도 알림이 표시되도록
 setupNotificationHandler();
@@ -39,6 +44,7 @@ if (Platform.OS === "web" && typeof document !== "undefined") {
 }
 
 export default function RootLayout() {
+  useScreenTracking();
   const [fontsLoaded] = useFonts({
     OnglyphPDH: require("../assets/fonts/OnglyphPDH.ttf"),
   });

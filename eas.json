@@ -29,7 +29,11 @@
       "env": {
         "EXPO_PUBLIC_SUPABASE_URL": "https://bpotmmtfheqjrvlwdugz.supabase.co",
         "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_wnEGhf1-c6xKvuj63NyS8Q_3u4EiY5D",
-        "EXPO_PUBLIC_API_BASE_URL": "https://mongle-app.vercel.app"
+        "EXPO_PUBLIC_API_BASE_URL": "https://mongle-app.vercel.app",
+        // 사용 분석(PostHog) — production 에만 둔다. development·preview 는 키가 없어
+        // 아무것도 보내지 않는다(테스트 데이터가 통계에 섞이지 않게). phc_ 는 공개용 프로젝트 키.
+        "EXPO_PUBLIC_POSTHOG_KEY": "phc_zvS6AYsSSTrff7yJVFLzdcHdB2hiQAvmeoxHz4YxBZFr",
+        "EXPO_PUBLIC_POSTHOG_HOST": "https://us.i.posthog.com"
       }
     }
   },

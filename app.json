@@ -81,7 +81,8 @@
             "extraProguardRules": "-keep class expo.modules.notifications.** { *; }"
           }
         }
-      ]
+      ],
+      "expo-localization"
     ],
     "runtimeVersion": {
       "policy": "fingerprint"

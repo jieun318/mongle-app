@@ -30,6 +30,11 @@ const BLOCKED = [
   // expo-image-picker 가 넣지만 쓰지 않는다. 크롭 결과는 앱 전용 캐시에
   // 저장하므로 외부 저장소 쓰기가 필요 없고, API 29+ 에서는 무시된다.
   "android.permission.WRITE_EXTERNAL_STORAGE",
+
+  // expo-application(사용 분석 PostHog 가 앱 버전을 읽으려고 씀)이 딸려 오는
+  // com.android.installreferrer 라이브러리가 넣는다. 설치 경로(getInstallReferrerAsync)는
+  // 몽글도 posthog-react-native 도 쓰지 않는다. 빌드 결과 AAB 매니페스트에서 빠졌는지 확인할 것.
+  "com.google.android.finsky.permission.BIND_GET_INSTALL_REFERRER_SERVICE",
 ];
 
 module.exports = function withTrimmedPermissions(config) {

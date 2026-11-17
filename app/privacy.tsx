@@ -18,7 +18,7 @@ export default function PrivacyScreen() {
         <Text style={styles.meta}>
           몽글(이하 "회사")은 정보주체의 개인정보를 중요시하며, 「개인정보
           보호법」을 준수합니다. 회사는 본 방침을 통해 수집하는 개인정보의 항목,
-          이용 목적, 보유 기간 등을 안내합니다. 본 방침은 2026년 11월 6일부터
+          이용 목적, 보유 기간 등을 안내합니다. 본 방침은 2026년 11월 24일부터
           시행됩니다.
         </Text>
 
@@ -31,7 +31,8 @@ export default function PrivacyScreen() {
             꿈 일기 작성·저장, 운세 제공, AI 기반 해몽 및 챗봇 응답
           </Bullet>
           <Bullet label="서비스 개선">
-            통계 분석, 신규 기능 개발, 오류 진단
+            이용 통계 분석(계정과 연결하지 않는 익명 통계), 신규 기능 개발,
+            오류 진단
           </Bullet>
         </Section>
 
@@ -63,6 +64,13 @@ export default function PrivacyScreen() {
             접속 IP, 접속 로그, 기기·OS·앱 버전 정보. 꿈 사전 검색어는 계정과
             연결하지 않고 통계 목적으로만 저장합니다.
           </Bullet>
+          <Bullet label="이용 통계 (선택)">
+            기기마다 무작위로 만든 식별자, 방문한 화면, 주요 기능 사용 여부(꿈
+            해몽 요청, 꿈 기록 저장, 챗봇 메시지 전송, 운세 확인, 꿈 사전 검색
+            결과 수, 문의하기), 기기 모델·OS·앱 버전·언어·시간대. 계정과 연결하지
+            않으며, 꿈 내용·챗봇 대화·검색어는 수집하지 않고 접속 IP는 저장하지
+            않습니다. 거부 방법은 제11조를 참고해 주세요.
+          </Bullet>
           <P>
             수집 방법: 카카오 로그인 시 카카오로부터 제공받거나, 사용자가 앱
             내에서 직접 입력하며, 일부 정보는 서비스 이용 중 자동으로
@@ -76,6 +84,10 @@ export default function PrivacyScreen() {
             보관이 필요한 경우 해당 기간 동안 보관합니다.
           </P>
           <Bullet label="로그인 기록">3개월 (통신비밀보호법)</Bullet>
+          <Bullet label="이용 통계">
+            수집일로부터 1년 후 자동 삭제 — 계정과 연결되지 않은 정보라 회원
+            탈퇴와 관계없이 이 기간이 지나면 삭제됩니다.
+          </Bullet>
         </Section>
 
         <Section n="4" title="개인정보의 제3자 제공">
@@ -102,6 +114,10 @@ export default function PrivacyScreen() {
                 "650 Industries, Inc. (Expo)",
                 "앱 업데이트 배포 서버 — 업데이트 확인 시 IP·기기·앱 버전 정보 전송 (미국)",
               ],
+              [
+                "PostHog, Inc.",
+                "서비스 이용 통계 분석 — 익명 이용 기록·기기 정보 전송 (미국)",
+              ],
               ["Kakao Corp.", "소셜 로그인 인증 (대한민국)"],
               ["Open-Meteo", "일출·일몰 시각 조회 — 대략적 좌표 전송 (독일)"],
               [
@@ -119,8 +135,8 @@ export default function PrivacyScreen() {
         <Section n="6" title="개인정보의 국외 이전">
           <P>
             회사는 서비스 제공을 위하여 아래와 같이 개인정보를 국외로
-            이전합니다. 이전은 서비스 이용 시점에 정보통신망을 통해 암호화
-            전송(HTTPS/TLS)하는 방식으로 이루어집니다.
+            이전합니다. 이전은 앱·웹을 이용할 때마다 정보통신망을 통해 수시로
+            암호화 전송(HTTPS/TLS)하는 방식으로 이루어집니다.
           </P>
           {TRANSFERS.map((t) => (
             <View key={t.to} style={styles.transfer}>
@@ -137,7 +153,9 @@ export default function PrivacyScreen() {
             설정 &gt; 회원 탈퇴]로 이전을 중단할 수 있습니다. 회원 정보 저장과
             AI 해몽은 위 수탁사 없이 제공할 수 없어, 거부 시 서비스를 이용할 수
             없습니다. 위치 정보는 기기 설정에서 위치 권한을 거부하면 전송되지
-            않으며, 이 경우에도 서비스 이용에 제한이 없습니다.
+            않으며, 이 경우에도 서비스 이용에 제한이 없습니다. 이용 통계(PostHog)는
+            제11조의 방법으로 끄면 그 기기·브라우저에서는 전송되지 않으며, 이
+            경우에도 서비스 이용에 제한이 없습니다.
           </Bullet>
         </Section>
 
@@ -189,6 +207,21 @@ export default function PrivacyScreen() {
             회사는 맞춤형 광고를 위한 행태정보를 수집하지 않으며, 광고 식별자를
             이용하지 않습니다.
           </P>
+          <P>
+            다만 서비스 개선을 위해 이용 통계(제2조)를 수집합니다. 이를 위해
+            기기마다 무작위로 만든 식별자를 앱 저장 공간(웹은 브라우저 저장소)에
+            저장합니다. 이 식별자는 계정과 연결하지 않으며 광고에 쓰지 않습니다.
+          </P>
+          <Bullet label="거부 방법">
+            [마이페이지 &gt; 설정 &gt; 개인정보 &gt; 이용 통계 보내기]를 끄면 해당
+            기기에서는 더 이상 보내지 않습니다. 웹은 브라우저마다 따로 설정하며,
+            브라우저 저장소를 지우면 다시 켜진 상태가 됩니다. 거부해도 서비스
+            이용에는 제한이 없습니다.
+          </Bullet>
+          <Bullet label="웹 (로그인 전)">
+            웹 첫 화면(mongle-app.vercel.app) 하단의 [이용 통계 설정]을 누르면
+            해당 브라우저에서 끄거나 다시 켤 수 있습니다.
+          </Bullet>
         </Section>
 
         <Section n="12" title="개인정보 보호책임자">
@@ -218,10 +251,13 @@ export default function PrivacyScreen() {
         </Section>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>공고일자: 2026년 10월 30일</Text>
-          <Text style={styles.footerText}>시행일자: 2026년 11월 6일</Text>
+          <Text style={styles.footerText}>공고일자: 2026년 11월 17일</Text>
+          <Text style={styles.footerText}>시행일자: 2026년 11월 24일</Text>
           <Text style={styles.footerText}>
-            이전 방침: 2026년 6월 23일 ~ 2026년 11월 5일 적용
+            이전 방침: 2026년 11월 6일 ~ 2026년 11월 23일 적용
+          </Text>
+          <Text style={styles.footerText}>
+            그 이전 방침: 2026년 6월 23일 ~ 2026년 11월 5일 적용
           </Text>
         </View>
       </ScrollView>
@@ -272,6 +308,15 @@ const TRANSFERS: {
     items: "접속 IP, 기기·OS·앱 버전 정보",
     purpose: "앱 업데이트 확인 및 배포",
     retention: "Expo 서비스 약관이 정한 기간",
+  },
+  {
+    to: "PostHog, Inc.",
+    country: "미국",
+    contact: "posthog.com/privacy (개인정보 문의 창구)",
+    items:
+      "기기별 무작위 식별자, 방문 화면, 주요 기능 사용 여부, 기기 모델·OS·앱 버전·언어·시간대 (접속 IP는 저장하지 않음)",
+    purpose: "서비스 이용 통계 분석",
+    retention: "수집일로부터 1년",
   },
   {
     to: "Open-Meteo",

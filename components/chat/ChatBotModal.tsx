@@ -34,6 +34,7 @@ import { compatText } from "@/lib/emojiCompat";
 import { isCrisisDisclosure, SAFETY_STUB } from "@/features/chat/safety";
 import { isInterpretation, MORE_MARKER, segmentHasCrisis } from "@/features/chat/answer";
 import { saveChatDream, type SaveOutcome } from "@/features/chat/saveChatDream";
+import { track } from "@/lib/analytics";
 
 interface Props {
   visible: boolean;
@@ -646,6 +647,9 @@ export default function ChatBotModal({
       metaRef.current = null;
       metaMsgIdRef.current = null;
     }
+    // 사용 분석 — 이벤트 이름만 보낸다. 메시지 내용은 절대 넣지 않는다.
+    if (isFirstDream) track("dream_interpretation_requested");
+    track("chat_message_sent");
     // 위기 발화는 첫 턴이 아니어도 안내한다. pickEmpathy 는 키워드 매칭이라
     // "죽고싶다" 에 scary 큐("죽")가 걸려 "마음이 많이 졸였겠어요 😨" 같은
     // 응답을 내놓는다 — 반드시 이 분기보다 먼저 걸러야 한다.

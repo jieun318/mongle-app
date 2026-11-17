@@ -22,6 +22,7 @@ import {
 import { showNotice } from "@/lib/dialog";
 import { useDreamItem } from "@/features/dream/dreamQueries";
 import DreamEmoji from "@/components/dream/DreamEmoji";
+import { track } from "@/lib/analytics";
 
 export default function NewDreamScreen() {
   const space = useBottomSpace();
@@ -123,6 +124,7 @@ export default function NewDreamScreen() {
       return;
     }
 
+    track("dream_saved", { source: "card" });
     showNotice("저장 완료", "꿈이 보관함에 담겼어요", () =>
       router.replace("/(app)/storage"),
     );

@@ -2,6 +2,7 @@ import { createDream, todayISODate, updateDream } from "@/features/dream/dreams"
 import { MORE_MARKER } from "@/features/chat/answer";
 import { isCrisisDisclosure } from "@/features/chat/safety";
 import type { DreamMeta, SavedSegment, StoredChatMessage } from "@/features/chat/chatSession";
+import { track } from "@/lib/analytics";
 
 // 채팅 구간을 꿈 보관함에 저장한다. 채팅 모달의 닫기·새 대화·결과 카드 보기가 모두 이
 // 함수 하나를 거친다 — 저장 경로가 여럿이면 같은 대화가 두 번 저장되기 쉽다.
@@ -84,6 +85,7 @@ async function doSave({ messages, savedCount, meta, lastSave, continuing }: Save
       interpretationSummary: meta?.interpretation ?? "",
     });
     if (error || !data) return { status: "error", message: error?.message ?? "저장 결과 없음" };
+    track("dream_saved", { source: "chat" });
     return { status: "saved", title, updated: false, segment: { dreamId: data.id, from, to: messages.length } };
   } catch (err) {
     return { status: "error", message: err instanceof Error ? err.message : String(err) };

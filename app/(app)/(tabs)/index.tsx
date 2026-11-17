@@ -98,6 +98,7 @@ import {
   type WeatherCondition,
 } from "@/features/weather/weather";
 import WeatherOverlay from "@/components/weather/WeatherOverlay";
+import { track } from "@/lib/analytics";
 
 // ⚠️ 개발용 강제 날씨 스위치 — 실제 비/눈이 올 때만 보여 테스트가 어려우므로,
 // 화면 좌상단 테스트 버튼으로 연출을 순환시킨다(null = 실제 날씨 사용).
@@ -885,6 +886,9 @@ export default function HomeScreen() {
     // 보고 일찍 return 해 버리면, 첫 commit 실패 시 mypage 의 이번 주 운세에 영원히
     // 안 뜨는 버그가 생긴다.
     commitDailyFortuneToDB(fortune, userId).catch(() => {});
+
+    // 사용 분석 — 운세 내용(등급·문구)은 보내지 않는다.
+    track("fortune_viewed", { first_today: !alreadyViewed });
 
     // 오늘 이미 봤으면 애니 생략하고 결과만 즉시 표시
     if (alreadyViewed) {

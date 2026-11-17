@@ -23,6 +23,7 @@ import { useThisWeekFortunes } from "@/features/fortune/fortuneQueries";
 import { avatarUrlKey } from "@/features/auth/profile";
 import { useAvatarUrl, useMyProfile } from "@/features/auth/profileQueries";
 import { useRefetchStaleOnFocus } from "@/lib/useRefetchStaleOnFocus";
+import { track } from "@/lib/analytics";
 
 const CONTACT_EMAIL = "mongle.help@gmail.com";
 
@@ -260,7 +261,10 @@ export default function MypageScreen() {
               <View style={styles.linkRow}>
                 <TouchableOpacity
                   style={styles.linkCell}
-                  onPress={openContactEmail}
+                  onPress={() => {
+                    track("contact_clicked");
+                    openContactEmail();
+                  }}
                   activeOpacity={0.7}
                 >
                   <Text style={styles.linkText}>문의하기</Text>

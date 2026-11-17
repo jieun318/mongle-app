@@ -19,6 +19,7 @@ import DreamListItem from "@/components/dream/DreamListItem";
 import { useSearchDreamItems } from "@/features/dream/dreamQueries";
 import type { DreamItem } from "@/features/dream/dreamData";
 import { logSearch } from "@/features/dream/searchLogs";
+import { track } from "@/lib/analytics";
 import { ChatBubbleIcon, CloudIcon } from "@/components/ui/icons";
 
 export default function SearchResultsScreen() {
@@ -38,7 +39,11 @@ export default function SearchResultsScreen() {
   const resultCount = dreams.length;
   useEffect(() => {
     if (!trimmedQuery || !isSuccess) return;
-    const t = setTimeout(() => logSearch(trimmedQuery, resultCount), 1000);
+    const t = setTimeout(() => {
+      logSearch(trimmedQuery, resultCount);
+      // 사용 분석 — 검색어는 절대 넣지 않고 결과 개수만.
+      track("dictionary_searched", { result_count: resultCount });
+    }, 1000);
     return () => clearTimeout(t);
   }, [trimmedQuery, isSuccess, resultCount]);
 

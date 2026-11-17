@@ -1,5 +1,38 @@
-import { View, Text, Image, StyleSheet, ScrollView } from "react-native";
+import { View, Text, Image, StyleSheet, ScrollView, Pressable } from "react-native";
 import { Link } from "expo-router";
+import { useEffect, useState } from "react";
+import { getAnalyticsEnabled, setAnalyticsEnabled } from "@/lib/analytics";
+import { showNotice } from "@/lib/dialog";
+
+// 비로그인 방문자도 이용 통계를 끌 수 있게 하는 하단 링크 (개인정보처리방침 제11조).
+// 누를 때마다 이 브라우저의 설정을 끄기/켜기로 바꾼다. 정적 HTML 에는 "켜짐"으로 박히고
+// 하이드레이션 뒤 저장된 값으로 바뀐다.
+function AnalyticsSettingLink() {
+  const [enabled, setEnabled] = useState(true);
+  useEffect(() => {
+    getAnalyticsEnabled().then(setEnabled);
+  }, []);
+
+  const toggle = async () => {
+    const next = !enabled;
+    await setAnalyticsEnabled(next);
+    setEnabled(next);
+    showNotice(
+      next ? "이용 통계를 켰어요" : "이용 통계를 껐어요",
+      next
+        ? "이 브라우저에서 익명 이용 통계를 보내요. 꿈 내용·대화·검색어는 보내지 않아요."
+        : "이 브라우저에서는 이용 통계를 보내지 않아요. 브라우저 저장소를 지우면 다시 켜져요.",
+    );
+  };
+
+  return (
+    <Pressable onPress={toggle} accessibilityRole="button">
+      <Text style={styles.footerLink}>
+        이용 통계 설정 ({enabled ? "켜짐" : "꺼짐"})
+      </Text>
+    </Pressable>
+  );
+}
 
 // 웹 루트(/) 랜딩 — 앱 셸이 아니라 "서비스를 설명하는 공개 웹사이트"여야 한다.
 // Google Play 조직 웹사이트 인증은 심사자가 이 URL 을 직접 열어보고 조직 실재
@@ -133,6 +166,7 @@ export default function WebLanding({ hasSession = false }: Props) {
           <Link href="/business" style={styles.footerLink}>
             사업자 정보
           </Link>
+          <AnalyticsSettingLink />
         </View>
         <Text style={styles.copy}>© 2026 몽글 (Mongle). All rights reserved.</Text>
       </View>

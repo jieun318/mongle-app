@@ -49,6 +49,68 @@ import {
   timeStringToDate,
 } from "@/lib/notifications";
 import { MoonIcon, SparklesIcon } from "@/components/ui/icons";
+import { getAnalyticsEnabled, setAnalyticsEnabled } from "@/lib/analytics";
+
+// '이용 통계 보내기' — 기본 켜짐. 끄면 PostHog 로 아무것도 보내지 않는다(앱·웹 각각 이 기기 기준).
+function AnalyticsToggleRow() {
+  const [enabled, setEnabled] = useState(true);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    getAnalyticsEnabled().then((v) => {
+      if (!cancelled) setEnabled(v);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const toggle = async () => {
+    if (busy) return;
+    const next = !enabled;
+    setBusy(true);
+    setEnabled(next);
+    try {
+      await setAnalyticsEnabled(next);
+    } catch {
+      setEnabled(!next);
+      showNotice("설정을 바꾸지 못했어요", "잠시 후 다시 시도해 주세요.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Pressable
+      style={({ pressed }) => [
+        styles.row,
+        pressed && styles.rowPressed,
+        busy && styles.rowBusy,
+      ]}
+      onPress={toggle}
+      disabled={busy}
+      android_ripple={{ color: "rgba(184,152,240,0.18)" }}
+      accessibilityRole="switch"
+      accessibilityState={{ checked: enabled, disabled: busy }}
+      accessibilityLabel="이용 통계 보내기"
+    >
+      <View style={{ flex: 1 }}>
+        <Text style={styles.rowLabel}>이용 통계 보내기</Text>
+        <Text style={styles.rowDesc}>
+          어떤 화면과 기능을 쓰는지 익명으로 보내 서비스 개선에 써요. 꿈 내용·대화·검색어는 보내지 않아요
+        </Text>
+      </View>
+      <View pointerEvents="none">
+        <Switch
+          value={enabled}
+          trackColor={{ true: "#B898F0", false: "#D8D0E8" }}
+          thumbColor="#fff"
+        />
+      </View>
+    </Pressable>
+  );
+}
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -473,6 +535,11 @@ export default function SettingsScreen() {
                 onPress={() => openTimePicker("fortune")}
               />
             )}
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>개인정보</Text>
+            <AnalyticsToggleRow />
           </View>
 
           <View style={styles.section}>
